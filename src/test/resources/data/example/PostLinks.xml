@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<postlinks>
+  <row Id="83" CreationDate="2015-01-29T04:07:49.210" PostId="48" RelatedPostId="5" LinkTypeId="1" />
+  <row Id="125" CreationDate="2015-02-02T19:40:26.530" PostId="4" RelatedPostId="60" LinkTypeId="1" />
+  <row Id="156" CreationDate="2015-02-10T15:15:38.817" PostId="60" RelatedPostId="68" LinkTypeId="1" />
+  <row Id="191" CreationDate="2015-02-12T12:43:48.377" PostId="80" RelatedPostId="77" LinkTypeId="1" />
+  <row Id="229" CreationDate="2015-02-13T19:22:37.160" PostId="28" RelatedPostId="86" LinkTypeId="1" />
+  <row Id="230" CreationDate="2015-02-13T19:23:48.867" PostId="86" RelatedPostId="28" LinkTypeId="1" />
+  <row Id="1278" CreationDate="2015-02-17T14:40:00.937" PostId="108" RelatedPostId="91" LinkTypeId="1" />
+  <row Id="1279" CreationDate="2015-02-17T15:37:53.617" PostId="103" RelatedPostId="52" LinkTypeId="1" />
+  <row Id="1440" CreationDate="2015-04-11T02:59:36.357" PostId="1132" RelatedPostId="5" LinkTypeId="1" />
+  <row Id="1530" CreationDate="2015-05-18T00:54:12.077" PostId="1139" RelatedPostId="1128" LinkTypeId="1" />
+  <row Id="1585" CreationDate="2015-06-01T20:18:25.330" PostId="1146" RelatedPostId="32" LinkTypeId="1" />
+  <row Id="1604" CreationDate="2015-06-10T02:17:58.353" PostId="32" RelatedPostId="1146" LinkTypeId="1" />
+  <row Id="1646" CreationDate="2015-07-24T17:50:27.777" PostId="1134" RelatedPostId="1139" LinkTypeId="1" />
+  <row Id="1663" CreationDate="2015-08-08T02:08:27.550" PostId="1155" RelatedPostId="1146" LinkTypeId="1" />
+  <row Id="1681" CreationDate="2015-08-10T01:23:32.437" PostId="1155" RelatedPostId="91" LinkTypeId="1" />
+  <row Id="1682" CreationDate="2015-08-10T01:24:34.883" PostId="1134" RelatedPostId="91" LinkTypeId="1" />
+  <row Id="1693" CreationDate="2015-08-12T17:08:22.950" PostId="1150" RelatedPostId="1155" LinkTypeId="1" />
+  <row Id="1728" CreationDate="2015-08-29T05:54:16.203" PostId="1162" RelatedPostId="1158" LinkTypeId="1" />
+  <row Id="1905" CreationDate="2016-01-15T10:19:58.793" PostId="1175" RelatedPostId="97" LinkTypeId="1" />
+  <row Id="1947" CreationDate="2016-01-28T11:56:36.540" PostId="1177" RelatedPostId="1134" LinkTypeId="3" />
+  <row Id="2386" CreationDate="2016-12-08T14:10:16.947" PostId="1207" RelatedPostId="1165" LinkTypeId="1" />
+  <row Id="2664" CreationDate="2017-06-19T20:37:33.587" PostId="1217" RelatedPostId="32" LinkTypeId="1" />
+  <row Id="3160" CreationDate="2018-03-13T11:48:36.463" PostId="1222" RelatedPostId="1175" LinkTypeId="1" />
+</postlinks>

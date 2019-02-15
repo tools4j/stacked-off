@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<comments>
+  <row Id="1" PostId="3" Score="0" Text="*Wave* hello fellow rpg.se user." CreationDate="2015-01-27T21:31:29.540" UserId="24" />
+  <row Id="2" PostId="3" Score="0" Text="@JoshuaAslanSmith: Cheers. :)" CreationDate="2015-01-27T22:17:51.780" UserId="3" />
+  <row Id="3" PostId="2" Score="2" Text="I've gone ahead and added a feed for this site (meta.coffee) already, since meta's a very important part of the community." CreationDate="2015-01-27T22:33:57.407" UserId="63" />
+  <row Id="4" PostId="1" Score="0" Text="oh, these are terms for _that_? never heard either… maybe allow both and recommend elaboration in the text?" CreationDate="2015-01-27T22:55:08.750" UserId="77" />
+  <row Id="5" PostId="2" Score="0" Text="@Doorknob add that as an answer so I can upvote (for the meta rep as much as that mattters lol)\" CreationDate="2015-01-27T22:56:19.410" UserId="24" />
+  <row Id="6" PostId="1" Score="0" Text="Recommending both would be confusing; generally you want to use one tag, and make any other names a tag synonym (you don't want to have half the questions have one name, and the other have a different one, making it hard to get a list of all questions about that particular topic)." CreationDate="2015-01-28T01:48:22.847" UserId="80" />
+  <row Id="7" PostId="1" Score="0" Text="Certainly, the terms &quot;pour-over&quot;, &quot;drip&quot;, and &quot;filter&quot; (and perhaps others...) need regional disambiguation; perhaps this should be a question at [main] main site? I fear clarifying text in every question/answer will be necessary. Making uniform the vernacular of the entire world might be easier. ;-)" CreationDate="2015-02-11T16:32:01.823" UserId="262" />
+  <row Id="8" PostId="1" Score="1" Text="@hoc_age Tagging terminology needs to be nailed down in the tag wiki for the site so for our purposes Yes, it does need to be agreed upon and defined. Meta is the place to talk about and discuss issues on the main site." CreationDate="2015-02-11T17:02:35.463" UserId="24" />
+  <row Id="9" PostId="1" Score="0" Text="@JoshuaAslanSmith - agreed about the tag terminology, and I think  you've convinced me that the best place to &quot;define&quot; our *lingua franca* is the tag wiki. My comment on [this answer](http://meta.coffee.stackexchange.com/a/24/262) summarizes my feelings about the (more-)general problem." CreationDate="2015-02-11T17:09:52.737" UserId="262" />
+</comments>
