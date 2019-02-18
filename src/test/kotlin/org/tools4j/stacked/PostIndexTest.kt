@@ -9,7 +9,7 @@ internal class PostIndexTest {
         val postIndex = PostIndex(RamIndexFactory())
         postIndex.init()
         val posts = Posts.fromXmlOnClasspath("/data/example/Posts.xml")
-        postIndex.addPosts(posts.posts!!)
+        postIndex.addItems(posts.posts!!)
         val results = postIndex.query("coffee")
         
         assertThat(results).hasSize(3)

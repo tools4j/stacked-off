@@ -9,7 +9,7 @@ internal class CommentIndexTest {
         val commentIndex = CommentIndex(RamIndexFactory())
         commentIndex.init()
         val comments = Comments.fromXmlOnClasspath("/data/example/Comments.xml")
-        commentIndex.addComments(comments.comments!!)
+        commentIndex.addItems(comments.comments!!)
         val results = commentIndex.query("question")
         
         assertThat(results).hasSize(1)

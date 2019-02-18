@@ -779,7 +779,7 @@
   <row Id="1807" PostId="1164" VoteTypeId="2" CreationDate="2015-11-11T00:00:00.000" />
   <row Id="1808" PostId="1120" VoteTypeId="2" CreationDate="2015-11-14T00:00:00.000" />
   <row Id="1809" PostId="1164" VoteTypeId="1" CreationDate="2015-11-22T00:00:00.000" />
-  <row Id="1810" PostId="1165" VoteTypeId="5" UserId="262" CreationDate="2015-12-04T00:00:00.000" />
+  <row Id="1810" PostId="1165" VoteTypeId="5" UserId="6" CreationDate="2015-12-04T00:00:00.000" />
   <row Id="1811" PostId="1166" VoteTypeId="2" CreationDate="2015-12-04T00:00:00.000" />
   <row Id="1812" PostId="1166" VoteTypeId="2" CreationDate="2015-12-07T00:00:00.000" />
   <row Id="1813" PostId="1167" VoteTypeId="3" CreationDate="2015-12-07T00:00:00.000" />
