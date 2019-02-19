@@ -1,7 +1,8 @@
 package org.tools4j.stacked
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonRootName
+import java.util.function.Consumer
+import javax.xml.namespace.QName
+import javax.xml.stream.events.StartElement
 
 
 interface RawPost {
@@ -33,54 +34,42 @@ data class ParentPostImpl(val post: Post, override val childPosts: List<Post>): 
             : this(PostImpl(rawPost, commentModels), childPosts)
 }
 
-@JsonRootName("posts")
-data class Posts(
-    @set:JsonProperty("row")
-    var posts: List<RawPostImpl>? = null){
+data class RawPostImpl(
+    override val id: String? = null,
+    override val postTypeId: String? = null,
+    override val creationDate: String? = null,
+    override val score: String? = null,
+    override val viewCount: String? = null,
+    override val body:String? = null,
+    override val ownerUserId: String? = null,
+    override val lastActivityDate: String? = null,
+    override val tags: String? = null,
+    override val parentId: String? = null,
+    override val favoriteCount: String? = null,
+    override val title: String? = null) : RawPost
 
-    companion object {
-        @JvmStatic
-        fun fromXmlOnClasspath(onClasspath: String): Posts{
-            return XmlDoc.parseAs(onClasspath)
-        }
+
+class PostXmlRowHandler(delegate: ItemHandler<RawPost>): XmlRowHandler<RawPost>(delegate) {
+    override fun getParentElementName(): String {
+        return "posts"
+    }
+
+    override fun handle(element: StartElement) {
+        val rawPost = RawPostImpl(
+            element.getAttributeByName(QName.valueOf("Id"))?.value,
+            element.getAttributeByName(QName.valueOf("PostTypeId"))?.value,
+            element.getAttributeByName(QName.valueOf("CreationDate"))?.value,
+            element.getAttributeByName(QName.valueOf("Score"))?.value,
+            element.getAttributeByName(QName.valueOf("ViewCount"))?.value,
+            element.getAttributeByName(QName.valueOf("Body"))?.value,
+            element.getAttributeByName(QName.valueOf("OwnerUserId"))?.value,
+            element.getAttributeByName(QName.valueOf("LastActivityDate"))?.value,
+            element.getAttributeByName(QName.valueOf("Tags"))?.value,
+            element.getAttributeByName(QName.valueOf("ParentId"))?.value,
+            element.getAttributeByName(QName.valueOf("FavoriteCount"))?.value,
+            element.getAttributeByName(QName.valueOf("Title"))?.value
+        )
+        delegate.handle(rawPost)
     }
 }
-
-@JsonRootName("row")
-data class RawPostImpl(
-    @set:JsonProperty("Id")
-    override var id: String? = null,
-
-    @set:JsonProperty("PostTypeId")
-    override var postTypeId: String? = null,
-
-    @set:JsonProperty("CreationDate")
-    override var creationDate: String? = null,
-
-    @set:JsonProperty("Score")
-    override var score: String? = null,
-
-    @set:JsonProperty("ViewCount")
-    override var viewCount: String? = null,
-
-    @set:JsonProperty("Body")
-    override var body:String? = null,
-
-    @set:JsonProperty("OwnerUserId")
-    override var ownerUserId: String? = null,
-
-    @set:JsonProperty("LastActivityDate")
-    override var lastActivityDate: String? = null,
-
-    @set:JsonProperty("Tags")
-    override var tags: String? = null,
-
-    @set:JsonProperty("ParentId")
-    override var parentId: String? = null,
-
-    @set:JsonProperty("FavoriteCount")
-    override var favoriteCount: String? = null,
-
-    @set:JsonProperty("Title")
-    override var title: String? = null) : RawPost
 

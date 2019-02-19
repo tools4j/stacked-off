@@ -24,9 +24,6 @@ class Main {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val posts = parseAs<Posts>("Posts.xml")
-            val post = posts.posts!![0]
-            println(post)
         }
     }
 }

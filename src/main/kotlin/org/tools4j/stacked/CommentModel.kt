@@ -1,7 +1,8 @@
 package org.tools4j.stacked
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonRootName
+import java.util.function.Consumer
+import javax.xml.namespace.QName
+import javax.xml.stream.events.StartElement
 
 interface Comment {
     val id: String?
@@ -12,35 +13,29 @@ interface Comment {
     val userId: String?
 }
 
-@JsonRootName("comments")
-data class Comments(
-    @set:JsonProperty("row")
-    var comments: List<CommentImpl>? = null){
+data class CommentImpl(
+    override val id: String?,
+    override val postId: String?,
+    override val score: String?,
+    override val text: String?,
+    override val creationDate: String?,
+    override val userId: String?) : Comment
 
-    companion object {
-        @JvmStatic
-        fun fromXmlOnClasspath(onClasspath: String): Comments {
-            return XmlDoc.parseAs(onClasspath)
-        }
+
+class CommentXmlRowHandler(delegate: ItemHandler<Comment>): XmlRowHandler<Comment>(delegate) {
+    override fun getParentElementName(): String {
+        return "comments"
+    }
+
+    override fun handle(element: StartElement) {
+        val rawPost = CommentImpl(
+            element.getAttributeByName(QName.valueOf("Id"))?.value,
+            element.getAttributeByName(QName.valueOf("PostId"))?.value,
+            element.getAttributeByName(QName.valueOf("Score"))?.value,
+            element.getAttributeByName(QName.valueOf("Text"))?.value,
+            element.getAttributeByName(QName.valueOf("CreationDate"))?.value,
+            element.getAttributeByName(QName.valueOf("UserId"))?.value
+        )
+        delegate.handle(rawPost)
     }
 }
-
-@JsonRootName("row")
-data class CommentImpl(
-    @set:JsonProperty("Id")
-    override var id: String?,
-
-    @set:JsonProperty("PostId")
-    override var postId: String?,
-
-    @set:JsonProperty("Score")
-    override var score: String?,
-
-    @set:JsonProperty("Text")
-    override var text: String?,
-
-    @set:JsonProperty("CreationDate")
-    override var creationDate: String?,
-
-    @set:JsonProperty("UserId")
-    override var userId: String?) : Comment

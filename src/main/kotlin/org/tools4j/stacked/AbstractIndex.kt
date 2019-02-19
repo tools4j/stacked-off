@@ -38,6 +38,21 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         w.close()
     }
 
+    fun getItemHandler(): ItemHandler<T>{
+        return object: ItemHandler<T>{
+            val config = IndexWriterConfig(analyzer)
+            val w = IndexWriter(index, config)
+
+            override fun handle(item: T) {
+                w.addDocument(convertItemToDocument(item))
+            }
+
+            override fun onFinish() {
+                w.close()
+            }
+        }
+    }
+
     fun query(queryString: String): List<T> {
         val q = queryParser.parse(queryString);
 

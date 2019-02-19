@@ -1,7 +1,7 @@
 package org.tools4j.stacked
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonRootName
+import javax.xml.namespace.QName
+import javax.xml.stream.events.StartElement
 
 interface User {
     val id: String?
@@ -10,29 +10,24 @@ interface User {
     val accountId: String?
 }
 
-@JsonRootName("users")
-data class Users(
-    @set:JsonProperty("row")
-    var users: List<UserImpl>? = null){
+data class UserImpl(
+    override var id: String?,
+    override var reputation: String?,
+    override var displayName: String?,
+    override var accountId: String?) : User
 
-    companion object {
-        @JvmStatic
-        fun fromXmlOnClasspath(onClasspath: String): Users {
-            return XmlDoc.parseAs(onClasspath)
-        }
+class UserXmlRowHandler(delegate: ItemHandler<User>): XmlRowHandler<User>(delegate) {
+    override fun getParentElementName(): String {
+        return "users"
+    }
+
+    override fun handle(element: StartElement) {
+        val user = UserImpl(
+            element.getAttributeByName(QName.valueOf("Id"))?.value,
+            element.getAttributeByName(QName.valueOf("Reputation"))?.value,
+            element.getAttributeByName(QName.valueOf("DisplayName"))?.value,
+            element.getAttributeByName(QName.valueOf("AccountId"))?.value
+        )
+        delegate.handle(user)
     }
 }
-
-@JsonRootName("row")
-data class UserImpl(
-    @set:JsonProperty("Id")
-    override var id: String?,
-
-    @set:JsonProperty("Reputation")
-    override var reputation: String?,
-
-    @set:JsonProperty("DisplayName")
-    override var displayName: String?,
-
-    @set:JsonProperty("AccountId")
-    override var accountId: String?) : User

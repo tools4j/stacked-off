@@ -7,8 +7,11 @@ internal class UserIndexTest {
     fun testGetUserById() {
         val userIndex = UserIndex(RamIndexFactory())
         userIndex.init()
-        val users = Users.fromXmlOnClasspath("/data/example/Users.xml")
-        userIndex.addItems(users.users!!)
+
+        val userXmlRowHandler = UserXmlRowHandler(userIndex.getItemHandler())
+        val xmlFileParser = XmlFileParser("/data/example/Users.xml", XmlRowHandlerFactory(listOf(userXmlRowHandler)))
+        xmlFileParser.parse()
+
         UserTestUtils.assertUser1(userIndex.getById("1")!!);
         UserTestUtils.assertUser2(userIndex.getById("2")!!);
         UserTestUtils.assertUser3(userIndex.getById("3")!!);

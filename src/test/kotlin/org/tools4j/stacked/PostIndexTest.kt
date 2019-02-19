@@ -8,8 +8,10 @@ internal class PostIndexTest {
     fun testQueryAllPostsFromIndex() {
         val postIndex = PostIndex(RamIndexFactory())
         postIndex.init()
-        val posts = Posts.fromXmlOnClasspath("/data/example/Posts.xml")
-        postIndex.addItems(posts.posts!!)
+
+        val postXmlRowHandler = PostXmlRowHandler(postIndex.getItemHandler())
+        val xmlFileParser = XmlFileParser("/data/example/Posts.xml", XmlRowHandlerFactory(listOf(postXmlRowHandler)))
+        xmlFileParser.parse()
         val results = postIndex.query("coffee")
         
         assertThat(results).hasSize(3)

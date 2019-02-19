@@ -6,7 +6,11 @@ import org.junit.jupiter.api.Test
 class UsersParseXmlTest {
     @Test
     fun testParseUsers(){
-        val users = Users.fromXmlOnClasspath("/data/example/Users.xml").users!!
+        val users = ArrayList<User>()
+        val xmlRowHandlerFactory = XmlRowHandlerFactory(listOf(UserXmlRowHandler(ToListHandler(users))))
+        val xmlRowParser = XmlFileParser("/data/example/Users.xml", xmlRowHandlerFactory)
+        xmlRowParser.parse()
+        
         assertThat(users).hasSize(6)
         UserTestUtils.assertHasAllUsers(users)
     }
