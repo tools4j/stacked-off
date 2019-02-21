@@ -1,22 +1,36 @@
 package org.tools4j.stacked
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class PostIndexTest {
+    private lateinit var postIndex: PostIndex
+
+    @BeforeEach
+    fun setup() {
+        postIndex = createPostIndex()
+    }
+
     @Test
     fun testQueryAllPostsFromIndex() {
-        val postIndex = PostIndex(RamIndexFactory())
-        postIndex.init()
-
-        val postXmlRowHandler = PostXmlRowHandler(postIndex.getItemHandler())
-        val xmlFileParser = XmlFileParser("/data/example/Posts.xml", XmlRowHandlerFactory(listOf(postXmlRowHandler)))
-        xmlFileParser.parse()
-        val results = postIndex.query("coffee")
-        
+        val results = postIndex.search("coffee")
         assertThat(results).hasSize(3)
-        PostTestUtils.assertHasPostOne(results);
-        PostTestUtils.assertHasPostTwo(results);
-        PostTestUtils.assertHasPostThree(results);
+        assertHasRawPost1(results);
+        assertHasRawPost2(results);
+        assertHasRawPost3(results);
+    }
+
+    @Test
+    fun testGetByParentPostId() {
+        val results = postIndex.getByParentPostId("1")
+        assertThat(results).hasSize(1)
+        assertHasRawPost3(results);
+    }
+
+    @Test
+    fun testGetByParentPostId_noPosts() {
+        val results = postIndex.getByParentPostId("2")
+        assertThat(results).isEmpty()
     }
 }

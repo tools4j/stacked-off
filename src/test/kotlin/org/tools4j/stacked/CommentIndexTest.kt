@@ -1,21 +1,32 @@
 package org.tools4j.stacked
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.function.Consumer
 
 internal class CommentIndexTest {
+    private lateinit var commentIndex: CommentIndex
+
+    @BeforeEach
+    fun setup(){
+        commentIndex = createCommentIndex()
+    }
+
     @Test
     fun testQueryAllCommentsFromIndex() {
-        val commentIndex = CommentIndex(RamIndexFactory())
-        commentIndex.init()
-        val commentXmlRowHandler = CommentXmlRowHandler(commentIndex.getItemHandler())
-        val xmlFileParser = XmlFileParser("/data/example/Comments.xml", XmlRowHandlerFactory(listOf(commentXmlRowHandler)))
-        xmlFileParser.parse()
-        
-        val results = commentIndex.query("question")
-        
+        val results = commentIndex.search("question")
         assertThat(results).hasSize(1)
-        CommentTestUtils.assertHasComment7(results);
+        assertHasComment7(results);
+    }
+
+    @Test
+    fun testGetCommentsByPostId() {
+        val results = commentIndex.getByPostId("1")!!
+        assertThat(results).hasSize(5)
+        assertHasComment4(results);
+        assertHasComment6(results);
+        assertHasComment7(results);
+        assertHasComment8(results);
+        assertHasComment9(results);
     }
 }

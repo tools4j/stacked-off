@@ -1,7 +1,6 @@
 package org.tools4j.stacked
 
 import org.junit.jupiter.api.Test
-import java.util.function.Consumer
 
 class PostsParseXmlTest {
     @Test
@@ -11,8 +10,8 @@ class PostsParseXmlTest {
         val xmlRowParser = XmlFileParser("/data/example/Posts.xml", xmlRowHandlerFactory)
         xmlRowParser.parse()
 
-        PostTestUtils.assertHasPostOne(posts)
-        PostTestUtils.assertHasPostTwo(posts)
-        PostTestUtils.assertHasPostThree(posts)
+        assertHasRawPost1(posts)
+        assertHasRawPost2(posts)
+        assertHasRawPost3(posts)
     }
 }

@@ -12,6 +12,6 @@ class UsersParseXmlTest {
         xmlRowParser.parse()
         
         assertThat(users).hasSize(6)
-        UserTestUtils.assertHasAllUsers(users)
+        assertHasAllUsers(users)
     }
 }

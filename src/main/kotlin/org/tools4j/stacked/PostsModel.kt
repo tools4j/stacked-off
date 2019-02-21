@@ -1,6 +1,5 @@
 package org.tools4j.stacked
 
-import java.util.function.Consumer
 import javax.xml.namespace.QName
 import javax.xml.stream.events.StartElement
 
@@ -21,17 +20,28 @@ interface RawPost {
 }
 
 interface Post: RawPost {
-    val commentModels: List<Comment>
+    val comments: List<Comment>
+    fun containsComment(commentId: String): Boolean
 }
 
-interface ParentPost: Post {
+interface Question: Post {
     val childPosts: List<Post>
+    fun containsPost(postId: String): Boolean
 }
 
-data class PostImpl(val rawPost: RawPost, override val commentModels: List<Comment>): RawPost by rawPost, Post
-data class ParentPostImpl(val post: Post, override val childPosts: List<Post>): Post by post, ParentPost {
-    constructor(rawPost: RawPost, commentModels: List<Comment>, childPosts: List<Post>)
-            : this(PostImpl(rawPost, commentModels), childPosts)
+data class PostImpl(val rawPost: RawPost, override val comments: List<Comment>): RawPost by rawPost, Post{
+    override fun containsComment(commentId: String): Boolean{
+        return comments.any { it.id == commentId }
+    }
+}
+
+data class QuestionImpl(val post: Post, override val childPosts: List<Post>): Post by post, Question {
+    constructor(rawPost: RawPost, comments: List<Comment>, childPosts: List<Post>)
+            : this(PostImpl(rawPost, comments), childPosts)
+
+    override fun containsPost(postId: String): Boolean{
+        return post.id == postId || childPosts.any { it.id == postId }
+    }
 }
 
 data class RawPostImpl(

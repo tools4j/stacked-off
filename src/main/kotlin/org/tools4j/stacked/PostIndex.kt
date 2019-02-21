@@ -1,6 +1,8 @@
 package org.tools4j.stacked
 
 import org.apache.lucene.document.*
+import org.apache.lucene.index.Term
+import org.apache.lucene.search.TermQuery
 
 class PostIndex(indexFactory: IndexFactory)
     : AbstractIndex<RawPost>(indexFactory,"posts") {
@@ -36,9 +38,13 @@ class PostIndex(indexFactory: IndexFactory)
         if(post.ownerUserId != null) doc.add(StoredField("ownerUserId", post.ownerUserId))
         if(post.lastActivityDate != null) doc.add(StoredField("lastActivityDate", post.lastActivityDate))
         if(post.tags != null) doc.add(TextField("tags", post.tags, Field.Store.YES))
-        if(post.parentId != null) doc.add(StoredField("parentId", post.parentId))
+        if(post.parentId != null) doc.add(TextField("parentId", post.parentId, Field.Store.YES))
         if(post.favoriteCount != null) doc.add(StoredField("favoriteCount", post.favoriteCount))
         if(post.title != null) doc.add(TextField("title", post.title, Field.Store.YES))
         return doc
+    }
+
+    fun getByParentPostId(parentPostId: String): List<RawPost> {
+        return search{it.search(TermQuery(Term("parentId", parentPostId)), 100)}
     }
 }

@@ -6,7 +6,8 @@ import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLInputFactory
 
 
-class XmlFileParser(val file: String, val xmlRowHandlerFactory: XmlRowHandlerFactory) {
+class ZipFileParser(val file: String, val xmlFileParser: XmlFileParser) {
+    /*
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
 
@@ -28,15 +29,12 @@ class XmlFileParser(val file: String, val xmlRowHandlerFactory: XmlRowHandlerFac
     }
 
     private fun parseElements(reader: XMLEventReader, parentElementName: String, xmlRowHandler: XmlRowHandler<*>) {
-        val startTimeMs = System.currentTimeMillis()
         var countOfElementsHandled = 0;
         while (reader.hasNext()) {
             val event = reader.nextEvent();
             if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals(parentElementName)) {
                 xmlRowHandler.onFinish()
-                val endTimeMs = System.currentTimeMillis()
-                val durationMs = endTimeMs - startTimeMs
-                println("Total of $countOfElementsHandled $parentElementName rows read from xml. Took $durationMs ms.")
+                println("Total of $countOfElementsHandled $parentElementName rows read.")
                 return;
             }
             if (event.isStartElement()) {
@@ -48,9 +46,10 @@ class XmlFileParser(val file: String, val xmlRowHandlerFactory: XmlRowHandlerFac
                 xmlRowHandler.handle(element);
                 countOfElementsHandled++
                 if(countOfElementsHandled % printCountUpdateEveryNRows == 0){
-                    println("$countOfElementsHandled $parentElementName rows read from xml...")
+                    println("$countOfElementsHandled $parentElementName rows read...")
                 }
             }
         }
     }
+    */
 }

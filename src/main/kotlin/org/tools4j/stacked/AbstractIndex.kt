@@ -11,10 +11,11 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.search.TermQuery
+import org.apache.lucene.search.TopDocs
 import org.apache.lucene.store.Directory
 
 abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String) {
-    private lateinit var index: Directory
+    internal lateinit var index: Directory
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
 
@@ -53,10 +54,9 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         }
     }
 
-    fun query(queryString: String): List<T> {
+    fun search(queryString: String, hitsPerPage: Int = 10): List<T> {
         val q = queryParser.parse(queryString);
 
-        val hitsPerPage = 10
         val reader = DirectoryReader.open(index)
         val searcher = IndexSearcher(reader)
         val docs = searcher.search(q, hitsPerPage)
@@ -75,6 +75,21 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
             return convertDocumentToItem(searcher.doc(hits.get(0).doc));
         }
         return null
+    }
+
+    fun search(searchLambda: (IndexSearcher)-> TopDocs): List<T> {
+        val reader = DirectoryReader.open(index)
+        val searcher = IndexSearcher(reader)
+        val docs = searchLambda(searcher)
+        val hits = docs.scoreDocs
+        if (docs.totalHits > 0) {
+            return hits
+                .map{it.doc}
+                .map{searcher.doc(it)}
+                .map{convertDocumentToItem(it)}
+                .toList()
+        }
+        return emptyList()
     }
 
     abstract fun getIndexedFieldsAndRankings(): MutableMap<String, Float>;
