@@ -5,7 +5,7 @@ import javax.xml.stream.events.StartElement
 
 
 interface RawPost {
-    val id: String?
+    val id: String
     val postTypeId: String?
     val creationDate: String?
     val score: String?
@@ -42,21 +42,26 @@ data class QuestionImpl(val post: Post, override val childPosts: List<Post>): Po
     override fun containsPost(postId: String): Boolean{
         return post.id == postId || childPosts.any { it.id == postId }
     }
+
+    override fun containsComment(commentId: String): Boolean {
+        return post.containsComment(commentId)
+                || childPosts.any { it.containsComment(commentId) }
+    }
 }
 
 data class RawPostImpl(
-    override val id: String? = null,
-    override val postTypeId: String? = null,
-    override val creationDate: String? = null,
-    override val score: String? = null,
-    override val viewCount: String? = null,
-    override val body:String? = null,
-    override val ownerUserId: String? = null,
-    override val lastActivityDate: String? = null,
-    override val tags: String? = null,
-    override val parentId: String? = null,
-    override val favoriteCount: String? = null,
-    override val title: String? = null) : RawPost
+    override val id: String,
+    override val postTypeId: String?,
+    override val creationDate: String?,
+    override val score: String?,
+    override val viewCount: String?,
+    override val body:String?,
+    override val ownerUserId: String?,
+    override val lastActivityDate: String?,
+    override val tags: String?,
+    override val parentId: String?,
+    override val favoriteCount: String?,
+    override val title: String?) : RawPost
 
 
 class PostXmlRowHandler(delegate: ItemHandler<RawPost>): XmlRowHandler<RawPost>(delegate) {
@@ -66,7 +71,7 @@ class PostXmlRowHandler(delegate: ItemHandler<RawPost>): XmlRowHandler<RawPost>(
 
     override fun handle(element: StartElement) {
         val rawPost = RawPostImpl(
-            element.getAttributeByName(QName.valueOf("Id"))?.value,
+            element.getAttributeByName(QName.valueOf("Id"))!!.value,
             element.getAttributeByName(QName.valueOf("PostTypeId"))?.value,
             element.getAttributeByName(QName.valueOf("CreationDate"))?.value,
             element.getAttributeByName(QName.valueOf("Score"))?.value,

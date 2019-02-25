@@ -21,7 +21,7 @@ class CommentIndex(indexFactory: IndexFactory)
 
     override fun convertItemToDocument(rawComment: RawComment): Document {
         val doc = Document()
-        doc.add(StringField("id", rawComment.id!!, Field.Store.YES))
+        doc.add(StringField("id", rawComment.id, Field.Store.YES))
         if(rawComment.postId != null) doc.add(StringField("postId", rawComment.postId, Field.Store.YES))
         if(rawComment.score != null) doc.add(StoredField("score", rawComment.score))
         if(rawComment.text != null) doc.add(TextField("text", rawComment.text, Field.Store.YES))

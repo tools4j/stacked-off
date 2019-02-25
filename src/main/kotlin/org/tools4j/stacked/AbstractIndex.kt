@@ -18,6 +18,10 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     internal lateinit var index: Directory
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
+    private val searcher: IndexSearcher by lazy {
+        val reader = DirectoryReader.open(index)
+        IndexSearcher(reader)
+    }
 
     fun init() {
         index = indexFactory.createIndex(name)
@@ -27,7 +31,7 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
             fields.keys.toTypedArray(),
             analyzer,
             fields
-        );
+        )
     }
 
     fun addItems(items: List<T>){
@@ -55,20 +59,17 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     }
 
     fun search(queryString: String, hitsPerPage: Int = 10): List<T> {
+        val startTimeMs = System.currentTimeMillis()
         val q = queryParser.parse(queryString);
-
-        val reader = DirectoryReader.open(index)
-        val searcher = IndexSearcher(reader)
         val docs = searcher.search(q, hitsPerPage)
         val hits = docs.scoreDocs
-
-        println("Found " + docs.totalHits + " hits.")
+        val endTimeMs = System.currentTimeMillis()
+        val durationMs = endTimeMs - startTimeMs
+        println("Found " + docs.totalHits + " hits. Took $durationMs ms.")
         return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
     fun getById(id: String): T? {
-        val reader = DirectoryReader.open(index)
-        val searcher = IndexSearcher(reader)
         val docs = searcher.search(TermQuery(Term("id", id)), 1)
         val hits = docs.scoreDocs
         if (docs.totalHits > 0) {

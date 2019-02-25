@@ -27,7 +27,7 @@ class UserIndex(indexFactory: IndexFactory)
 
     override fun convertItemToDocument(user: User): Document {
         val doc = Document()
-        doc.add(StringField("id", user.id!!, Field.Store.YES))
+        doc.add(StringField("id", user.id, Field.Store.YES))
         if(user.reputation != null) doc.add(StoredField("reputation", user.reputation))
         if(user.displayName != null) doc.add(StoredField("displayName", user.displayName))
         if(user.accountId != null) doc.add(StoredField("accountId", user.accountId))

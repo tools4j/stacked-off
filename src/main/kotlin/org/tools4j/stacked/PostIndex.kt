@@ -29,7 +29,7 @@ class PostIndex(indexFactory: IndexFactory)
 
     override fun convertItemToDocument(post: RawPost): Document {
         val doc = Document()
-        doc.add(StringField("id", post.id!!, Field.Store.YES))
+        doc.add(StringField("id", post.id, Field.Store.YES))
         if(post.postTypeId != null) doc.add(StoredField("postTypeId", post.postTypeId))
         if(post.creationDate != null) doc.add(StoredField("creationDate", post.creationDate))
         if(post.score != null) doc.add(StoredField("score", post.score))
@@ -45,6 +45,6 @@ class PostIndex(indexFactory: IndexFactory)
     }
 
     fun getByParentPostId(parentPostId: String): List<RawPost> {
-        return search{it.search(TermQuery(Term("parentId", parentPostId)), 100)}
+        return search{it.search(TermQuery(Term("parentId", parentPostId)), 1)}
     }
 }

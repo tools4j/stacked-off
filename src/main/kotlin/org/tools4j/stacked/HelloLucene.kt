@@ -65,7 +65,7 @@ object HelloLucene {
         doc.add(TextField("title", post.title, Field.Store.YES))
         doc.add(TextField("body", post.body, Field.Store.YES))
         doc.add(TextField("tags", post.tags, Field.Store.YES))
-        doc.add(StoredField("parentId", post.parentId!!))
+        doc.add(StoredField("parentId", post.parentId))
         w.addDocument(doc)
     }
 

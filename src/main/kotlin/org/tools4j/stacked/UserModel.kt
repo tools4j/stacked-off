@@ -11,10 +11,10 @@ interface User {
 }
 
 data class UserImpl(
-    override var id: String?,
-    override var reputation: String?,
-    override var displayName: String?,
-    override var accountId: String?) : User
+    override val id: String,
+    override val reputation: String?,
+    override val displayName: String?,
+    override val accountId: String?) : User
 
 class UserXmlRowHandler(delegate: ItemHandler<User>): XmlRowHandler<User>(delegate) {
     override fun getParentElementName(): String {
@@ -23,7 +23,7 @@ class UserXmlRowHandler(delegate: ItemHandler<User>): XmlRowHandler<User>(delega
 
     override fun handle(element: StartElement) {
         val user = UserImpl(
-            element.getAttributeByName(QName.valueOf("Id"))?.value,
+            element.getAttributeByName(QName.valueOf("Id"))!!.value,
             element.getAttributeByName(QName.valueOf("Reputation"))?.value,
             element.getAttributeByName(QName.valueOf("DisplayName"))?.value,
             element.getAttributeByName(QName.valueOf("AccountId"))?.value
