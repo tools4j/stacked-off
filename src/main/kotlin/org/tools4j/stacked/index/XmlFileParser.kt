@@ -1,29 +1,36 @@
 package org.tools4j.stacked.index
 
 import java.io.IOException
+import java.io.InputStream
+import java.util.zip.ZipInputStream
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLInputFactory
 
 
-class XmlFileParser(val file: String, val xmlRowHandlerFactory: XmlRowHandlerFactory) {
+class XmlFileParser(val file: String, val indexedSiteId: String, val xmlRowHandlerFactory: XmlRowHandlerFactory) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
 
     @Throws(IOException::class, XMLStreamException::class)
     fun parse() {
-        this.javaClass.getResourceAsStream(file).use { stream ->
-//            ZipInputStream(stream).use { zip ->
-                val reader = factory.createXMLEventReader(stream)!!
-                while (reader.hasNext()) {
-                    val event = reader.nextEvent()
-                    if(event.isStartElement()){
-                        val parentElementName = event.asStartElement().getName().getLocalPart()
-                        val xmlRowHandler = xmlRowHandlerFactory.getHandlerForElementName(parentElementName)
-                        parseElements(reader, parentElementName, xmlRowHandler)
-                    }
-                }
-//            }
+        parseStream(this.javaClass.getResourceAsStream(file))
+    }
+
+    @Throws(IOException::class, XMLStreamException::class)
+    private fun parseZip(stream: InputStream){
+        parseStream(ZipInputStream(stream))
+    }
+
+    private fun parseStream(stream: InputStream){
+        val reader = factory.createXMLEventReader(stream)!!
+        while (reader.hasNext()) {
+            val event = reader.nextEvent()
+            if(event.isStartElement()){
+                val parentElementName = event.asStartElement().getName().getLocalPart()
+                val xmlRowHandler = xmlRowHandlerFactory.getHandlerForElementName(parentElementName)
+                parseElements(reader, parentElementName, xmlRowHandler)
+            }
         }
     }
 
@@ -45,7 +52,7 @@ class XmlFileParser(val file: String, val xmlRowHandlerFactory: XmlRowHandlerFac
                 if(elementName != "row"){
                     throw IllegalStateException("Found non 'row' child element: " + element)
                 }
-                xmlRowHandler.handle(element);
+                xmlRowHandler.handle(element, indexedSiteId);
                 countOfElementsHandled++
                 if(countOfElementsHandled % printCountUpdateEveryNRows == 0){
                     println("$countOfElementsHandled $parentElementName rows read from xml...")

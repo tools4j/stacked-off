@@ -1,0 +1,60 @@
+<html>
+<head>
+    <script src="app.js"></script>
+    <script type="text/javascript">
+        const baseUrl = "http://localhost/";
+
+        function loadSites() {
+            fetchJson("v1/site", sites => showSites(sites));
+        }
+
+        function showSites(sites){
+            const markup = `
+            <table class="sitesTable dataTable">
+                <tr><th></th><th>Id</th><th>TinyName</th><th>Url</th></tr>
+                ${sites.map(site =>
+                `<tr>
+                    <td><img src="${site.iconUrl}"/></td>
+                    <td>${site.id}</td>
+                    <td>${site.tinyName}</td>
+                    <td>${site.url}</td>
+                </tr>`).join('')}
+            </table>`;
+            document.getElementById("content").innerHTML = markup
+        }
+
+        function fetchJson(address, callback) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var obj = JSON.parse(this.responseText);
+                    document.getElementById("errors").innerHTML = ""
+                    document.getElementById("content2").innerHTML = this.responseText;
+                    callback(obj)
+                } else {
+                    const msg = `<div>Errors incurred whilst fetching data from ${this.url}</div>
+                               <div>Request:</div>
+                               <div>${this.request}</div>
+                               <div>Reponse:</div>
+                               <div>${this.responseText}</div>`
+                    document.getElementById("errors").innerHTML = msg
+                }
+            };
+            xmlhttp.open("GET", baseUrl + address , true);
+            xmlhttp.send();
+        }
+    </script>
+</head>
+<body onload="loadSites()">
+<div>
+    OffStack
+</div>
+<span>Hello world!!</span>
+<button onclick="loadSites()">Load Sites</button>
+<div id="errors"></div>
+<div id="content"></div>
+<br/>
+<br/>
+<div id="content2"></div>
+</body>
+</html>

@@ -15,11 +15,11 @@ class XmlRowHandlerFactory(val rowHandlers: List<XmlRowHandler<*>>) {
     }
 }
 
-abstract class XmlRowHandler<T>(val delegate: ItemHandler<T>):
-    ItemHandler<StartElement> {
+abstract class XmlRowHandler<T>(val delegate: ItemHandler<T>) {
     abstract fun getParentElementName(): String
+    abstract fun handle(element: StartElement, indexedSiteId: String)
 
-    override fun onFinish() {
+    fun onFinish() {
         delegate.onFinish()
     }
 }

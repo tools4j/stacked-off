@@ -1,10 +1,9 @@
 package org.tools4j.stacked.index
 
-import javax.xml.namespace.QName
-import javax.xml.stream.events.StartElement
+import org.apache.lucene.document.*
 
 interface Site {
-    val id: String
+    val stackexchangeSiteId: String
     val tinyName: String?
     val name: String?
     val longName: String?
@@ -22,10 +21,11 @@ interface Site {
     val lastPost: String?
     val oDataEndpoint: String?
     val badgeIconUrl: String?
+    fun convertToDocument(): Document
 }
 
 data class SiteImpl(
-    override val id: String,
+    override val stackexchangeSiteId: String,
     override val tinyName: String?,
     override val name: String?,
     override val longName: String?,
@@ -42,35 +42,49 @@ data class SiteImpl(
     override val totalTags: String?,
     override val lastPost: String?,
     override val oDataEndpoint: String?,
-    override val badgeIconUrl: String?) : Site
+    override val badgeIconUrl: String?) : Site {
 
+    constructor(doc: Document): this(
+            doc.get("stackexchangeSiteId"),
+            doc.get("tinyName"),
+            doc.get("name"),
+            doc.get("longName"),
+            doc.get("url"),
+            doc.get("imageUrl"),
+            doc.get("iconUrl"),
+            doc.get("databaseName"),
+            doc.get("tagline"),
+            doc.get("tagCss"),
+            doc.get("totalQuestions"),
+            doc.get("totalAnswers"),
+            doc.get("totalUsers"),
+            doc.get("totalComments"),
+            doc.get("totalTags"),
+            doc.get("lastPost"),
+            doc.get("oDataEndpoint"),
+            doc.get("badgeIconUrl"))
 
-class SiteXmlRowHandler(delegate: ItemHandler<Site>): XmlRowHandler<Site>(delegate) {
-    override fun getParentElementName(): String {
-        return "sites"
-    }
-
-    override fun handle(element: StartElement) {
-        val site = SiteImpl(
-            element.getAttributeByName(QName.valueOf("id"))!!.value,
-            element.getAttributeByName(QName.valueOf("tinyName"))?.value,
-            element.getAttributeByName(QName.valueOf("name"))?.value,
-            element.getAttributeByName(QName.valueOf("longName"))?.value,
-            element.getAttributeByName(QName.valueOf("url"))?.value,
-            element.getAttributeByName(QName.valueOf("imageUrl"))?.value,
-            element.getAttributeByName(QName.valueOf("iconUrl"))?.value,
-            element.getAttributeByName(QName.valueOf("databaseName"))?.value,
-            element.getAttributeByName(QName.valueOf("tagline"))?.value,
-            element.getAttributeByName(QName.valueOf("tagCss"))?.value,
-            element.getAttributeByName(QName.valueOf("totalQuestions"))?.value,
-            element.getAttributeByName(QName.valueOf("totalAnswers"))?.value,
-            element.getAttributeByName(QName.valueOf("totalUsers"))?.value,
-            element.getAttributeByName(QName.valueOf("totalComments"))?.value,
-            element.getAttributeByName(QName.valueOf("totalTags"))?.value,
-            element.getAttributeByName(QName.valueOf("lastPost"))?.value,
-            element.getAttributeByName(QName.valueOf("oDataEndpoint"))?.value,
-            element.getAttributeByName(QName.valueOf("badgeIconUrl"))?.value
-        )
-        delegate.handle(site)
+    override fun convertToDocument(): Document {
+        val doc = Document()
+        doc.add(StringField("stackexchangeSiteId", stackexchangeSiteId, Field.Store.YES))
+        doc.add(StringField("uid", stackexchangeSiteId, Field.Store.NO))
+        if(tinyName != null) doc.add(TextField("tinyName", tinyName, Field.Store.YES))
+        if(name != null) doc.add(TextField("name", name, Field.Store.YES))
+        if(longName != null) doc.add(TextField("longName", longName, Field.Store.YES))
+        if(url != null) doc.add(TextField("url", url, Field.Store.YES))
+        if(imageUrl != null) doc.add(StoredField("imageUrl", imageUrl))
+        if(iconUrl != null) doc.add(StoredField("iconUrl", iconUrl))
+        if(databaseName != null) doc.add(StoredField("databaseName", databaseName))
+        if(tagline != null) doc.add(StoredField("tagline", tagline))
+        if(tagCss != null) doc.add(StoredField("tagCss", tagCss))
+        if(totalQuestions != null) doc.add(StoredField("totalQuestions", totalQuestions))
+        if(totalAnswers != null) doc.add(StoredField("totalAnswers", totalAnswers))
+        if(totalUsers != null) doc.add(StoredField("totalUsers", totalUsers))
+        if(totalComments != null) doc.add(StoredField("totalComments", totalComments))
+        if(totalTags != null) doc.add(StoredField("totalTags", totalTags))
+        if(lastPost != null) doc.add(StoredField("lastPost", lastPost))
+        if(oDataEndpoint != null) doc.add(StoredField("oDataEndpoint", oDataEndpoint))
+        if(badgeIconUrl != null) doc.add(StoredField("badgeIconUrl", badgeIconUrl))
+        return doc
     }
 }

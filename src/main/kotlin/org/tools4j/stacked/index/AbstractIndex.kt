@@ -10,6 +10,7 @@ import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.IndexSearcher
+import org.apache.lucene.search.MatchAllDocsQuery
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.search.TopDocs
 import org.apache.lucene.store.Directory
@@ -69,13 +70,23 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
-    fun getById(id: String): T? {
-        val docs = searcher.search(TermQuery(Term("id", id)), 1)
+    fun getByUid(uid: String): T? {
+        val docs = searcher.search(TermQuery(Term("uid", uid)), 2)
         val hits = docs.scoreDocs
-        if (docs.totalHits > 0) {
+        if (docs.totalHits == 0L) {
+            return null
+        } else if(docs.totalHits == 1L) {
             return convertDocumentToItem(searcher.doc(hits.get(0).doc));
+        } else {
+            throw IllegalStateException("Found more than one item with uid [$uid]. Items: ${hits.map{it.doc}}")
         }
-        return null
+    }
+
+    fun getAll(): List<T> {
+        val docs = searcher.search(MatchAllDocsQuery(), 10000)
+        val hits = docs.scoreDocs
+        println("Found " + docs.totalHits + " total records found.")
+        return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
     fun search(searchLambda: (IndexSearcher)-> TopDocs): List<T> {

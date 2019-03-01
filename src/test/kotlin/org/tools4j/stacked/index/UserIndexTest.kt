@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 
 internal class UserIndexTest {
     private lateinit var userIndex: UserIndex
+    private val s1 = Site1Assertions()
 
     @BeforeEach
     fun setup(){
@@ -13,11 +14,11 @@ internal class UserIndexTest {
 
     @Test
     fun testGetUserById() {
-        assertUser1(userIndex.getById("1")!!);
-        assertUser2(userIndex.getById("2")!!);
-        assertUser3(userIndex.getById("3")!!);
-        assertUser4(userIndex.getById("4")!!);
-        assertUser5(userIndex.getById("5")!!);
-        assertUser6(userIndex.getById("6")!!);
+        s1.assertUser1(userIndex.getByUid("$SITE_1.1")!!);
+        s1.assertUser2(userIndex.getByUid("$SITE_1.2")!!);
+        s1.assertUser3(userIndex.getByUid("$SITE_1.3")!!);
+        s1.assertUser4(userIndex.getByUid("$SITE_1.4")!!);
+        s1.assertUser5(userIndex.getByUid("$SITE_1.5")!!);
+        s1.assertUser6(userIndex.getByUid("$SITE_1.6")!!);
     }
 }

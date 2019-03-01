@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class UsersParseXmlTest {
+    private val s1 = Site1Assertions()
+
     @Test
     fun testParseUsers(){
         val users = ArrayList<User>()
@@ -12,10 +14,10 @@ class UsersParseXmlTest {
                 UserXmlRowHandler(ToListHandler(users))
             )
         )
-        val xmlRowParser = XmlFileParser("/data/example/Users.xml", xmlRowHandlerFactory)
-        xmlRowParser.parse()
+        val xmlFileParser = XmlFileParser("/data/example/Users.xml", "1", xmlRowHandlerFactory)
+        xmlFileParser.parse()
         
         assertThat(users).hasSize(6)
-        assertHasAllUsers(users)
+        s1.assertHasAllUsers(users)
     }
 }

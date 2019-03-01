@@ -1,5 +1,7 @@
 package org.tools4j.stacked.index
 
+val SITE_1 = "1"
+
 class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {
     override fun handle(item: T) {
         list.add(item)
@@ -24,6 +26,7 @@ fun createPostIndex(): PostIndex {
     val postXmlRowHandler = PostXmlRowHandler(postIndex.getItemHandler())
     val xmlFileParser = XmlFileParser(
         "/data/example/Posts.xml",
+        "1",
         XmlRowHandlerFactory(listOf(postXmlRowHandler))
     )
     xmlFileParser.parse()
@@ -36,6 +39,7 @@ fun createCommentIndex(): CommentIndex {
     val commentXmlRowHandler = CommentXmlRowHandler(commentIndex.getItemHandler())
     val xmlFileParser = XmlFileParser(
         "/data/example/Comments.xml",
+        "1",
         XmlRowHandlerFactory(listOf(commentXmlRowHandler))
     )
     xmlFileParser.parse()
@@ -48,8 +52,17 @@ fun createUserIndex(): UserIndex {
     val userXmlRowHandler = UserXmlRowHandler(userIndex.getItemHandler())
     val xmlFileParser = XmlFileParser(
         "/data/example/Users.xml",
+        "1",
         XmlRowHandlerFactory(listOf(userXmlRowHandler))
     )
     xmlFileParser.parse()
     return userIndex
+}
+
+fun createSiteIndex(): SiteIndex {
+    val index = SiteIndex(RamIndexFactory())
+    index.init()
+    val xmlFileParser = SiteXmlFileParser("/data/example/Sites.xml", index)
+    xmlFileParser.parse()
+    return index
 }
