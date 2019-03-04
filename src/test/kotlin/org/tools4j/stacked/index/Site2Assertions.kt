@@ -1,6 +1,5 @@
 package org.tools4j.stacked.index
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.fail
 
@@ -15,10 +14,10 @@ class Site2Assertions() {
         assertIsQuestion1(question!!)
     }
 
-    fun assertHasQuestion2(questions: Collection<Question>){
-        val question = getQuestionByUid("$SITE_2.2", questions)
+    fun assertHasQuestion3(questions: Collection<Question>){
+        val question = getQuestionByUid("$SITE_2.3", questions)
         assertThat(question).isNotNull
-        assertIsQuestion2(question!!)
+        assertIsQuestion3(question!!)
     }
 
     fun getQuestionByUid(uid: String, questions: Collection<Question>): Question? {
@@ -31,8 +30,8 @@ class Site2Assertions() {
         assertHasPost2(question.childPosts)
     }
 
-    fun assertIsQuestion2(question: Question){
-        assertIsPost2(question)
+    fun assertIsQuestion3(question: Question){
+        assertIsPost3(question)
         assertThat(question.childPosts).isEmpty()
     }
 
@@ -121,11 +120,11 @@ class Site2Assertions() {
         assertThat(post.creationDate).isEqualTo("2014-01-21T21:06:16.967")
         assertThat(post.score).isEqualTo("7")
         assertThat(post.viewCount).isEqualTo("128")
-        assertThat(post.body).isEqualTo("&lt;p&gt;I've seen several questions so far that deal with human biology as it relates directly to alcohol. &lt;/p&gt;&#xA;&#xA;&lt;p&gt;It seems like these questions are off topic and generally outside of the expertise of this site.&lt;/p&gt;&#xA;&#xA;&lt;p&gt;Examples:&lt;/p&gt;&#xA;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://alcohol.stackexchange.com/questions/7/will-certain-types-of-beer-get-me-more-drunk-more-quickly&quot;&gt;Will certain types of beer get me more drunk more quickly?&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://alcohol.stackexchange.com/questions/16/why-do-i-seem-to-pee-out-more-beer-than-i-drink&quot;&gt;Why do I seem to pee out more beer than I drink?&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&#xA;&lt;p&gt;How much of this topic can we feasibly cover, and how much of it &lt;em&gt;should&lt;/em&gt; we cover?&lt;/p&gt;&#xA;")
+        assertThat(post.body).isEqualTo("<p>I've seen several questions so far that blah deal with human biology as it relates directly to alcohol. </p>\n\n<p>It seems like these questions are off topic and generally outside of the expertise of this site.</p>\n\n<p>Examples:</p>\n\n<ul>\n<li><p><a href=\"https://alcohol.stackexchange.com/questions/7/will-certain-types-of-beer-get-me-more-drunk-more-quickly\">Will certain types of beer get me more drunk more quickly?</a></p></li>\n<li><p><a href=\"https://alcohol.stackexchange.com/questions/16/why-do-i-seem-to-pee-out-more-beer-than-i-drink\">Why do I seem to pee out more beer than I drink?</a></p></li>\n</ul>\n\n<p>How much of this topic can we feasibly cover, and how much of it <em>should</em> we cover?</p>\n")
         assertThat(post.ownerUserUid).isEqualTo("$SITE_2.3")
         assertThat(post.lastActivityDate).isEqualTo("2014-01-22T23:43:21.513")
         assertThat(post.title).isEqualTo("How much do we want to get into biology?")
-        assertThat(post.tags).isEqualTo("&lt;discussion&gt;&lt;scope&gt;")
+        assertThat(post.tags).isEqualTo("<discussion><scope>")
     }
 
     fun <T: RawPost> getPostWithUid(posts: List<T>, uid: String): T {

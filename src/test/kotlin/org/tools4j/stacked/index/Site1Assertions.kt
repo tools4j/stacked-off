@@ -133,7 +133,7 @@ class Site1Assertions() {
         assertThat(post.creationDate).isEqualTo("2015-01-27T21:30:20.953")
         assertThat(post.score).isEqualTo("8")
         assertThat(post.viewCount).isNull()
-        assertThat(post.body).isEqualTo("<p>It looks like filter coffee has <a href=\"http://en.wikipedia.org/wiki/Indian_filter_coffee\" rel=\"nofollow\">another, different meaning</a> too. When I read \"drip coffee,\" I think of the kind you <a href=\"http://en.wikipedia.org/wiki/Drip_brew\" rel=\"nofollow\">get from a traditional coffeemaker</a>. Go for \"pour-over.\"</p>\n")
+        assertThat(post.body).isEqualTo("<p>It looks like blah filter coffee has <a href=\"http://en.wikipedia.org/wiki/Indian_filter_coffee\" rel=\"nofollow\">another, different meaning</a> too. When I read \"drip coffee,\" I think of the kind you <a href=\"http://en.wikipedia.org/wiki/Drip_brew\" rel=\"nofollow\">get from a traditional coffeemaker</a>. Go for \"pour-over.\"</p>\n")
         assertThat(post.ownerUserUid).isEqualTo("$SITE_1.1")
         assertThat(post.lastActivityDate).isEqualTo("2015-01-27T21:30:20.953")
         assertThat(post.tags).isNull()

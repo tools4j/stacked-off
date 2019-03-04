@@ -148,6 +148,15 @@ internal class PostServiceTest {
     }
 
     @Test
+    fun testSite1AndSite2Search(){
+        val questions = postService.search("blah")
+        assertThat(questions).hasSize(2)
+        s1.assertHasQuestion1(questions)
+        s2.assertHasQuestion3(questions)
+    }
+
+
+    @Test
     fun testSite1Search_text_is_in_one_comment_in_post_1(){
         val questions = postService.search("Recommending")
         assertThat(questions).hasSize(1)
