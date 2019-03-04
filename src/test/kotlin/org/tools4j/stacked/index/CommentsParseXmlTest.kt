@@ -9,8 +9,9 @@ class CommentsParseXmlTest {
     @Test
     fun testParseComments(){
         val comments = ArrayList<RawComment>()
-        val xmlRowHandlerFactory = XmlRowHandlerFactory(listOf(CommentXmlRowHandler(ToListHandler(comments))))
-        val xmlFileParser = XmlFileParser("/data/example/Comments.xml", "1", xmlRowHandlerFactory)
+        val xmlFileParser = XmlFileParser("/data/coffee/Comments.xml",
+            "1",
+            {CommentXmlRowHandler({ToListHandler(comments)})})
         xmlFileParser.parse()
 
         assertThat(comments).hasSize(9)

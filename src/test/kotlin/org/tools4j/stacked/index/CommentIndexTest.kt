@@ -10,7 +10,7 @@ internal class CommentIndexTest {
 
     @BeforeEach
     fun setup(){
-        commentIndex = createCommentIndex()
+        commentIndex = createAndLoadCommentIndex()
     }
 
     @Test

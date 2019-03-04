@@ -45,7 +45,7 @@ data class UserImpl(
     }
 }
 
-class UserXmlRowHandler(delegate: ItemHandler<User>): XmlRowHandler<User>(delegate) {
+class UserXmlRowHandler(delegateProvider: () -> ItemHandler<User>): XmlRowHandler<User>(delegateProvider) {
     override fun getParentElementName(): String {
         return "users"
     }

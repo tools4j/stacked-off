@@ -15,7 +15,7 @@ class ZipFileParser(val file: String, val xmlFileParser: XmlFileParser) {
                     val event = reader.nextEvent()
                     if(event.isStartElement()){
                         val parentElementName = event.asStartElement().getName().getLocalPart()
-                        val xmlRowHandler = xmlRowHandlerFactory.getHandlerForElementName(parentElementName)
+                        val xmlRowHandler = xmlRowHandlerRepo.getHandlerForElementName(parentElementName)
                         parseElements(reader, parentElementName, xmlRowHandler)
                     }
                 }

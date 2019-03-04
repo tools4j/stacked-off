@@ -9,7 +9,7 @@ internal class UserIndexTest {
 
     @BeforeEach
     fun setup(){
-        userIndex = createUserIndex()
+        userIndex = createAndLoadUserIndex()
     }
 
     @Test

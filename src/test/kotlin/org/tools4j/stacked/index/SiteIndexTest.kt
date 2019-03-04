@@ -9,7 +9,7 @@ internal class SiteIndexTest {
 
     @BeforeEach
     fun setup(){
-        siteIndex = createSiteIndex()
+        siteIndex = createAndLoadSiteIndex()
     }
 
     @Test

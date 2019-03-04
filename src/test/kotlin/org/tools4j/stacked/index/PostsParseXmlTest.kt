@@ -8,8 +8,9 @@ class PostsParseXmlTest {
     @Test
     fun testParsePosts(){
         val posts = ArrayList<RawPost>()
-        val xmlRowHandlerFactory = XmlRowHandlerFactory(listOf(PostXmlRowHandler(ToListHandler(posts))))
-        val xmlRowParser = XmlFileParser("/data/example/Posts.xml", "1", xmlRowHandlerFactory)
+        val xmlRowParser = XmlFileParser("/data/coffee/Posts.xml",
+            "1",
+            {PostXmlRowHandler({ToListHandler(posts)})})
         xmlRowParser.parse()
 
         s1.assertHasRawPost1(posts)

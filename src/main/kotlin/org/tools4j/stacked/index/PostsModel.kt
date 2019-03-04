@@ -23,6 +23,7 @@ interface RawPost {
 }
 
 interface Post: RawPost {
+    val ownerUser: User
     val comments: List<Comment>
     fun containsComment(commentUid: String): Boolean
 }
@@ -32,7 +33,7 @@ interface Question: Post {
     fun containsPost(postId: String): Boolean
 }
 
-data class PostImpl(val rawPost: RawPost, override val comments: List<Comment>): RawPost by rawPost,
+data class PostImpl(val rawPost: RawPost, override val ownerUser: User, override val comments: List<Comment>): RawPost by rawPost,
     Post {
     override fun containsComment(commentUid: String): Boolean{
         return comments.any { it.uid == commentUid }
@@ -41,8 +42,8 @@ data class PostImpl(val rawPost: RawPost, override val comments: List<Comment>):
 
 data class QuestionImpl(val post: Post, override val childPosts: List<Post>): Post by post,
     Question {
-    constructor(rawPost: RawPost, comments: List<Comment>, childPosts: List<Post>)
-            : this(PostImpl(rawPost, comments), childPosts)
+    constructor(rawPost: RawPost, ownerUser: User, comments: List<Comment>, childPosts: List<Post>)
+            : this(PostImpl(rawPost, ownerUser, comments), childPosts)
 
     override fun containsPost(postUid: String): Boolean{
         return post.uid == postUid || childPosts.any { it.uid == postUid }
@@ -116,7 +117,7 @@ data class RawPostImpl(
 }
 
 
-class PostXmlRowHandler(delegate: ItemHandler<RawPost>): XmlRowHandler<RawPost>(delegate) {
+class PostXmlRowHandler(delegateProvider: () -> ItemHandler<RawPost>): XmlRowHandler<RawPost>(delegateProvider) {
     override fun getParentElementName(): String {
         return "posts"
     }

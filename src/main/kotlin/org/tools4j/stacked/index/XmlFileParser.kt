@@ -8,7 +8,7 @@ import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLInputFactory
 
 
-class XmlFileParser(val file: String, val indexedSiteId: String, val xmlRowHandlerFactory: XmlRowHandlerFactory) {
+class XmlFileParser(val file: String, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
 
@@ -28,7 +28,7 @@ class XmlFileParser(val file: String, val indexedSiteId: String, val xmlRowHandl
             val event = reader.nextEvent()
             if(event.isStartElement()){
                 val parentElementName = event.asStartElement().getName().getLocalPart()
-                val xmlRowHandler = xmlRowHandlerFactory.getHandlerForElementName(parentElementName)
+                val xmlRowHandler = xmlRowHandlerProvider()
                 parseElements(reader, parentElementName, xmlRowHandler)
             }
         }

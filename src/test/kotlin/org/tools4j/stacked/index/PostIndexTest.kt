@@ -10,7 +10,7 @@ internal class PostIndexTest {
 
     @BeforeEach
     fun setup() {
-        postIndex = createPostIndex()
+        postIndex = createAndLoadPostIndex()
     }
 
     @Test

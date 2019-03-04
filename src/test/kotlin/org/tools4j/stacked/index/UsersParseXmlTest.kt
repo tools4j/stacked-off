@@ -9,12 +9,9 @@ class UsersParseXmlTest {
     @Test
     fun testParseUsers(){
         val users = ArrayList<User>()
-        val xmlRowHandlerFactory = XmlRowHandlerFactory(
-            listOf(
-                UserXmlRowHandler(ToListHandler(users))
-            )
-        )
-        val xmlFileParser = XmlFileParser("/data/example/Users.xml", "1", xmlRowHandlerFactory)
+        val xmlFileParser = XmlFileParser("/data/coffee/Users.xml",
+            "1",
+            {UserXmlRowHandler({ToListHandler(users)})})
         xmlFileParser.parse()
         
         assertThat(users).hasSize(6)

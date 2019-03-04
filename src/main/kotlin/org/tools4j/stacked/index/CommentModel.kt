@@ -65,7 +65,7 @@ data class RawCommentImpl(
     }
 }
 
-class CommentXmlRowHandler(delegate: ItemHandler<RawComment>): XmlRowHandler<RawComment>(delegate) {
+class CommentXmlRowHandler(delegateProvider: () -> ItemHandler<RawComment>): XmlRowHandler<RawComment>(delegateProvider) {
     override fun getParentElementName(): String {
         return "comments"
     }

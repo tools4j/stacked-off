@@ -68,11 +68,14 @@ class PostService(
     }
 
     private fun convertRawPostToPost(rawPost: RawPost): Post {
+        val ownerUser = userIndex
+            .getByUid(rawPost.ownerUserUid!!)!!
+
         val comments = commentIndex
             .getByPostUid(rawPost.uid)
             .map { convertRawCommentToComment(it) }
             .toList()
-        return PostImpl(rawPost, comments)
+        return PostImpl(rawPost, ownerUser, comments)
     }
 
     private fun convertRawCommentToComment(rawComment: RawComment): Comment {
