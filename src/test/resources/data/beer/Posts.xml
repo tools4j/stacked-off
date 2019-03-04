@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<posts>
+    <row Id="1" PostTypeId="1" CreationDate="2014-01-21T20:58:43.500" Score="12" ViewCount="145"
+         Body="&lt;p&gt;I've already seen a question or two that seem to at least tangentially reference Homebrewing. &lt;/p&gt;&#xA;&#xA;&lt;p&gt;Keeping in mind that there is already a beta site on Homebrewing, how much of the topic should we allow and how much should we be prepared to migrate their direction?&lt;/p&gt;&#xA;"
+         OwnerUserId="1" LastActivityDate="2014-01-23T08:44:14.440" Title="Is Homebrewing on topic?"
+         Tags="&lt;discussion&gt;&lt;scope&gt;&lt;homebrew&gt;" AnswerCount="3" CommentCount="3"/>
+    <row Id="2" PostTypeId="2" ParentId="1" CreationDate="2014-01-21T21:05:11.577" Score="21"
+         Body="&lt;p&gt;I would say that if there is a site for Homebrewing then technical questions about brewing beer at home are off topic.  But questions about &quot;homebrewed&quot; beer would not be off topic. &lt;/p&gt;&#xA;"
+         OwnerUserId="1" LastActivityDate="2014-01-21T21:05:11.577" CommentCount="0"/>
+    <row Id="3" PostTypeId="1" CreationDate="2014-01-21T21:06:16.967" Score="7" ViewCount="128"
+         Body="&lt;p&gt;I've seen several questions so far that blah deal with human biology as it relates directly to alcohol. &lt;/p&gt;&#xA;&#xA;&lt;p&gt;It seems like these questions are off topic and generally outside of the expertise of this site.&lt;/p&gt;&#xA;&#xA;&lt;p&gt;Examples:&lt;/p&gt;&#xA;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://alcohol.stackexchange.com/questions/7/will-certain-types-of-beer-get-me-more-drunk-more-quickly&quot;&gt;Will certain types of beer get me more drunk more quickly?&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://alcohol.stackexchange.com/questions/16/why-do-i-seem-to-pee-out-more-beer-than-i-drink&quot;&gt;Why do I seem to pee out more beer than I drink?&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&#xA;&lt;p&gt;How much of this topic can we feasibly cover, and how much of it &lt;em&gt;should&lt;/em&gt; we cover?&lt;/p&gt;&#xA;"
+         OwnerUserId="3" LastEditorUserId="-1" LastEditDate="2017-04-12T07:33:59.157"
+         LastActivityDate="2014-01-22T23:43:21.513" Title="How much do we want to get into biology?"
+         Tags="&lt;discussion&gt;&lt;scope&gt;" AnswerCount="2" CommentCount="0"/>
+</posts>

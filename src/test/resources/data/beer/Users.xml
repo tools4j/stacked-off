@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<users>
+    <row Id="1" Reputation="101" CreationDate="2014-01-21T20:21:18.000" DisplayName="Geoff Dalgas"
+         LastAccessDate="2016-04-22T15:30:09.763" WebsiteUrl="http://stackoverflow.com" Location="Corvallis, OR"
+         AboutMe="&lt;p&gt;Developer on the Stack Overflow team.  Find me on&lt;/p&gt;&#xA;&#xA;&lt;p&gt;&lt;a href=&quot;http://www.twitter.com/SuperDalgas&quot; rel=&quot;nofollow noreferrer&quot;&gt;Twitter&lt;/a&gt;&#xA;&lt;br&gt;&lt;br&gt;&#xA;&lt;a href=&quot;http://blog.stackoverflow.com/2009/05/welcome-stack-overflow-valued-associate-00003/&quot;&gt;Stack Overflow Valued Associate #00003&lt;/a&gt;&lt;/p&gt;&#xA;"
+         Views="1" UpVotes="0" DownVotes="0" ProfileImageUrl="https://i.stack.imgur.com/nDllk.png" AccountId="2"/>
+    <row Id="2" Reputation="268" CreationDate="2014-01-21T20:22:19.000" DisplayName="Kasra Rahjerdi"
+         LastAccessDate="2016-05-19T02:43:51.863" WebsiteUrl="http://kasrarahjerdi.com/"
+         Location="New York, United States"
+         AboutMe="&lt;p&gt;Hi!&lt;/p&gt;&#xA;&#xA;&lt;p&gt;I work at Stack Exchange as the lead for the Mobile team, which currently consists of Stack Exchange for &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.stackexchange.marvin&quot; rel=&quot;nofollow&quot;&gt;Android&lt;/a&gt; and &lt;a href=&quot;http://meta.stackexchange.com/questions/220264/help-us-test-the-alpha-version-of-our-ios-app&quot;&gt;iOS&lt;/a&gt;.&lt;/p&gt;&#xA;"
+         Views="7" UpVotes="6" DownVotes="1" ProfileImageUrl="https://i.stack.imgur.com/a5cWx.png?s=128&amp;g=1"
+         AccountId="109934"/>
+    <row Id="3" Reputation="99" CreationDate="2014-01-21T20:22:22.000" DisplayName="Adam Lear"
+         LastAccessDate="2016-05-18T21:09:39.523" Location="New York, NY"
+         AboutMe="&#xA;&#xA;&lt;p&gt;Developer at Stack Overflow. Canadian working in the American idiom.&lt;/p&gt;&#xA;&#xA;&lt;p&gt;Once upon a time:&lt;/p&gt;&#xA;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;community manager at Stack Overflow&lt;/li&gt;&#xA;&lt;li&gt;elected moderator on Stack Overflow and Software Engineering&lt;/li&gt;&#xA;&lt;li&gt;desktop software developer ¯\_(ツ)_/¯ &lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&#xA;&lt;p&gt;Email me a link to your favorite Wikipedia article: &lt;code&gt;adam@stackoverflow.com&lt;/code&gt;.&lt;/p&gt;&#xA;"
+         Views="1" UpVotes="4" DownVotes="0" ProfileImageUrl="https://i.stack.imgur.com/SMEGn.jpg?s=128&amp;g=1"
+         AccountId="37099"/>
+</users>
