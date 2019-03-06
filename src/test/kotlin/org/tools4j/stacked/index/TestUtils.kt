@@ -1,5 +1,12 @@
 package org.tools4j.stacked.index
 
+import org.assertj.core.api.Assertions.assertThat
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.lang.IllegalArgumentException
+import java.util.*
+import java.util.concurrent.atomic.AtomicLong
+
 val SITE_1 = "1"
 val SITE_2 = "2"
 
@@ -18,25 +25,6 @@ fun createPostService(): PostService {
         createAndLoadPostIndex(),
         createAndLoadCommentIndex(),
         createAndLoadUserIndex()
-    )
-}
-
-fun createIndexRepo(): IndexRepo {
-    return IndexRepo(
-        createSiteIndex(),
-        createPostIndex(),
-        createCommentIndex(),
-        createUserIndex()
-    )
-}
-
-fun createRowHandlerRepo(indexRepo: IndexRepo): XmlRowHandlerRepo {
-    return XmlRowHandlerRepo(
-        linkedMapOf(
-            "posts" to {PostXmlRowHandler({indexRepo.postIndex.getItemHandler()})},
-            "comments" to {CommentXmlRowHandler({indexRepo.commentIndex.getItemHandler()})},
-            "users" to {UserXmlRowHandler({indexRepo.userIndex.getItemHandler()})}
-        )
     )
 }
 
@@ -116,15 +104,63 @@ private fun createUserIndex(): UserIndex {
     return userIndex
 }
 
-fun createAndLoadSiteIndex(): SiteIndex {
-    val index = createSiteIndex()
-    val xmlFileParser = SiteXmlFileParser("/data/Sites.xml", index)
-    xmlFileParser.parse()
-    return index
+//TODO, work how to get resourceAsStream easier
+class Dummy{}
+
+
+fun createAndLoadIndexedSiteIndex(): IndexedSiteIndex{
+    val indexedSiteIndex = createIndexedSiteIndex()
+    val xmlRowParser = SeSiteXmlFileParser(Dummy().javaClass.getResourceAsStream("/data/Sites.xml"));
+    val sites = xmlRowParser.parse()
+
+    val beerIndexedSite = IndexedSiteImpl(
+        "1",
+        "2019-02-25T10:00:00",
+        true,
+        null,
+        sites.first { it.tinyName == "beerme" })
+
+    val sw = StringWriter()
+    IllegalArgumentException("Boom!").printStackTrace(PrintWriter(sw))
+    val exceptionAsString = sw.toString()
+
+    val coffeeIndexedSite = IndexedSiteImpl(
+        "2",
+        "2019-02-01T05:00:00",
+        false,
+        exceptionAsString,
+        sites.first { it.tinyName == "coffeeme" })
+
+    indexedSiteIndex.addItems(listOf(beerIndexedSite, coffeeIndexedSite))
+    return indexedSiteIndex
 }
 
-private fun createSiteIndex(): SiteIndex {
-    val index = SiteIndex(RamIndexFactory())
-    index.init()
-    return index
+fun createIndexedSiteIndex(): IndexedSiteIndex {
+    val indexedSiteIndex = IndexedSiteIndex(RamIndexFactory())
+    indexedSiteIndex.init()
+    return indexedSiteIndex
+}
+
+fun assertHasIndexedSite1(indexedSites: List<IndexedSite>){
+    assertIsIndexedSite1(indexedSites.first { it.indexedSiteId == "1" })
+}
+
+fun assertHasIndexedSite2(indexedSites: List<IndexedSite>){
+    assertIsIndexedSite2(indexedSites.first { it.indexedSiteId == "2" })
+}
+
+fun assertIsIndexedSite1(indexedSite: IndexedSite){
+    assertThat(indexedSite.indexedSiteId).isEqualTo("1")
+    assertThat(indexedSite.dateTimeIndexed).isEqualTo("2019-02-25T10:00:00")
+    assertThat(indexedSite.success).isEqualTo(true)
+    assertThat(indexedSite.errorMessage).isNull()
+    assertIsSeSite2(indexedSite.seSite)
+}
+
+fun assertIsIndexedSite2(indexedSite: IndexedSite){
+    assertThat(indexedSite.indexedSiteId).isEqualTo("2")
+    assertThat(indexedSite.dateTimeIndexed).isEqualTo("2019-02-01T05:00:00")
+    assertThat(indexedSite.success).isEqualTo(false)
+    assertThat(indexedSite.errorMessage).startsWith("java.lang.IllegalArgumentException: Boom!")
+    assertIsSeSite3(indexedSite.seSite)
 }

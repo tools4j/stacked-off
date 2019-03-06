@@ -39,7 +39,8 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         val config = IndexWriterConfig(analyzer)
         val w = IndexWriter(index, config)
         for (item in items) {
-            w.addDocument(convertItemToDocument(item))
+            val doc = convertItemToDocument(item)
+            w.addDocument(doc)
         }
         w.close()
     }
@@ -50,7 +51,8 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
             val w = IndexWriter(index, config)
 
             override fun handle(item: T) {
-                w.addDocument(convertItemToDocument(item))
+                val doc = convertItemToDocument(item)
+                w.addDocument(doc)
             }
 
             override fun onFinish() {
