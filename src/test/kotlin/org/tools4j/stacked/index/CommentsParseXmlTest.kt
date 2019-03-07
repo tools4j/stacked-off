@@ -9,7 +9,7 @@ class CommentsParseXmlTest {
     @Test
     fun testParseComments(){
         val comments = ArrayList<RawComment>()
-        val xmlFileParser = XmlFileParser("/data/coffee/Comments.xml",
+        val xmlFileParser = XmlFileParser(this.javaClass.getResourceAsStream("/data/coffee/Comments.xml"),
             "1",
             {CommentXmlRowHandler({ToListHandler(comments)})})
         xmlFileParser.parse()

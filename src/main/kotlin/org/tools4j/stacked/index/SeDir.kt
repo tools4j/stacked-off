@@ -3,8 +3,14 @@ package org.tools4j.stacked.index
 import java.io.File
 import java.io.FileInputStream
 import java.lang.IllegalStateException
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.streams.toList
 
-class SeDir(val path: String) {
+private val SITES_XML_FILE_NAME = "Sites.xml"
+
+data class SeDir(val path: String) {
     fun getContents(): SeDirContents {
         val pathDir = File(path)
         validateDumpPathDir(pathDir)
@@ -18,9 +24,14 @@ class SeDir(val path: String) {
         parentDir.listFiles().forEach { child ->
             if (isZipFile(child)) {
                 zipFiles.add(child)
-            } else {
+            } else if(!child.name.equals(SITES_XML_FILE_NAME)) {
                 println("Unrecognized file in dump dir [${child.name}]")
             }
+        }
+        if(zipFiles.isEmpty()){
+            throw IllegalStateException("Could not find any zip files at given path [${parentDir.absolutePath}], " +
+                    "please ensure that there is at least one zip file in this directory, and that " +
+                    "zip files have one of the following extensions ${getZipFileExtensions()}")
         }
         return zipFiles
     }
@@ -28,15 +39,18 @@ class SeDir(val path: String) {
     private fun getSiteXmlFile(parentDir: File): File {
         var sitesXmlFile: File? = null
         parentDir.listFiles().forEach { child ->
-            if (child.name.equals("Sites.xml", true)) {
-                if (child.isFile) {
-                    throw IllegalStateException("Sites.xml file found is not a file! [${parentDir.absolutePath}]")
+            if (child.name.equals(SITES_XML_FILE_NAME, true)) {
+                if (!child.isFile) {
+                    throw IllegalStateException("Found $SITES_XML_FILE_NAME but it is " +
+                            "not a file! [${child.absolutePath}]")
                 }
                 sitesXmlFile = child
             }
         }
         if(sitesXmlFile == null){
-            throw IllegalStateException("Could not find Sites.xml file.  Please ensure this is downloaded.")
+            throw IllegalStateException("Could not find $SITES_XML_FILE_NAME file.  " +
+                    "Please ensure that when you download the associated $SITES_XML_FILE_NAME " +
+                    "file when you download Stack Exchange data dump files.")
         }
         return sitesXmlFile!!
     }
@@ -56,14 +70,16 @@ class SeDir(val path: String) {
         }
     }
 
-    private fun isZipFile(file: File): Boolean {
-        return file.name.endsWith(".7z")
-                || file.name.endsWith(".zip")
-                || file.name.endsWith(".gz")
+    fun isZipFile(file: File): Boolean {
+        return getZipFileExtensions().contains(file.extension)
+    }
+
+    fun getZipFileExtensions(): Set<String>{
+        return linkedSetOf("7z", "zip")
     }
 }
 
-class SeDirContents(val siteXmlFile: File, val zipFiles: Set<File>){
+data class SeDirContents(val siteXmlFile: File, val zipFiles: Set<File>){
     fun getSites(): Set<SeDirSite>{
         val matchedZipFilesBySite = LinkedHashMap<SeSite, MutableSet<File>>()
         val sitesByDomain = SeSiteXmlFileParser(FileInputStream(siteXmlFile)).parse().map { it.urlDomain to it }.toMap()
@@ -75,12 +91,25 @@ class SeDirContents(val siteXmlFile: File, val zipFiles: Set<File>){
                 matchedZipFilesBySite[matchingSite]!!.add(zipFile)
             }
         }
-        return matchedZipFilesBySite.map { SeDirSite(it.key, it.value) }.toSet()
+        return matchedZipFilesBySite.map { SeDirSite(it.key, ZipFiles(it.value)) }.toSet()
     }
 }
 
-class SeDirSite(val site: SeSite, val zipFiles: Set<File>){
-    fun parse(){
+data class SeDirSite(val site: SeSite, val zipFiles: ZipFiles)
 
+data class ZipFiles(val zipFiles: Set<File>){
+    fun parse(seZipFileParser: SeZipFileParser){
+        getPathsInsideZipFiles().forEach { seZipFileParser.parse(it) }
+    }
+
+    fun getPathsInsideZipFiles(): List<Path>{
+        return zipFiles.flatMap { getPathsInsideZipFile(it) }
+    }
+
+    private fun getPathsInsideZipFile(fromZip: File): List<Path> {
+        return FileSystems
+            .newFileSystem(fromZip.toURI(), emptyMap<String, String>())
+            .rootDirectories
+            .flatMap { root -> Files.walk(root).toList() }
     }
 }

@@ -1,29 +1,16 @@
 package org.tools4j.stacked.index
 
-import java.io.IOException
 import java.io.InputStream
-import java.util.zip.ZipInputStream
 import javax.xml.stream.XMLEventReader
-import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLInputFactory
 
 
-class XmlFileParser(val file: String, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
+class XmlFileParser(val fileInputStream: InputStream, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
 
-    @Throws(IOException::class, XMLStreamException::class)
-    fun parse() {
-        parseStream(this.javaClass.getResourceAsStream(file))
-    }
-
-    @Throws(IOException::class, XMLStreamException::class)
-    private fun parseZip(stream: InputStream){
-        parseStream(ZipInputStream(stream))
-    }
-
-    private fun parseStream(stream: InputStream){
-        val reader = factory.createXMLEventReader(stream)!!
+    fun parse(){
+        val reader = factory.createXMLEventReader(fileInputStream)!!
         while (reader.hasNext()) {
             val event = reader.nextEvent()
             if(event.isStartElement()){

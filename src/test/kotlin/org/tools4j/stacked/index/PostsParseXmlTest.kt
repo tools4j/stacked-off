@@ -8,7 +8,7 @@ class PostsParseXmlTest {
     @Test
     fun testParsePosts(){
         val posts = ArrayList<RawPost>()
-        val xmlRowParser = XmlFileParser("/data/coffee/Posts.xml",
+        val xmlRowParser = XmlFileParser(this.javaClass.getResourceAsStream("/data/coffee/Posts.xml"),
             "1",
             {PostXmlRowHandler({ToListHandler(posts)})})
         xmlRowParser.parse()

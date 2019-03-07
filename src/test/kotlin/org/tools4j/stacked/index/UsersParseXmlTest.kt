@@ -9,7 +9,7 @@ class UsersParseXmlTest {
     @Test
     fun testParseUsers(){
         val users = ArrayList<User>()
-        val xmlFileParser = XmlFileParser("/data/coffee/Users.xml",
+        val xmlFileParser = XmlFileParser(Dummy().javaClass.getResourceAsStream("/data/coffee/Users.xml"),
             "1",
             {UserXmlRowHandler({ToListHandler(users)})})
         xmlFileParser.parse()

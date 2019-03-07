@@ -1,14 +1,21 @@
 package org.tools4j.stacked.index
 
 import org.assertj.core.api.Assertions.assertThat
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.lang.IllegalArgumentException
-import java.util.*
-import java.util.concurrent.atomic.AtomicLong
 
 val SITE_1 = "1"
 val SITE_2 = "2"
+
+
+fun getFileOnClasspath(pathOnClasspath: String): File {
+    val resource = Dummy().javaClass.getResource(pathOnClasspath)
+    if(resource == null){
+        throw java.lang.IllegalArgumentException("No resource found on classpath at: $pathOnClasspath")
+    }
+    return File(resource!!.toURI())
+}
 
 class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {
     override fun handle(item: T) {
@@ -31,14 +38,14 @@ fun createPostService(): PostService {
 fun createAndLoadPostIndex(): PostIndex {
     val postIndex = createPostIndex()
     val coffeeXmlFileParser = XmlFileParser(
-        "/data/coffee/Posts.xml",
+        Dummy().javaClass.getResourceAsStream("/data/coffee/Posts.xml"),
         SITE_1,
         {PostXmlRowHandler({postIndex.getItemHandler()})}
     )
     coffeeXmlFileParser.parse()
 
     val beerXmlFileParser = XmlFileParser(
-        "/data/beer/Posts.xml",
+        Dummy().javaClass.getResourceAsStream("/data/beer/Posts.xml"),
         SITE_2,
         {PostXmlRowHandler({postIndex.getItemHandler()})}
     )
@@ -56,14 +63,14 @@ fun createAndLoadCommentIndex(): CommentIndex {
     val commentIndex = createCommentIndex()
 
     val coffeeXmlFileParser = XmlFileParser(
-        "/data/coffee/Comments.xml",
+        Dummy().javaClass.getResourceAsStream("/data/coffee/Comments.xml"),
         SITE_1,
         {CommentXmlRowHandler({commentIndex.getItemHandler()})}
     )
     coffeeXmlFileParser.parse()
 
     val beerXmlFileParser = XmlFileParser(
-        "/data/beer/Comments.xml",
+        Dummy().javaClass.getResourceAsStream("/data/beer/Comments.xml"),
         SITE_2,
         {CommentXmlRowHandler({commentIndex.getItemHandler()})}
     )
@@ -82,14 +89,14 @@ fun createAndLoadUserIndex(): UserIndex {
     val userIndex = createUserIndex()
 
     val coffeeXmlFileParser = XmlFileParser(
-        "/data/coffee/Users.xml",
+        Dummy().javaClass.getResourceAsStream("/data/coffee/Users.xml"),
         SITE_1,
         {UserXmlRowHandler({userIndex.getItemHandler()})}
     )
     coffeeXmlFileParser.parse()
 
     val beerXmlFileParser = XmlFileParser(
-        "/data/beer/Users.xml",
+        Dummy().javaClass.getResourceAsStream("/data/beer/Users.xml"),
         SITE_2,
         {UserXmlRowHandler({userIndex.getItemHandler()})}
     )
