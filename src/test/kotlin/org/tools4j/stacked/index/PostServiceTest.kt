@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 
 internal class PostServiceTest {
     private lateinit var postService: PostService
-    private val s1 = Site1Assertions()
-    private val s2 = Site2Assertions()
+    private val s1 = CoffeeSiteAssertions()
+    private val s2 = BeerSiteAssertions()
 
     @BeforeEach
     fun setup() {
@@ -16,32 +16,32 @@ internal class PostServiceTest {
 
     @Test
     fun testGetSite1Post() {
-        val post = postService.getPost("$SITE_1.2")
+        val post = postService.getPost("${s1.indexedSiteId}.2")
         s1.assertIsPost2(post!!)
     }
 
     @Test
     fun testGetSite1Question1() {
-        val question = postService.getQuestion("$SITE_1.1")
+        val question = postService.getQuestion("${s1.indexedSiteId}.1")
         s1.assertIsQuestion1(question!!)
     }
 
     @Test
     fun testGetSite1Question2() {
-        val question = postService.getQuestion("$SITE_1.2")
+        val question = postService.getQuestion("${s1.indexedSiteId}.2")
         s1.assertIsQuestion2(question!!)
     }
 
     @Test
     fun testGetSite1Question3() {
-        val question = postService.getQuestion("$SITE_1.3")
+        val question = postService.getQuestion("${s1.indexedSiteId}.3")
         //Parent of post 3 is post 1
         s1.assertIsQuestion1(question!!)
     }
 
     @Test
     fun testGetSite1Question_thatDoesNotExist() {
-        assertThat(postService.getQuestion("$SITE_1.4")).isNull()
+        assertThat(postService.getQuestion("${s1.indexedSiteId}.4")).isNull()
     }
 
     @Test
@@ -52,7 +52,7 @@ internal class PostServiceTest {
     @Test
     fun testGetQuestionsForSite1Comments(){
         val commentsIndex = createAndLoadCommentIndex()
-        val comment1 = commentsIndex.getByUid("$SITE_1.1")!!
+        val comment1 = commentsIndex.getByUid("${s1.indexedSiteId}.1")!!
         val questions = postService.getQuestionsForComments(listOf(comment1))
         s1.assertHasQuestion1(questions)
     }
@@ -60,8 +60,8 @@ internal class PostServiceTest {
     @Test
     fun testGetQuestionsForSite1Comments_multipleQuestions(){
         val commentsIndex = createAndLoadCommentIndex()
-        val comment1 = commentsIndex.getByUid("$SITE_1.1")!!
-        val comment3 = commentsIndex.getByUid("$SITE_1.3")!!
+        val comment1 = commentsIndex.getByUid("${s1.indexedSiteId}.1")!!
+        val comment3 = commentsIndex.getByUid("${s1.indexedSiteId}.3")!!
         val questions = postService.getQuestionsForComments(listOf(comment1, comment3))
         s1.assertHasQuestion1(questions)
         s1.assertHasQuestion2(questions)
@@ -71,9 +71,9 @@ internal class PostServiceTest {
     fun testGetQuestionsForSite1Comments_ignoreAlreadyFetchedQuestions(){
         val commentsIndex = createAndLoadCommentIndex()
 
-        val question1 =  postService.getQuestion("$SITE_1.1")!!
-        val comment1 = commentsIndex.getByUid("$SITE_1.1")!!
-        val comment3 = commentsIndex.getByUid("$SITE_1.3")!!
+        val question1 =  postService.getQuestion("${s1.indexedSiteId}.1")!!
+        val comment1 = commentsIndex.getByUid("${s1.indexedSiteId}.1")!!
+        val comment3 = commentsIndex.getByUid("${s1.indexedSiteId}.3")!!
         val questions = postService.getQuestionsForComments(
             listOf(comment1, comment3), setOf(question1)
         )
@@ -84,9 +84,9 @@ internal class PostServiceTest {
     @Test
     fun testGetSite1QuestionsForRawPosts(){
         val postIndex = createAndLoadPostIndex()
-        val rawPost1 = postIndex.getByUid("$SITE_1.1")!!
-        val rawPost2 = postIndex.getByUid("$SITE_1.2")!!
-        val rawPost3 = postIndex.getByUid("$SITE_1.3")!!
+        val rawPost1 = postIndex.getByUid("${s1.indexedSiteId}.1")!!
+        val rawPost2 = postIndex.getByUid("${s1.indexedSiteId}.2")!!
+        val rawPost3 = postIndex.getByUid("${s1.indexedSiteId}.3")!!
 
         var questions = postService.getQuestionsForRawPosts(listOf(rawPost1))
         assertThat(questions).hasSize(1)
@@ -101,11 +101,11 @@ internal class PostServiceTest {
     @Test
     fun testGetSite1QuestionsForRawPosts_ignoreAlreadyFetchedQuestions(){
         val postIndex = createAndLoadPostIndex()
-        val rawPost1 = postIndex.getByUid("$SITE_1.1")!!
-        val rawPost2 = postIndex.getByUid("$SITE_1.2")!!
-        val rawPost3 = postIndex.getByUid("$SITE_1.3")!!
+        val rawPost1 = postIndex.getByUid("${s1.indexedSiteId}.1")!!
+        val rawPost2 = postIndex.getByUid("${s1.indexedSiteId}.2")!!
+        val rawPost3 = postIndex.getByUid("${s1.indexedSiteId}.3")!!
 
-        val question1 = postService.getQuestion("$SITE_1.1")!!
+        val question1 = postService.getQuestion("${s1.indexedSiteId}.1")!!
 
         val questions = postService.getQuestionsForRawPosts(
             listOf(rawPost1, rawPost2, rawPost3),
@@ -118,12 +118,12 @@ internal class PostServiceTest {
     @Test
     fun testGetSite1QuestionsForRawPosts_haveAlreadyFetchedAll(){
         val postIndex = createAndLoadPostIndex()
-        val rawPost1 = postIndex.getByUid("$SITE_1.1")!!
-        val rawPost2 = postIndex.getByUid("$SITE_1.2")!!
-        val rawPost3 = postIndex.getByUid("$SITE_1.3")!!
+        val rawPost1 = postIndex.getByUid("${s1.indexedSiteId}.1")!!
+        val rawPost2 = postIndex.getByUid("${s1.indexedSiteId}.2")!!
+        val rawPost3 = postIndex.getByUid("${s1.indexedSiteId}.3")!!
 
-        val question1 = postService.getQuestion("$SITE_1.1")!!
-        val question2 = postService.getQuestion("$SITE_1.2")!!
+        val question1 = postService.getQuestion("${s1.indexedSiteId}.1")!!
+        val question2 = postService.getQuestion("${s1.indexedSiteId}.2")!!
 
         val questions = postService.getQuestionsForRawPosts(
             listOf(rawPost1, rawPost2, rawPost3),

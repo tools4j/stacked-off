@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class CommentsParseXmlTest {
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @Test
     fun testParseComments(){

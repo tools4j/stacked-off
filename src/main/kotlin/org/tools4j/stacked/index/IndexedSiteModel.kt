@@ -2,6 +2,7 @@ package org.tools4j.stacked.index
 
 import org.apache.lucene.document.*
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 interface IndexedSite{
     val indexedSiteId: String
@@ -10,6 +11,14 @@ interface IndexedSite{
     val errorMessage: String?
     val seSite: SeSite
     fun convertToDocument(): Document
+    fun reIndex(dateTimeIndexed: String, seSite: SeSite): IndexingSite
+}
+
+interface IndexingSite{
+    val indexedSiteId: String
+    val dateTimeIndexed: String
+    val seSite: SeSite
+    fun finished(success: Boolean, errorMessage: String?): IndexedSite
 }
 
 class IndexedSiteImpl(
@@ -26,6 +35,10 @@ class IndexedSiteImpl(
         doc.get("errorMessage"),
         SeSiteImpl(doc))
 
+    override fun reIndex(dateTimeIndexed: String, seSite: SeSite): IndexingSite {
+        return IndexingSiteImpl(indexedSiteId, dateTimeIndexed, seSite )
+    }
+
     override fun convertToDocument(): Document {
         val doc = Document()
         doc.add(StringField("uid", indexedSiteId, Field.Store.YES))
@@ -37,6 +50,16 @@ class IndexedSiteImpl(
     }
 }
 
+class IndexingSiteImpl(
+    override val indexedSiteId: String,
+    override val dateTimeIndexed: String,
+    override val seSite: SeSite) : IndexingSite {
+
+    override fun finished(success: Boolean, errorMessage: String?): IndexedSite {
+        return IndexedSiteImpl(indexedSiteId, dateTimeIndexed, success, errorMessage, seSite )
+    }
+}
+
 interface IndexedSiteIdGenerator{
     fun getNext(): String
 }
@@ -44,5 +67,13 @@ interface IndexedSiteIdGenerator{
 class GUIDIndexedSiteIdGenerator: IndexedSiteIdGenerator{
     override fun getNext(): String {
         return UUID.randomUUID().toString()
+    }
+}
+
+class IncrementalIndexedSiteIdGenerator: IndexedSiteIdGenerator{
+    private val nextId = AtomicLong(1)
+
+    override fun getNext(): String {
+        return nextId.getAndIncrement().toString()
     }
 }

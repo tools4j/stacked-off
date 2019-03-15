@@ -12,9 +12,17 @@ val SITE_2 = "2"
 fun getFileOnClasspath(pathOnClasspath: String): File {
     val resource = Dummy().javaClass.getResource(pathOnClasspath)
     if(resource == null){
-        throw java.lang.IllegalArgumentException("No resource found on classpath at: $pathOnClasspath")
+        throw IllegalArgumentException("No resource found on classpath at: $pathOnClasspath")
     }
-    return File(resource!!.toURI())
+    return File(resource.toURI())
+}
+
+fun getFileOnClasspath(contextClass: Class<*>, pathOnClasspath: String): File {
+    val resource = contextClass.getResource(pathOnClasspath)
+    if(resource == null){
+        throw IllegalArgumentException("No resource found on classpath at: $pathOnClasspath")
+    }
+    return File(resource.toURI())
 }
 
 class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {

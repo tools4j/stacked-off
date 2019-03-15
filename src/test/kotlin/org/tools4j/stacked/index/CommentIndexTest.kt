@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 internal class CommentIndexTest {
     private lateinit var commentIndex: CommentIndex
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @BeforeEach
     fun setup(){
@@ -22,7 +22,7 @@ internal class CommentIndexTest {
 
     @Test
     fun testGetCommentsByPostId() {
-        val results = commentIndex.getByPostUid("$SITE_1.1")!!
+        val results = commentIndex.getByPostUid("${s1.indexedSiteId}.1")!!
         assertThat(results).hasSize(5)
         s1.assertHasComment4(results);
         s1.assertHasComment6(results);

@@ -3,7 +3,7 @@ package org.tools4j.stacked.index
 import org.junit.jupiter.api.Test
 
 class PostsParseXmlTest {
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @Test
     fun testParsePosts(){

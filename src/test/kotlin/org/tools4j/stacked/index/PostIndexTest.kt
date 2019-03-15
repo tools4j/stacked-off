@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 internal class PostIndexTest {
     private lateinit var postIndex: PostIndex
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @BeforeEach
     fun setup() {
@@ -24,14 +24,14 @@ internal class PostIndexTest {
 
     @Test
     fun testGetByParentPostId() {
-        val results = postIndex.getByParentUid("$SITE_1.1")
+        val results = postIndex.getByParentUid("${s1.indexedSiteId}.1")
         assertThat(results).hasSize(1)
         s1.assertHasRawPost3(results);
     }
 
     @Test
     fun testGetByParentPostId_noPosts() {
-        val results = postIndex.getByParentUid("$SITE_1.2")
+        val results = postIndex.getByParentUid("${s1.indexedSiteId}.2")
         assertThat(results).isEmpty()
     }
 }

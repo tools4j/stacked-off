@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 internal class IndexedSiteIndexTest {
     private lateinit var indexedSiteIndex: IndexedSiteIndex
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @BeforeEach
     fun setup(){

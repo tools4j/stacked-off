@@ -5,12 +5,12 @@ import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLInputFactory
 
 
-class XmlFileParser(val fileInputStream: InputStream, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
+class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
 
     fun parse(){
-        val reader = factory.createXMLEventReader(fileInputStream)!!
+        val reader = factory.createXMLEventReader(inputStream)!!
         while (reader.hasNext()) {
             val event = reader.nextEvent()
             if(event.isStartElement()){

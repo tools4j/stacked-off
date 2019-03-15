@@ -58,8 +58,8 @@ class SeSiteXmlFileParser(val inputStream: InputStream) {
     fun handle(element: StartElement): SeSite {
         return SeSiteImpl(
             element.getAttributeByName(QName.valueOf("Id"))!!.value,
-            element.getAttributeByName(QName.valueOf("TinyName"))?.value,
-            element.getAttributeByName(QName.valueOf("Name"))?.value,
+            element.getAttributeByName(QName.valueOf("TinyName"))!!.value,
+            element.getAttributeByName(QName.valueOf("Name"))!!.value,
             element.getAttributeByName(QName.valueOf("LongName"))?.value,
             element.getAttributeByName(QName.valueOf("Url")).value,
             element.getAttributeByName(QName.valueOf("ImageUrl"))?.value,

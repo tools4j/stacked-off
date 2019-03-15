@@ -3,10 +3,18 @@ package org.tools4j.stacked.index
 import java.io.File
 import java.io.FileInputStream
 import java.lang.IllegalStateException
+import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.streams.toList
+import java.io.InputStream
+import java.util.zip.ZipEntry
+import java.util.Enumeration
+import java.util.zip.ZipFile
+
+
 
 private val SITES_XML_FILE_NAME = "Sites.xml"
 
@@ -84,32 +92,15 @@ data class SeDirContents(val siteXmlFile: File, val zipFiles: Set<File>){
         val matchedZipFilesBySite = LinkedHashMap<SeSite, MutableSet<File>>()
         val sitesByDomain = SeSiteXmlFileParser(FileInputStream(siteXmlFile)).parse().map { it.urlDomain to it }.toMap()
         for (zipFile in zipFiles) {
-            val zipFilePrefix = zipFile.name.replace(Regex("(.*?)[\\-\\.$].*"), "$1")
+            val zipFilePrefix = zipFile.name.replace(Regex("(.*?)(-\\w+)?\\.\\w+$"), "$1")
             val matchingSite = sitesByDomain[zipFilePrefix]
             if(matchingSite != null){
                 matchedZipFilesBySite.computeIfAbsent(matchingSite){LinkedHashSet()}
                 matchedZipFilesBySite[matchingSite]!!.add(zipFile)
             }
         }
-        return matchedZipFilesBySite.map { SeDirSite(it.key, ZipFiles(it.value)) }.toSet()
+        return matchedZipFilesBySite.map { SeDirSite(it.key, it.value) }.toSet()
     }
 }
 
-data class SeDirSite(val site: SeSite, val zipFiles: ZipFiles)
-
-data class ZipFiles(val zipFiles: Set<File>){
-    fun parse(seZipFileParser: SeZipFileParser){
-        getPathsInsideZipFiles().forEach { seZipFileParser.parse(it) }
-    }
-
-    fun getPathsInsideZipFiles(): List<Path>{
-        return zipFiles.flatMap { getPathsInsideZipFile(it) }
-    }
-
-    private fun getPathsInsideZipFile(fromZip: File): List<Path> {
-        return FileSystems
-            .newFileSystem(fromZip.toURI(), emptyMap<String, String>())
-            .rootDirectories
-            .flatMap { root -> Files.walk(root).toList() }
-    }
-}
+data class SeDirSite(val site: SeSite, val zipFiles: Set<File>)

@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class UsersParseXmlTest {
-    private val s1 = Site1Assertions()
+    private val s1 = CoffeeSiteAssertions()
 
     @Test
     fun testParseUsers(){

@@ -4,8 +4,8 @@ import org.apache.lucene.document.*
 
 interface SeSite {
     val seSiteId: String
-    val tinyName: String?
-    val name: String?
+    val tinyName: String
+    val name: String
     val longName: String?
     val url: String
     val imageUrl: String?
@@ -29,8 +29,8 @@ interface SeSite {
 
 data class SeSiteImpl(
     override val seSiteId: String,
-    override val tinyName: String?,
-    override val name: String?,
+    override val tinyName: String,
+    override val name: String,
     override val longName: String?,
     override val url: String,
     override val imageUrl: String?,
@@ -72,10 +72,10 @@ data class SeSiteImpl(
 
     override fun addTo(doc: Document) {
         doc.add(StringField("seSiteId", seSiteId, Field.Store.YES))
-        if (tinyName != null) doc.add(TextField("tinyName", tinyName, Field.Store.YES))
-        if (name != null) doc.add(TextField("name", name, Field.Store.YES))
+        doc.add(TextField("tinyName", tinyName, Field.Store.YES))
+        doc.add(TextField("name", name, Field.Store.YES))
         if (longName != null) doc.add(TextField("longName", longName, Field.Store.YES))
-        if (url != null) doc.add(TextField("url", url, Field.Store.YES))
+        doc.add(TextField("url", url, Field.Store.YES))
         if (imageUrl != null) doc.add(StoredField("imageUrl", imageUrl))
         if (iconUrl != null) doc.add(StoredField("iconUrl", iconUrl))
         if (databaseName != null) doc.add(StoredField("databaseName", databaseName))
@@ -99,5 +99,31 @@ data class SeSiteImpl(
         matches += if(this.longName == other.longName) 1 else 0
         matches += if(this.url == other.url) 1 else 0
         return matches >= 3
+    }
+
+    override fun toString(): String {
+        return "SeSiteImpl(seSiteId='$seSiteId', tinyName=$tinyName, name=$name, url='$url')"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SeSiteImpl
+
+        if (seSiteId != other.seSiteId) return false
+        if (tinyName != other.tinyName) return false
+        if (name != other.name) return false
+        if (url != other.url) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = seSiteId.hashCode()
+        result = 31 * result + (tinyName.hashCode() ?: 0)
+        result = 31 * result + (name.hashCode() ?: 0)
+        result = 31 * result + url.hashCode()
+        return result
     }
 }
