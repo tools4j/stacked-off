@@ -22,7 +22,7 @@ internal class CommentIndexTest {
 
     @Test
     fun testGetCommentsByPostId() {
-        val results = commentIndex.getByPostUid("${s1.indexedSiteId}.1")!!
+        val results = commentIndex.getByPostUid("${s1.indexedSiteId}.1")
         assertThat(results).hasSize(5)
         s1.assertHasComment4(results);
         s1.assertHasComment6(results);

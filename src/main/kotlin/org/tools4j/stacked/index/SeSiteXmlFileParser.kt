@@ -1,13 +1,11 @@
 package org.tools4j.stacked.index
 
-import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLEventReader
-import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLInputFactory
+import javax.xml.stream.XMLStreamException
 import javax.xml.stream.events.StartElement
 
 

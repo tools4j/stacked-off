@@ -18,9 +18,8 @@ internal class SeZipFileParserTest {
         posts = ArrayList()
     }
 
-    private fun createSeHandlerProvider(indexedSiteId: String): SeHandlerProviderImpl {
-        return SeHandlerProviderImpl(
-            indexedSiteId,
+    private fun createSeHandlerProvider(): SeFileInZipParserProvider {
+        return SeFileInZipParserProviderImpl(
             mapOf(
                 "Users.xml" to { UserXmlRowHandler { ToListHandler(users) }},
                 "Posts.xml" to { PostXmlRowHandler { ToListHandler(posts) }},
@@ -30,33 +29,33 @@ internal class SeZipFileParserTest {
 
     @Test
     fun parseCoffee7z() {
-        val seHandlerProvider = createSeHandlerProvider("1")
+        val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-5/coffee.meta.stackexchange.com.7z")
-        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)
         assertCoffeeContents()
     }
 
     @Test
     fun parseCoffeeZip() {
-        val seHandlerProvider = createSeHandlerProvider("1")
+        val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-4/coffee.meta.stackexchange.com.zip")
-        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)
         assertCoffeeContents()
     }
 
     @Test
     fun parseBeer7z() {
-        val seHandlerProvider = createSeHandlerProvider("2")
+        val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-4/beer.meta.stackexchange.com.7z")
-        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(SITE_2, zipFile.absolutePath)
         assertBeerContents()
     }
 
     @Test
     fun parseBeerZip() {
-        val seHandlerProvider = createSeHandlerProvider("2")
+        val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-5/beer.meta.stackexchange.com.zip")
-        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(SITE_2, zipFile.absolutePath)
         assertBeerContents()
     }
 

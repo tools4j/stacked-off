@@ -4,12 +4,8 @@ import net.sf.sevenzipjbinding.*
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import java.io.*
 
-interface SeHandlerProvider {
-    fun fileInZipParser(pathInArchive: String): FileInZipParser?
-}
-
-class SeZipFileParser(val handlerProvider: SeHandlerProvider) {
-    fun parse(archiveFile: String) {
+class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserProvider) {
+    fun parse(indexedSiteId: String, archiveFile: String) {
         println("Parsing $archiveFile")
         RandomAccessFile(archiveFile, "r").use { randomAccessFile ->
             SevenZip.openInArchive(
@@ -20,7 +16,7 @@ class SeZipFileParser(val handlerProvider: SeHandlerProvider) {
                 for (i in archiveIndicesToParse.indices) {
                     archiveIndicesToParse[i] = i
                 }
-                val extractCallback = ExtractCallback(archive, handlerProvider)
+                val extractCallback = ExtractCallback(indexedSiteId, archive, seFileInZipParserProvider)
 
                 archive.extract(
                     archiveIndicesToParse,
@@ -33,8 +29,9 @@ class SeZipFileParser(val handlerProvider: SeHandlerProvider) {
 }
 
 class ExtractCallback(
+    private val indexedSiteId: String,
     private val archive: IInArchive,
-    private val handlerProvider: SeHandlerProvider) : IArchiveExtractCallback {
+    private val seFileInZipParserProvider: SeFileInZipParserProvider) : IArchiveExtractCallback {
 
     private var index = -1
     private var fileInZipParser: FileInZipParser? = null
@@ -52,7 +49,7 @@ class ExtractCallback(
         }
         val pathInArchive = archive.getProperty(index, PropID.PATH).toString()
         totalFileInZipSize = Integer.parseInt(archive.getProperty(index, PropID.SIZE).toString())
-        fileInZipParser = handlerProvider.fileInZipParser(pathInArchive)?: return null
+        fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)?: return null
         fileInZipParser!!.start()
         extractedFileInZipSize = 0
 
@@ -78,11 +75,14 @@ class ExtractCallback(
     override fun setTotal(total: Long) {}
 }
 
-class SeHandlerProviderImpl(
-    val indexedSiteId: String,
-    val rowHandlers: Map<String, () -> XmlRowHandler<*>>) : SeHandlerProvider {
+interface SeFileInZipParserProvider {
+    fun getFileInZipParser(indexedSiteId: String, pathInArchive: String): FileInZipParser?;
+}
 
-    override fun fileInZipParser(pathInArchive: String): FileInZipParser? {
+class SeFileInZipParserProviderImpl (
+    val rowHandlers: Map<String, () -> XmlRowHandler<*>>) : SeFileInZipParserProvider {
+
+    override fun getFileInZipParser(indexedSiteId: String, pathInArchive: String): FileInZipParser? {
         if(!rowHandlers.containsKey(pathInArchive)){
             return null
         }

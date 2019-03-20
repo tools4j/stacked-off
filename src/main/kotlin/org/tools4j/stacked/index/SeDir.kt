@@ -14,9 +14,7 @@ import java.util.zip.ZipEntry
 import java.util.Enumeration
 import java.util.zip.ZipFile
 
-
-
-private val SITES_XML_FILE_NAME = "Sites.xml"
+private const val SITES_XML_FILE_NAME = "Sites.xml"
 
 data class SeDir(val path: String) {
     fun getContents(): SeDirContents {

@@ -1,6 +1,7 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.document.Document
+import org.apache.lucene.index.Term
 
 class IndexedSiteIndex(indexFactory: IndexFactory)
     : AbstractIndex<IndexedSite>(indexFactory,"sites") {
@@ -13,5 +14,13 @@ class IndexedSiteIndex(indexFactory: IndexFactory)
 
     fun getHighestIndexedSiteId(): Long {
         return getAll().map { indexedSite -> indexedSite.indexedSiteId.toLong() }.max() ?: 0
+    }
+
+    fun getMatching(seSite: SeSite): List<IndexedSite> {
+        return getAll().filter { seSite.fuzzyMatches(it.seSite) }.toList()
+    }
+
+    fun getByTinyName(tinyName: String): IndexedSite? {
+        return getByTerm(Term("tinyName", tinyName))
     }
 }

@@ -15,16 +15,13 @@ import org.apache.lucene.search.TermQuery
 import org.apache.lucene.search.TopDocs
 import org.apache.lucene.store.Directory
 
-abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String) {
+abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
     internal lateinit var index: Directory
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
-    private val searcher: IndexSearcher by lazy {
-        val reader = DirectoryReader.open(index)
-        IndexSearcher(reader)
-    }
+    private lateinit var writer: IndexWriter
 
-    fun init() {
+    override fun init() {
         index = indexFactory.createIndex(name)
         analyzer = StandardAnalyzer()
         val fields: MutableMap<String, Float> = getIndexedFieldsAndRankings()
@@ -33,30 +30,39 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
             analyzer,
             fields
         )
+        val config = IndexWriterConfig(analyzer)
+        writer = IndexWriter(index, config)
+        writer.commit()
+    }
+
+    override fun shutdown() {
+        writer.close()
     }
 
     fun addItems(items: List<T>){
-        val config = IndexWriterConfig(analyzer)
-        val w = IndexWriter(index, config)
+        println("Index size before add: ${getAll().size}")
         for (item in items) {
             val doc = convertItemToDocument(item)
-            w.addDocument(doc)
+            writer.addDocument(doc)
         }
-        w.close()
+        writer.commit()
+        //Thread.sleep(2000)
+        println("Index size after add: ${getAll().size}")
+    }
+
+    fun addItem(item: T){
+        addItems(listOf(item))
     }
 
     fun getItemHandler(): ItemHandler<T> {
         return object: ItemHandler<T> {
-            val config = IndexWriterConfig(analyzer)
-            val w = IndexWriter(index, config)
-
             override fun handle(item: T) {
                 val doc = convertItemToDocument(item)
-                w.addDocument(doc)
+                writer.addDocument(doc)
             }
 
             override fun onFinish() {
-                w.close()
+                writer.commit()
             }
         }
     }
@@ -64,27 +70,39 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     fun search(queryString: String, hitsPerPage: Int = 10): List<T> {
         val startTimeMs = System.currentTimeMillis()
         val q = queryParser.parse(queryString);
-        val docs = searcher.search(q, hitsPerPage)
+        val reader = DirectoryReader.open(index)
+        val indexSearcher = IndexSearcher(reader)
+        val docs = indexSearcher.search(q, hitsPerPage)
         val hits = docs.scoreDocs
         val endTimeMs = System.currentTimeMillis()
         val durationMs = endTimeMs - startTimeMs
         println("Found " + docs.totalHits + " hits. Took $durationMs ms.")
-        return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
+        return hits.map{indexSearcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
     fun getByUid(uid: String): T? {
-        val docs = searcher.search(TermQuery(Term("uid", uid)), 2)
+        return getByTerm(Term("uid", uid))
+    }
+
+    fun getByTerm(term: Term): T? {
+        return getByTermQuery(TermQuery(term))
+    }
+
+    private fun getByTermQuery(termQuery: TermQuery): T? {
+        val searcher = IndexSearcher(DirectoryReader.open(index))
+        val docs = searcher.search(termQuery, 2)
         val hits = docs.scoreDocs
         if (docs.totalHits == 0L) {
             return null
-        } else if(docs.totalHits == 1L) {
+        } else if (docs.totalHits == 1L) {
             return convertDocumentToItem(searcher.doc(hits.get(0).doc));
         } else {
-            throw IllegalStateException("Found more than one item with uid [$uid]. Items: ${hits.map{it.doc}}")
+            throw IllegalStateException("Found more than one item with term $termQuery. Items: ${hits.map { it.doc }}")
         }
     }
 
     fun getAll(): List<T> {
+        val searcher = IndexSearcher(DirectoryReader.open(index))
         val docs = searcher.search(MatchAllDocsQuery(), 10000)
         val hits = docs.scoreDocs
         println("Found " + docs.totalHits + " total records found.")
@@ -104,6 +122,11 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
                 .toList()
         }
         return emptyList()
+    }
+
+    fun purgeSite(indexedSiteId: String){
+        writer.deleteDocuments(Term("indexedSiteId", indexedSiteId))
+        writer.commit()
     }
 
     abstract fun getIndexedFieldsAndRankings(): MutableMap<String, Float>;

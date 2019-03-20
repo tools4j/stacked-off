@@ -1,7 +1,9 @@
 package org.tools4j.stacked.index
 
-import org.apache.lucene.document.*
-import java.util.*
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.StoredField
+import org.apache.lucene.document.StringField
 import java.util.concurrent.atomic.AtomicLong
 
 interface IndexedSite{
@@ -64,14 +66,10 @@ interface IndexedSiteIdGenerator{
     fun getNext(): String
 }
 
-class GUIDIndexedSiteIdGenerator: IndexedSiteIdGenerator{
-    override fun getNext(): String {
-        return UUID.randomUUID().toString()
-    }
-}
+class IncrementalIndexedSiteIdGenerator(firstValue: Long): IndexedSiteIdGenerator{
+    constructor(): this(1L)
 
-class IncrementalIndexedSiteIdGenerator: IndexedSiteIdGenerator{
-    private val nextId = AtomicLong(1)
+    private val nextId = AtomicLong(firstValue)
 
     override fun getNext(): String {
         return nextId.getAndIncrement().toString()

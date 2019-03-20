@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 
 internal class IndexedSiteIndexTest {
     private lateinit var indexedSiteIndex: IndexedSiteIndex
-    private val s1 = CoffeeSiteAssertions()
 
     @BeforeEach
     fun setup(){
@@ -19,6 +18,26 @@ internal class IndexedSiteIndexTest {
         assertThat(indexedSites).hasSize(2)
         assertHasIndexedSite1(indexedSites)
         assertHasIndexedSite2(indexedSites)
+    }
+
+    @Test
+    fun testAddIndividuallyThenGetAll() {
+        indexedSiteIndex = createIndexedSiteIndex()
+
+        val xmlRowParser = SeSiteXmlFileParser(Dummy().javaClass.getResourceAsStream("/data/Sites.xml"));
+        val sites = xmlRowParser.parse()
+
+        val beerIndexedSite = IndexedSiteImpl(
+            "1",
+            "2019-02-25T10:00:00",
+            true,
+            null,
+            sites.first { it.tinyName == "beerme" })
+
+        indexedSiteIndex.addItem(beerIndexedSite)
+
+        val indexedSites = indexedSiteIndex.getAll()
+        assertThat(indexedSites).hasSize(1)
     }
 
     @Test
