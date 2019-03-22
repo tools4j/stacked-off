@@ -46,10 +46,6 @@ data class UserImpl(
 }
 
 class UserXmlRowHandler(delegateProvider: () -> ItemHandler<User>): XmlRowHandler<User>(delegateProvider) {
-    override fun getParentElementName(): String {
-        return "users"
-    }
-
     override fun handle(element: StartElement, indexedSiteId: String) {
         val user = UserImpl(
             element.getAttributeByName(QName.valueOf("Id"))!!.value,

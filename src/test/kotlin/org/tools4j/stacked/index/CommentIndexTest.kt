@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import org.apache.lucene.index.Term
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,5 +30,12 @@ internal class CommentIndexTest {
         s1.assertHasComment7(results);
         s1.assertHasComment8(results);
         s1.assertHasComment9(results);
+    }
+
+    @Test
+    fun testPurgeBySiteId() {
+        assertThat(commentIndex.searchByTerm(Term("indexedSiteId", s1.indexedSiteId))).hasSize(9)
+        commentIndex.purgeSite(s1.indexedSiteId)
+        assertThat(commentIndex.searchByTerm(Term("indexedSiteId", s1.indexedSiteId))).isEmpty()
     }
 }

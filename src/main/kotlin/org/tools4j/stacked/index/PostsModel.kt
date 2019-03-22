@@ -42,8 +42,6 @@ data class PostImpl(val rawPost: RawPost, override val ownerUser: User, override
 
 data class QuestionImpl(val post: Post, override val childPosts: List<Post>): Post by post,
     Question {
-    constructor(rawPost: RawPost, ownerUser: User, comments: List<Comment>, childPosts: List<Post>)
-            : this(PostImpl(rawPost, ownerUser, comments), childPosts)
 
     override fun containsPost(postUid: String): Boolean{
         return post.uid == postUid || childPosts.any { it.uid == postUid }
@@ -118,10 +116,6 @@ data class RawPostImpl(
 
 
 class PostXmlRowHandler(delegateProvider: () -> ItemHandler<RawPost>): XmlRowHandler<RawPost>(delegateProvider) {
-    override fun getParentElementName(): String {
-        return "posts"
-    }
-
     override fun handle(element: StartElement, indexedSiteId: String) {
         val rawPost = RawPostImpl(
             element.getAttributeByName(QName.valueOf("Id"))!!.value,

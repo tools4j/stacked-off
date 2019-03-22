@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import org.apache.lucene.index.Term
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -33,5 +34,12 @@ internal class PostIndexTest {
     fun testGetByParentPostId_noPosts() {
         val results = postIndex.getByParentUid("${s1.indexedSiteId}.2")
         assertThat(results).isEmpty()
+    }
+
+    @Test
+    fun testPurgeBySiteId() {
+        assertThat(postIndex.searchByTerm(Term("indexedSiteId", s1.indexedSiteId))).hasSize(3)
+        postIndex.purgeSite(s1.indexedSiteId)
+        assertThat(postIndex.searchByTerm(Term("indexedSiteId", s1.indexedSiteId))).isEmpty()
     }
 }

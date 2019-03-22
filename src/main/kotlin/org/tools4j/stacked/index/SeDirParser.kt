@@ -46,7 +46,7 @@ class SeDirParser(
             val exceptionAsString = sw.toString()
             println(exceptionAsString)
             if (matchingExistingIndexedSites.isNotEmpty()) {
-                indexes.purgeSite(newIndexedSiteId.toString())
+                indexes.purgeSite(newIndexedSiteId)
             }
             indexes.indexedSiteIndex.addItem(indexingSite.finished(false, exceptionAsString))
         }

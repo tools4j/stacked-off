@@ -40,14 +40,11 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     }
 
     fun addItems(items: List<T>){
-        println("Index size before add: ${getAll().size}")
         for (item in items) {
             val doc = convertItemToDocument(item)
             writer.addDocument(doc)
         }
         writer.commit()
-        //Thread.sleep(2000)
-        println("Index size after add: ${getAll().size}")
     }
 
     fun addItem(item: T){
@@ -88,7 +85,7 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         return getByTermQuery(TermQuery(term))
     }
 
-    private fun getByTermQuery(termQuery: TermQuery): T? {
+    fun getByTermQuery(termQuery: TermQuery): T? {
         val searcher = IndexSearcher(DirectoryReader.open(index))
         val docs = searcher.search(termQuery, 2)
         val hits = docs.scoreDocs
@@ -97,8 +94,20 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         } else if (docs.totalHits == 1L) {
             return convertDocumentToItem(searcher.doc(hits.get(0).doc));
         } else {
-            throw IllegalStateException("Found more than one item with term $termQuery. Items: ${hits.map { it.doc }}")
+            throw IllegalStateException("Found more than one item with term [$termQuery] " +
+                    "Items:\n${hits.map{convertDocumentToItem(searcher.doc(it.doc))}.joinToString("\n")}")
         }
+    }
+
+    fun searchByTerm(term: Term): List<T> {
+        return searchByTermQuery(TermQuery(term))
+    }
+
+    fun searchByTermQuery(termQuery: TermQuery): List<T> {
+        val searcher = IndexSearcher(DirectoryReader.open(index))
+        val docs = searcher.search(termQuery, 10000)
+        val hits = docs.scoreDocs
+        return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
     fun getAll(): List<T> {

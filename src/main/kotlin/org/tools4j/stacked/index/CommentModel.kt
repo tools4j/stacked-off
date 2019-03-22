@@ -66,10 +66,6 @@ data class RawCommentImpl(
 }
 
 class CommentXmlRowHandler(delegateProvider: () -> ItemHandler<RawComment>): XmlRowHandler<RawComment>(delegateProvider) {
-    override fun getParentElementName(): String {
-        return "comments"
-    }
-
     override fun handle(element: StartElement, indexedSiteId: String) {
         val rawPost = RawCommentImpl(
             element.getAttributeByName(QName.valueOf("Id"))!!.value,

@@ -4,7 +4,6 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.StoredField
 import org.apache.lucene.document.StringField
-import java.util.concurrent.atomic.AtomicLong
 
 interface IndexedSite{
     val indexedSiteId: String
@@ -13,7 +12,6 @@ interface IndexedSite{
     val errorMessage: String?
     val seSite: SeSite
     fun convertToDocument(): Document
-    fun reIndex(dateTimeIndexed: String, seSite: SeSite): IndexingSite
 }
 
 interface IndexingSite{
@@ -37,18 +35,19 @@ class IndexedSiteImpl(
         doc.get("errorMessage"),
         SeSiteImpl(doc))
 
-    override fun reIndex(dateTimeIndexed: String, seSite: SeSite): IndexingSite {
-        return IndexingSiteImpl(indexedSiteId, dateTimeIndexed, seSite )
-    }
-
     override fun convertToDocument(): Document {
         val doc = Document()
         doc.add(StringField("uid", indexedSiteId, Field.Store.YES))
+        doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         doc.add(StoredField("dateTimeIndexed", dateTimeIndexed))
         doc.add(StoredField("success", success.toString()))
         if(errorMessage != null) doc.add(StoredField("errorMessage", errorMessage))
         seSite.addTo(doc)
         return doc
+    }
+
+    override fun toString(): String {
+        return "IndexedSiteImpl(indexedSiteId='$indexedSiteId', dateTimeIndexed='$dateTimeIndexed', success=$success, errorMessage=$errorMessage, seSite=$seSite)"
     }
 }
 
@@ -64,14 +63,4 @@ class IndexingSiteImpl(
 
 interface IndexedSiteIdGenerator{
     fun getNext(): String
-}
-
-class IncrementalIndexedSiteIdGenerator(firstValue: Long): IndexedSiteIdGenerator{
-    constructor(): this(1L)
-
-    private val nextId = AtomicLong(firstValue)
-
-    override fun getNext(): String {
-        return nextId.getAndIncrement().toString()
-    }
 }

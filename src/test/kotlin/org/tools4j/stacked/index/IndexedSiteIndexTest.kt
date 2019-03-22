@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import org.apache.lucene.index.Term
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,4 +46,12 @@ internal class IndexedSiteIndexTest {
         assertIsIndexedSite1(indexedSiteIndex.getByUid("1")!!)
         assertIsIndexedSite2(indexedSiteIndex.getByUid("2")!!)
     }
+
+    @Test
+    fun testPurgeBySiteId() {
+        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", SITE_1))).hasSize(1)
+        indexedSiteIndex.purgeSite(SITE_1)
+        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", SITE_1))).isEmpty()
+    }
+
 }
