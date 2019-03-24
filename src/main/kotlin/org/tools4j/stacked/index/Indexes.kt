@@ -13,8 +13,8 @@ class Indexes(val indexedSiteIndex: IndexedSiteIndex,
         userIndex.purgeSite(indexedSiteId)
     }
 
-    fun purgeSites(matchingExistingIndexedSites: List<IndexedSite>) {
-        for (matchingExistingIndexedSite in matchingExistingIndexedSites) {
+    fun purgeSites(sites: List<IndexedSite>) {
+        for (matchingExistingIndexedSite in sites) {
             purgeSite(matchingExistingIndexedSite.indexedSiteId)
         }
     }

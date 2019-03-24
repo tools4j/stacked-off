@@ -5,6 +5,10 @@ class Setup {
         DiContext()
     }
 
+    val postService: PostService by lazy {
+        PostService(postIndex, commentIndex, userIndex)
+    }
+
     val seDirParser: SeDirParser by lazy {
         SeDirParser(seZipFileParser, indexes)
     }

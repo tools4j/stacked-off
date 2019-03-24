@@ -17,7 +17,7 @@ internal class SetupTest {
     }
 
     @Test
-    fun testSetupWithoutErrors(){
+    fun testSetupWithLoadingOfDirectory(){
         val setup = Setup()
         val path = File(this.javaClass.getResource("/data/se-example-dir-6").toURI())
         setup.seDirParser.parse(path.absolutePath, {true});
@@ -26,7 +26,6 @@ internal class SetupTest {
     }
 
     private fun assertSite1AndSite2Loaded(indexes: Indexes) {
-        println(indexes.indexedSiteIndex.getAll())
         val coffeeIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "coffeeme")))!!
         val beerIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "beerme")))!!
 
@@ -40,17 +39,5 @@ internal class SetupTest {
         beerAssertions.assertHasAllRawPosts(indexes.postIndex.getAll())
         beerAssertions.assertHasAllComments(indexes.commentIndex.getAll())
         beerAssertions.assertHasAllUsers(indexes.userIndex.getAll())
-    }
-
-
-    @Disabled
-    @Test
-    fun testDirParser() {
-        val setup = Setup()
-        setup.seDirParser.parse(
-            "C:\\Users\\ben\\Downloads\\stackexchange",
-            {seSite: SeSite ->
-                seSite.url.endsWith("unix.stackexchange.com")
-            });
     }
 }

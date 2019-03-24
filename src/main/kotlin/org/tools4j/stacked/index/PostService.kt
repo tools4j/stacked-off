@@ -5,8 +5,7 @@ import java.lang.IllegalStateException
 class PostService(
     private val postIndex: PostIndex,
     private val commentIndex: CommentIndex,
-    private val userIndex: UserIndex
-) {
+    private val userIndex: UserIndex) {
 
     fun search(searchText: String): Set<Question>{
         val rawPosts = postIndex.search(searchText)
