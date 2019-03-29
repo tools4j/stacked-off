@@ -1,0 +1,2 @@
+Error parsing file: Unexpected character 'a' (code 97) in prolog; expected '<'
+ at [row,col {unknown-source}]: [1,1] in file [Posts.xml] whilst parsing archive [C:\dev\workspaces\stacked2\out\test\resources\data\se-example-dir-9\coffee.rubbish.in.Posts.xml.7z]

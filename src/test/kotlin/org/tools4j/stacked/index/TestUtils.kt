@@ -17,14 +17,6 @@ fun getFileOnClasspath(pathOnClasspath: String): File {
     return File(resource.toURI())
 }
 
-fun getFileOnClasspath(contextClass: Class<*>, pathOnClasspath: String): File {
-    val resource = contextClass.getResource(pathOnClasspath)
-    if(resource == null){
-        throw IllegalArgumentException("No resource found on classpath at: $pathOnClasspath")
-    }
-    return File(resource.toURI())
-}
-
 class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {
     override fun handle(item: T) {
         list.add(item)

@@ -3,26 +3,45 @@ package org.tools4j.stacked.index
 import net.sf.sevenzipjbinding.*
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import java.io.*
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserProvider) {
     fun parse(indexedSiteId: String, archiveFile: String) {
         println("Parsing $archiveFile")
         RandomAccessFile(archiveFile, "r").use { randomAccessFile ->
-            SevenZip.openInArchive(
-                null, // autodetect archive type
-                RandomAccessFileInStream(randomAccessFile)
-            ).use { archive ->
-                val archiveIndicesToParse = IntArray(archive.numberOfItems)
-                for (i in archiveIndicesToParse.indices) {
-                    archiveIndicesToParse[i] = i
+            try {
+                SevenZip.openInArchive(
+                    null, // autodetect archive type
+                    RandomAccessFileInStream(randomAccessFile)
+                ).use { archive ->
+                    val archiveIndicesToParse = IntArray(archive.numberOfItems)
+                    for (i in archiveIndicesToParse.indices) {
+                        archiveIndicesToParse[i] = i
+                    }
+                    val extractCallback =
+                        ExtractCallback(indexedSiteId, archiveFile, archive, seFileInZipParserProvider)
+                    var outerException: Exception? = null
+                    try {
+                        archive.extract(
+                            archiveIndicesToParse,
+                            false, // Non-test mode
+                            extractCallback
+                        )
+                    } catch (e: Exception) {
+                        outerException = e
+                    }
+                    if (extractCallback.exceptionDuringParsing != null) {
+                        throw extractCallback.exceptionDuringParsing!!
+                    } else if (outerException != null) {
+                        throw UnknownExtractorException(archiveFile, outerException)
+                    }
                 }
-                val extractCallback = ExtractCallback(indexedSiteId, archive, seFileInZipParserProvider)
-
-                archive.extract(
-                    archiveIndicesToParse,
-                    false, // Non-test mode
-                    extractCallback
-                )
+            } catch (e: ExtractorException){
+                throw e
+            } catch (e: Exception){
+                throw UnknownExtractorException(archiveFile, e)
             }
         }
     }
@@ -30,27 +49,50 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
 
 class ExtractCallback(
     private val indexedSiteId: String,
+    private val archiveFile: String,
     private val archive: IInArchive,
     private val seFileInZipParserProvider: SeFileInZipParserProvider) : IArchiveExtractCallback {
-
     private var index = -1
     private var fileInZipParser: FileInZipParser? = null
-    @Volatile private var extractedFileInZipSize = 0
     private var totalFileInZipSize: Int = 0;
+    @Volatile var parsingFuture: Future<*>? = null
+    @Volatile lateinit var pathInArchive: String
+    @Volatile private var extractedFileInZipSize = 0
+    @Volatile var exceptionDuringParsing: Exception? = null
 
     override fun getStream(
         index: Int,
         extractAskMode: ExtractAskMode
     ): ISequentialOutStream? {
+        if(exceptionDuringParsing != null) throw exceptionDuringParsing!!
         this.index = index
         val skipExtraction = archive.getProperty(index, PropID.IS_FOLDER) as Boolean
         if (skipExtraction || extractAskMode != ExtractAskMode.EXTRACT){
             return null
         }
-        val pathInArchive = archive.getProperty(index, PropID.PATH).toString()
+        pathInArchive = archive.getProperty(index, PropID.PATH).toString()
+        println("Extractor calling getStream() for: $pathInArchive")
         totalFileInZipSize = Integer.parseInt(archive.getProperty(index, PropID.SIZE).toString())
-        fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)?: return null
-        fileInZipParser!!.start()
+        fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)
+        if(fileInZipParser == null){
+            return null
+        }
+        parsingFuture = Executors.newSingleThreadExecutor().submit({
+            try {
+                if(exceptionDuringParsing != null) throw exceptionDuringParsing!!
+                fileInZipParser!!.start()
+
+            } catch (e: FileInZipParserException) {
+                e.printStackTrace()
+                exceptionDuringParsing = ExtractorException(archiveFile, e)
+                throw exceptionDuringParsing!!
+            } catch (e: Exception) {
+                e.printStackTrace()
+                exceptionDuringParsing = UnknownExtractorException(archiveFile, e)
+                throw exceptionDuringParsing!!
+            }
+        })
+
         extractedFileInZipSize = 0
 
         return ISequentialOutStream { data ->
@@ -66,13 +108,31 @@ class ExtractCallback(
             throw IllegalStateException("Extraction error")
         }
         if(index < 0 || fileInZipParser == null) return
-        println("Completed: ${fileInZipParser!!.fileName}")
-        fileInZipParser!!.close()
+        println("Completed extracting [${fileInZipParser!!.fileName}], from archive [$archiveFile] with indexedSiteId [$indexedSiteId]")
+        /*
+        At this point we know that writing to the output stream has finished.
+        Therefore we need to close the output stream.  This will cause a -1
+        to be written to the output stream.  The reader (in the future) might
+        not have finished reading from the inputStream.  So we need to wait
+        for it to finish.  Hence the 'get'
+         */
+        fileInZipParser!!.flushAndClose()
+        parsingFuture?.get()
     }
 
     override fun setCompleted(completeValue: Long) {}
     override fun prepareOperation(extractAskMode: ExtractAskMode?) {}
     override fun setTotal(total: Long) {}
+}
+
+class UnknownExtractorException(val archiveFile: String, cause: Throwable): Exception(cause){
+    override val message: String?
+        get() = "Error occurred whilst parsing file [$archiveFile] ${cause?.message}"
+}
+
+class ExtractorException(val archiveFile: String, val fileInZipParserException: FileInZipParserException): Exception(){
+    override val message: String?
+        get() = fileInZipParserException.message + " whilst parsing archive [$archiveFile]"
 }
 
 interface SeFileInZipParserProvider {
@@ -100,18 +160,24 @@ class FileInZipParser(
     val xmlFileParser: XmlFileParser,
     val outputStreamToWriteTo: OutputStream) {
 
-    lateinit var thread: Thread
-
     fun start() {
-        thread = Thread {
+        try {
             xmlFileParser.parse()
+        } catch(e: XmlFileParserException){
+            throw FileInZipParserException(fileName, e)
         }
-        thread.start()
     }
 
-    fun close(){
+    fun flushAndClose() {
         outputStreamToWriteTo.flush()
         outputStreamToWriteTo.close()
-        thread.join()
     }
+}
+
+class FileInZipParserException(
+    val fileName: String,
+    val xmlFileParserException: XmlFileParserException): Exception(xmlFileParserException){
+
+    override val message: String?
+        get() = xmlFileParserException.message + " in file [$fileName]"
 }

@@ -1,12 +1,15 @@
 package org.tools4j.stacked.index
 
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 
 class SeDirParser(
     private val zipFileParser: SeZipFileParser,
     private val indexes: Indexes) {
+
+    fun parseFromClasspath(pathOnClasspath: String, filter: (SeSite) -> Boolean) {
+        val archiveFile = getFileOnClasspath(this.javaClass,pathOnClasspath)
+        return parse(archiveFile.absolutePath, filter)
+    }
 
     fun parse(dirPath: String, filter: (SeSite) -> Boolean) {
         var nextIndexedSiteId = indexes.indexedSiteIndex.getHighestIndexedSiteId() + 1
@@ -40,11 +43,8 @@ class SeDirParser(
             indexes.indexedSiteIndex.addItem(indexingSite.finished(true, null))
 
         } catch (e: Exception) {
-            println("Error parsing site $seSite, ${e.message}")
-            val sw = StringWriter()
-            e.printStackTrace(PrintWriter(sw))
-            val exceptionAsString = sw.toString()
-            println(exceptionAsString)
+            println(e.message)
+            val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
             if (matchingExistingIndexedSites.isNotEmpty()) {
                 indexes.purgeSite(newIndexedSiteId)
             }

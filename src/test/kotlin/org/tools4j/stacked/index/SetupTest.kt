@@ -26,16 +26,21 @@ internal class SetupTest {
     }
 
     private fun assertSite1AndSite2Loaded(indexes: Indexes) {
+        assertSite1Loaded(indexes)
+        assertSite2Loaded(indexes)
+    }
+
+    private fun assertSite1Loaded(indexes: Indexes) {
         val coffeeIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "coffeeme")))!!
-        val beerIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "beerme")))!!
-
         val coffeeAssertions = CoffeeSiteAssertions(coffeeIndexedSite.indexedSiteId)
-        val beerAssertions = BeerSiteAssertions(beerIndexedSite.indexedSiteId)
-
         coffeeAssertions.assertHasAllRawPosts(indexes.postIndex.getAll())
         coffeeAssertions.assertHasAllComments(indexes.commentIndex.getAll())
         coffeeAssertions.assertHasAllUsers(indexes.userIndex.getAll())
+    }
 
+    private fun assertSite2Loaded(indexes: Indexes) {
+        val beerIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "beerme")))!!
+        val beerAssertions = BeerSiteAssertions(beerIndexedSite.indexedSiteId)
         beerAssertions.assertHasAllRawPosts(indexes.postIndex.getAll())
         beerAssertions.assertHasAllComments(indexes.commentIndex.getAll())
         beerAssertions.assertHasAllUsers(indexes.userIndex.getAll())

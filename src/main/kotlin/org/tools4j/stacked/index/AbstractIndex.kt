@@ -103,6 +103,10 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         return searchByTermQuery(TermQuery(term))
     }
 
+    fun searchByTerm(key: String, value: String): List<T> {
+        return searchByTerm(Term(key, value))
+    }
+
     fun searchByTermQuery(termQuery: TermQuery): List<T> {
         val searcher = IndexSearcher(DirectoryReader.open(index))
         val docs = searcher.search(termQuery, 10000)
