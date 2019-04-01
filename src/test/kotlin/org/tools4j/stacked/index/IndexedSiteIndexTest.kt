@@ -54,4 +54,10 @@ internal class IndexedSiteIndexTest {
         assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", SITE_1))).isEmpty()
     }
 
+    @Test
+    fun testQueryWithMultipleCriteria(){
+        assertIsIndexedSite1(indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "success" to "true"))!!)
+    }
+
+
 }

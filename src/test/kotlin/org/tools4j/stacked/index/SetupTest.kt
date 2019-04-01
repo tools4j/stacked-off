@@ -5,9 +5,7 @@ import org.apache.lucene.search.TermQuery
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import java.io.File
 
 internal class SetupTest {
@@ -31,7 +29,7 @@ internal class SetupTest {
     }
 
     private fun assertSite1Loaded(indexes: Indexes) {
-        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "coffeeme")))!!
+        val coffeeIndexedSite = indexes.indexedSiteIndex.getByQuery(TermQuery(Term("tinyName", "coffeeme")))!!
         val coffeeAssertions = CoffeeSiteAssertions(coffeeIndexedSite.indexedSiteId)
         coffeeAssertions.assertHasAllRawPosts(indexes.postIndex.getAll())
         coffeeAssertions.assertHasAllComments(indexes.commentIndex.getAll())
@@ -39,7 +37,7 @@ internal class SetupTest {
     }
 
     private fun assertSite2Loaded(indexes: Indexes) {
-        val beerIndexedSite = indexes.indexedSiteIndex.getByTermQuery(TermQuery(Term("tinyName", "beerme")))!!
+        val beerIndexedSite = indexes.indexedSiteIndex.getByQuery(TermQuery(Term("tinyName", "beerme")))!!
         val beerAssertions = BeerSiteAssertions(beerIndexedSite.indexedSiteId)
         beerAssertions.assertHasAllRawPosts(indexes.postIndex.getAll())
         beerAssertions.assertHasAllComments(indexes.commentIndex.getAll())

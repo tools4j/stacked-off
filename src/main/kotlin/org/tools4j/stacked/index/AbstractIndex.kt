@@ -9,11 +9,13 @@ import org.apache.lucene.index.IndexWriterConfig
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.IndexSearcher
-import org.apache.lucene.search.MatchAllDocsQuery
-import org.apache.lucene.search.TermQuery
-import org.apache.lucene.search.TopDocs
+import org.apache.lucene.search.*
 import org.apache.lucene.store.Directory
+import org.apache.lucene.search.BooleanClause
+import org.apache.lucene.search.BooleanQuery
+import org.apache.lucene.search.TermQuery
+
+
 
 abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
     internal lateinit var index: Directory
@@ -82,34 +84,50 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     }
 
     fun getByTerm(term: Term): T? {
-        return getByTermQuery(TermQuery(term))
+        return getByQuery(TermQuery(term))
     }
 
-    fun getByTermQuery(termQuery: TermQuery): T? {
+    fun getByTerms(terms: Map<String, String>): T? {
+        val queryBuilder = BooleanQuery.Builder()
+        for (e in terms.entries) {
+            queryBuilder.add(TermQuery(Term(e.key, e.value)), BooleanClause.Occur.MUST)
+        }
+        return getByQuery(queryBuilder.build())
+    }
+
+    fun getByQuery(query: Query): T? {
         val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(termQuery, 2)
+        val docs = searcher.search(query, 2)
         val hits = docs.scoreDocs
         if (docs.totalHits == 0L) {
             return null
         } else if (docs.totalHits == 1L) {
             return convertDocumentToItem(searcher.doc(hits.get(0).doc));
         } else {
-            throw IllegalStateException("Found more than one item with term [$termQuery] " +
+            throw IllegalStateException("Found more than one item with query [$query] " +
                     "Items:\n${hits.map{convertDocumentToItem(searcher.doc(it.doc))}.joinToString("\n")}")
         }
     }
 
     fun searchByTerm(term: Term): List<T> {
-        return searchByTermQuery(TermQuery(term))
+        return searchByQuery(TermQuery(term))
     }
 
     fun searchByTerm(key: String, value: String): List<T> {
         return searchByTerm(Term(key, value))
     }
 
-    fun searchByTermQuery(termQuery: TermQuery): List<T> {
+    fun searchByTerms(terms: Map<String, String>): List<T> {
+        val query = BooleanQuery.Builder()
+        for (entry in terms.entries) {
+            query.add(TermQuery(Term(entry.key, entry.value)), BooleanClause.Occur.MUST)
+        }
+        return searchByQuery(query.build())
+    }
+
+    fun searchByQuery(query: Query): List<T> {
         val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(termQuery, 10000)
+        val docs = searcher.search(query, 10000)
         val hits = docs.scoreDocs
         return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }

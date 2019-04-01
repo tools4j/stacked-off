@@ -40,7 +40,7 @@ class IndexedSiteImpl(
         doc.add(StringField("uid", indexedSiteId, Field.Store.YES))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         doc.add(StoredField("dateTimeIndexed", dateTimeIndexed))
-        doc.add(StoredField("success", success.toString()))
+        doc.add(StringField("success", success.toString(), Field.Store.YES))
         if(errorMessage != null) doc.add(StoredField("errorMessage", errorMessage))
         seSite.addTo(doc)
         return doc

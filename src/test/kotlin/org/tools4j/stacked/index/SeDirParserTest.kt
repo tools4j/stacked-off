@@ -1,10 +1,10 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.index.Term
+import org.apache.lucene.index.Terms
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.File
 
 class SeDirParserTest {
     private val indexes = createIndexes()
@@ -63,8 +63,27 @@ class SeDirParserTest {
         assertThat(coffeeIndexedSites.first().indexedSiteId).isNotEqualTo(coffeeIndexedSiteWithErrors)
         assertCoffeeSiteLoaded()
 
-        val latestBeerIndexedSite = indexes.indexedSiteIndex.getByTinyName("beerme")!!
+        val latestBeerIndexedSite = assertBeerSiteLoaded()
         assertThat(latestBeerIndexedSite.indexedSiteId).isEqualTo(originalBeerIndexedSite.indexedSiteId)
+    }
+
+    @Test
+    fun testLoadingOfDirectoryWithGoodZipFileThenLoadingWithBadZipFile(){
+        val pathWithGoodZipFiles = "/data/se-example-dir-5"
+        seDirParser.parseFromClasspath(pathWithGoodZipFiles, {true});
+        val originalCoffeeIndexedSite = assertCoffeeSiteLoaded()
+        val originalBeerIndexedSite = assertBeerSiteLoaded()
+
+        val pathWithGoodBeerZipFileButBrokenCoffeeZipFile = "/data/se-example-dir-7"
+        seDirParser.parseFromClasspath(pathWithGoodBeerZipFileButBrokenCoffeeZipFile, {true});
+        val currentBeerIndexedSite = assertBeerSiteLoaded()
+        val currentCoffeeIndexedSite = assertCoffeeSiteLoaded()
+
+        assertThat(currentBeerIndexedSite.indexedSiteId).isNotEqualTo(originalBeerIndexedSite.indexedSiteId)
+        assertThat(currentCoffeeIndexedSite.indexedSiteId).isEqualTo(originalCoffeeIndexedSite.indexedSiteId)
+
+        assertThat(indexes.indexedSiteIndex.searchByTerm("tinyName", "coffeeme")).hasSize(2)
+        val coffeeIndexedSiteWithErrors = assertCoffeeSiteLoadedWithErrorMatching("Found non 'row' child element within \\[posts\\] with name \\[NotARow\\] child number \\[2\\] in file \\[Posts.xml\\] whilst parsing archive \\[[^\\]]*coffee.meta.stackexchange.com.7z\\]")
     }
 
     private fun assertThatSiteDoesNotHaveAnyEntities(indexedSiteId: String) {
@@ -79,7 +98,7 @@ class SeDirParserTest {
     }
 
     private fun assertCoffeeSiteLoaded(): IndexedSite {
-        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTinyName("coffeeme")!!
+        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "success" to "true"))!!
         val coffeeAssertions = CoffeeSiteAssertions(coffeeIndexedSite.indexedSiteId)
 
         coffeeAssertions.assertHasAllRawPosts(posts)
@@ -89,7 +108,7 @@ class SeDirParserTest {
     }
 
     private fun assertBeerSiteLoaded(): IndexedSite {
-        val beerIndexedSite = indexes.indexedSiteIndex.getByTinyName("beerme")!!
+        val beerIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "success" to "true"))!!
         val beerAssertions = BeerSiteAssertions(beerIndexedSite.indexedSiteId)
 
         beerAssertions.assertHasAllRawPosts(posts)
@@ -106,7 +125,7 @@ class SeDirParserTest {
     }
 
     private fun assertCoffeeSiteLoadedWithErrorMatching(message: String): IndexedSite {
-        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTinyName("coffeeme")!!
+        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "success" to "false"))!!
         assertThatSiteDoesNotHaveAnyEntities(coffeeIndexedSite.indexedSiteId)
         assertThat(coffeeIndexedSite.success).isFalse()
         assertThat(coffeeIndexedSite.errorMessage).matches(message)
