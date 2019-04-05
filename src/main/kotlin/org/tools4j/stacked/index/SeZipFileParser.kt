@@ -3,12 +3,15 @@ package org.tools4j.stacked.index
 import net.sf.sevenzipjbinding.*
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import java.io.*
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserProvider) {
-    fun parse(indexedSiteId: String, archiveFile: String) {
+    fun parse(
+        indexedSiteId: String,
+        archiveFile: String,
+        jobStatus: JobStatus = JobStatusImpl()
+    ) {
         println("Parsing $archiveFile")
         RandomAccessFile(archiveFile, "r").use { randomAccessFile ->
             try {
@@ -21,7 +24,13 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
                         archiveIndicesToParse[i] = i
                     }
                     val extractCallback =
-                        ExtractCallback(indexedSiteId, archiveFile, archive, seFileInZipParserProvider)
+                        ExtractCallback(
+                            indexedSiteId,
+                            archiveFile,
+                            archive,
+                            seFileInZipParserProvider,
+                            jobStatus)
+
                     var outerException: Exception? = null
                     try {
                         archive.extract(
@@ -51,10 +60,13 @@ class ExtractCallback(
     private val indexedSiteId: String,
     private val archiveFile: String,
     private val archive: IInArchive,
-    private val seFileInZipParserProvider: SeFileInZipParserProvider) : IArchiveExtractCallback {
+    private val seFileInZipParserProvider: SeFileInZipParserProvider,
+    private val jobStatus: JobStatus = JobStatusImpl()
+
+) : IArchiveExtractCallback {
     private var index = -1
     private var fileInZipParser: FileInZipParser? = null
-    private var totalFileInZipSize: Int = 0;
+    private var totalFileInZipSize: Long = 0;
     @Volatile var parsingFuture: Future<*>? = null
     @Volatile lateinit var pathInArchive: String
     @Volatile private var extractedFileInZipSize = 0
@@ -72,7 +84,8 @@ class ExtractCallback(
         }
         pathInArchive = archive.getProperty(index, PropID.PATH).toString()
         println("Extractor calling getStream() for: $pathInArchive")
-        totalFileInZipSize = Integer.parseInt(archive.getProperty(index, PropID.SIZE).toString())
+        jobStatus.addOperation("Parsing $pathInArchive from $archiveFile...")
+        totalFileInZipSize = archive.getProperty(index, PropID.SIZE).toString().toLong()
         fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)
         if(fileInZipParser == null){
             return null
@@ -98,7 +111,7 @@ class ExtractCallback(
         return ISequentialOutStream { data ->
             fileInZipParser!!.outputStreamToWriteTo.write(data)
             extractedFileInZipSize += data.size
-            println("$extractedFileInZipSize/$totalFileInZipSize bytes extracted...")
+            jobStatus.currentOperationProgress = toProgress(totalFileInZipSize, extractedFileInZipSize.toLong())
             data.size // Return amount of processed data
         }
     }

@@ -1,6 +1,6 @@
 package org.tools4j.stacked.index
 
-class Setup {
+class Instance {
     val diContext: DiContext by lazy {
         DiContext()
     }

@@ -23,7 +23,7 @@ interface RawPost {
 }
 
 interface Post: RawPost {
-    val ownerUser: User
+    val ownerUser: User?
     val comments: List<Comment>
     fun containsComment(commentUid: String): Boolean
 }
@@ -33,7 +33,7 @@ interface Question: Post {
     fun containsPost(postId: String): Boolean
 }
 
-data class PostImpl(val rawPost: RawPost, override val ownerUser: User, override val comments: List<Comment>): RawPost by rawPost,
+data class PostImpl(val rawPost: RawPost, override val ownerUser: User?, override val comments: List<Comment>): RawPost by rawPost,
     Post {
     override fun containsComment(commentUid: String): Boolean{
         return comments.any { it.uid == commentUid }

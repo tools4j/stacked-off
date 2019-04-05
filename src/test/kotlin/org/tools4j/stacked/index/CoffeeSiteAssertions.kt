@@ -59,7 +59,7 @@ class CoffeeSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost1(post: Post) {
         assertIsRawPost1(post)
-        assertUser2(post.ownerUser)
+        assertUser2(post.ownerUser!!)
         assertThat(post.comments).hasSize(5)
         assertHasComment4(post.comments)
         assertHasComment6(post.comments)
@@ -90,7 +90,7 @@ class CoffeeSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost2(post: Post) {
         assertIsRawPost2(post)
-        assertUser2(post.ownerUser)
+        assertUser2(post.ownerUser!!)
         assertThat(post.comments).hasSize(2)
         assertHasComment3(post.comments)
         assertHasComment5(post.comments)
@@ -128,7 +128,7 @@ class CoffeeSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost3(post: Post) {
         assertIsRawPost3(post)
-        assertUser1(post.ownerUser)
+        assertUser1(post.ownerUser!!)
         assertThat(post.comments).hasSize(2)
         assertHasComment1(post.comments)
         assertHasComment2(post.comments)

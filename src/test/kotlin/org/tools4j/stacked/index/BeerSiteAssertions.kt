@@ -59,7 +59,7 @@ class BeerSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost1(post: Post) {
         assertIsRawPost1(post)
-        assertUser1(post.ownerUser)
+        assertUser1(post.ownerUser!!)
         assertThat(post.comments).hasSize(2)
         assertHasComment1(post.comments)
         assertHasComment2(post.comments)
@@ -85,7 +85,7 @@ class BeerSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost2(post: Post) {
         assertIsRawPost2(post)
-        assertUser1(post.ownerUser)
+        assertUser1(post.ownerUser!!)
         assertThat(post.comments).hasSize(1)
         assertHasComment3(post.comments)
     }
@@ -118,7 +118,7 @@ class BeerSiteAssertions(val indexedSiteId: String) {
 
     fun assertIsPost3(post: Post) {
         assertIsRawPost3(post)
-        assertUser3(post.ownerUser)
+        assertUser3(post.ownerUser!!)
         assertThat(post.comments).isEmpty()
     }
 

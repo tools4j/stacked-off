@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src="app.js"></script>
+    <script type="text/javascript" src="jquery-3.3.1.js"></script>
     <script type="text/javascript">
         const baseUrl = "http://localhost/";
 
@@ -8,19 +8,130 @@
             fetchJson("v1/site", sites => showSites(sites));
         }
 
-        function showSites(sites){
-            const markup = `
+        function search(searchText) {
+            fetchJson("v1/search?searchText=" + searchText, results => showResults(results));
+        }
+
+        function loadQuestion(questionUid){
+            fetchJson("v1/question/" + questionUid, question => showQuestion(question));
+        }
+
+        function loadNewSites_chooseSitesXmlFile(){
+            const markup = `<h1>Load new site(s)</h1>
+                <h2>Step 1. Enter the path of the a downloaded stack dump directory</h2>
+                <span>(This cannot be a file chooser due to browser security restrictions.)</span>
+                <div class="div-load-sites">
+                    <input id="sites-xml-chooser"
+                            type="text"
+                            value="C:/dev/workspaces/stacked2/src/test/resources/data/se-example-dir-5"
+                            onchange="javascript:$('#sites-xml-chosen-next-button')[0].disabled=false"/>
+                </div>
+                <input id="sites-xml-chosen-next-button"
+                    type="button"
+                    value="Next"
+                    onclick="javascript:loadNewSites_discoverSitesInDirectory($('#sites-xml-chooser')[0].value.replace(/\\\\/g, '/'))">
+                `;
+            $("#content")[0].innerHTML = markup
+        }
+
+        function loadNewSites_discoverSitesInDirectory(seDir){
+            fetchJson("v1/sedir?path=" + seDir, seDirSites => loadNewSites_selectSitesToLoad(seDir, seDirSites));
+        }
+
+        function loadNewSites_selectSitesToLoad(seDir, seDirSites){
+            // language=HTML
+            const markup = `<h1>Load new site(s)</h1>
+            <h2>Step 2. Select the sites that you wish to load</h2>
             <table class="sitesTable dataTable">
-                <tr><th></th><th>Id</th><th>TinyName</th><th>Url</th></tr>
-                ${sites.map(site =>
-                `<tr>
-                    <td><img src="${site.iconUrl}"/></td>
-                    <td>${site.id}</td>
-                    <td>${site.tinyName}</td>
-                    <td>${site.url}</td>
-                </tr>`).join('')}
-            </table>`;
-            document.getElementById("content").innerHTML = markup
+                <tr>
+                <th>Id</th>
+                <th>Site Url</th>
+                <th>files</th>
+                <th>load</th>
+                </tr>
+            ${seDirSites.map(seDirSite =>
+                        `<tr>
+                <td>${seDirSite.site.seSiteId}</td>
+                <td>${seDirSite.site.url}</td>
+                <td>${seDirSite.zipFiles.length}</td>
+                <td><input
+                        type="checkbox"
+                        class="site-selection-checkbox"
+                        value="${seDirSite.site.seSiteId}"
+                        onchange="javascript:$('#sites-selected-to-load-button')[0].disabled=false">
+                </td>
+            </tr>`).join('')}
+            </table>
+            <input
+                id="sites-selected-to-load-button"
+                type="button"
+                value="Next"
+                disabled="true"
+                onclick="loadNewSites_loadSites('${seDir}', $('.site-selection-checkbox:checkbox:checked').map(function(){return this.value}).get().join(','));"/>`;
+            $("#content")[0].innerHTML = markup
+        }
+
+        function loadNewSites_loadSites(seDir, seDirSiteIds){
+            fetchJson("v1/loadSites?path=" + seDir + "&seDirSiteIds=" + seDirSiteIds, indexedSites => showSites(indexedSites));
+        }
+
+        function loadSitesDir(siteXmlFile){
+            alert(siteXmlFile)
+        }
+
+        function showQuestion(question) {
+            const markup = `
+                <h3>${question.post.rawPost.title}</h3>
+                <div>${question.post.rawPost.body}</div>
+                ${question.post.comments.map(comment =>
+                            `<div class="comment">
+                        <div class="comment-content">
+                            ${comment.rawComment.text}
+                        </div>
+                        <div>
+                            ${comment.user.displayName}
+                        </div>
+                    </div>`).join('\n')}`
+            $("#content")[0].innerHTML = markup
+        }
+
+        function showResults(results){
+            const markup = `
+                <br/>
+                ${results.map(question =>
+                            `<a>
+                        <a href="javascript:loadQuestion('${question.post.rawPost.indexedSiteId + "." + question.post.rawPost.id}')">
+                            ${question.post.rawPost.title}
+                        </a>
+                    </h3>
+                    <div>${question.post.rawPost.body}</div>`).join('')};`
+            $("#content")[0].innerHTML = markup
+        }
+
+        function showSites(indexedSites){
+            const markup = `
+                <table class="sitesTable dataTable">
+                    <tr>
+                        <th></th>
+                        <th>Id</th>
+                        <th>TinyName</th>
+                        <th>Name</th>
+                        <th>Url</th>
+                        <th>Loaded</th>
+                        <th>Errors</th>
+                    </tr>
+                    ${indexedSites.map(indexedSite =>
+                            `<tr>
+                        <td><img src="${indexedSite.seSite.iconUrl}"/></td>
+                        <td>${indexedSite.indexedSiteId}</td>
+                        <td>${indexedSite.seSite.tinyName}</td>
+                        <td>${indexedSite.seSite.name}</td>
+                        <td>${indexedSite.seSite.url}</td>
+                        <td>${indexedSite.success}</td>
+                        <td>${indexedSite.errorMessage}</td>
+                    </tr>`).join('')}
+                </table>`;
+            $("#content")[0].innerHTML = markup
         }
 
         function fetchJson(address, callback) {
@@ -28,33 +139,27 @@
             xmlhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     var obj = JSON.parse(this.responseText);
-                    document.getElementById("errors").innerHTML = ""
-                    document.getElementById("content2").innerHTML = this.responseText;
+                    $("#errors")[0].innerHTML = ""
                     callback(obj)
-                } else {
-                    const msg = `<div>Errors incurred whilst fetching data from ${this.url}</div>
-                               <div>Request:</div>
-                               <div>${this.request}</div>
-                               <div>Reponse:</div>
-                               <div>${this.responseText}</div>`
-                    document.getElementById("errors").innerHTML = msg
+                } else if(this.status == 500 || this.status == 404){
+                    $("#errors")[0].innerHTML = this.responseText
                 }
             };
             xmlhttp.open("GET", baseUrl + address , true);
             xmlhttp.send();
         }
+
     </script>
 </head>
 <body onload="loadSites()">
 <div>
-    OffStack
+    OffStack -
+    <input id="textSearch" type="text" onkeydown="if(event.key === 'Enter') search(value)"/>
 </div>
-<span>Hello world!!</span>
-<button onclick="loadSites()">Load Sites</button>
-<div id="errors"></div>
+<a href="javascript:loadSites()">Sites</a>
+<a href="javascript:loadNewSites_chooseSitesXmlFile()">Load new site</a>
+
+<div id="errors" style="color: red"></div>
 <div id="content"></div>
-<br/>
-<br/>
-<div id="content2"></div>
 </body>
 </html>

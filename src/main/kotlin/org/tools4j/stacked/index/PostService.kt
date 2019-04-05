@@ -67,8 +67,7 @@ class PostService(
     }
 
     private fun convertRawPostToPost(rawPost: RawPost): Post {
-        val ownerUser = userIndex
-            .getByUid(rawPost.ownerUserUid!!)!!
+        val ownerUser = if(rawPost.ownerUserUid != null) userIndex.getByUid(rawPost.ownerUserUid!!) else null
 
         val comments = commentIndex
             .getByPostUid(rawPost.uid)

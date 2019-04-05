@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import java.io.File
 
-internal class SetupTest {
+internal class InstanceTest {
     @BeforeEach
     fun setup(){
         assertThat(File("./data").deleteRecursively()).isTrue()
@@ -16,7 +16,7 @@ internal class SetupTest {
 
     @Test
     fun testSetupWithLoadingOfDirectory(){
-        val setup = Setup()
+        val setup = Instance()
         val path = File(this.javaClass.getResource("/data/se-example-dir-6").toURI())
         setup.seDirParser.parse(path.absolutePath, {true});
         assertSite1AndSite2Loaded(setup.indexes)
