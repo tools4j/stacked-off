@@ -1,8 +1,123 @@
 <html>
 <head>
+    <style type="text/css">
+
+        body, div, span, p {
+            padding: 0;
+            margin: 0;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+        }
+
+        body {
+            font-size: 15px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+            line-height: 1.35;
+            font-weight: normal;
+            margin-bottom: .5em;
+        }
+
+        h2 {
+            font-size: 1.2em;
+            font-weight: normal;
+        }
+
+        h2.results-heading {
+            margin-bottom: 0.5em
+        }
+
+        h2 a.result-link {
+            text-decoration-line: none;
+            text-decoration-style: solid
+        }
+
+        a {
+            color: rgb(0, 119, 204);
+            text-decoration-color: rgb(0, 119, 204);
+        }
+
+        p, span, div {
+            font-weight: 400;
+        }
+
+        div.result p {
+            font-size: 1em;
+        }
+
+        div.header, div.result {
+            background: white;
+            border-bottom: 1px solid #eff0f1;
+        }
+
+        div.result {
+            padding-bottom: 1em;
+        }
+
+        img.logo {
+            width: 15em;
+        }
+
+        td.logo-td {
+            width: 16em;
+        }
+
+        input.searchbar {
+            border-color: #bbc0c4;
+            background-color: #FFF;
+            box-shadow: none;
+            color: #3b4045;
+            -webkit-appearance: none;
+            width: 100%;
+            margin: 0;
+            padding: .6em .7em;
+            border: 1px solid #bbc0c4;
+            border-radius: 3px;
+            font-size: 13px;
+            line-height: 1.15384615;
+        }
+
+        td.header-links {
+            text-align: right;
+            padding-right: 2em;
+        }
+
+        td.header-links input {
+            padding: 0.3em 0.5em;
+        }
+
+        div#content {
+            padding: 0em 2em;
+        }
+
+        table.data-table td {
+            border-bottom: 1px solid #eff0f1;
+        }
+
+        table.data-table th {
+            border-bottom: 2px solid #f1b301;
+        }
+
+        table.data-table th, table.data-table td {
+            margin: 0;
+            padding: 0.2em 0.4em;
+            text-align: left;
+        }
+
+        .content-start-spacer {
+            margin-top: 1em;
+        }
+
+    </style>
     <script type="text/javascript" src="jquery-3.3.1.js"></script>
     <script type="text/javascript">
         const baseUrl = "http://localhost/";
+
+        function sleep (time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+        }
 
         function loadSites() {
             fetchJson("v1/site", sites => showSites(sites));
@@ -23,7 +138,7 @@
                 <div class="div-load-sites">
                     <input id="sites-xml-chooser"
                             type="text"
-                            value="C:/dev/workspaces/stacked2/src/test/resources/data/se-example-dir-5"
+                            value="C:/Users/ben/Downloads/stackexchange"
                             onchange="javascript:$('#sites-xml-chosen-next-button')[0].disabled=false"/>
                 </div>
                 <input id="sites-xml-chosen-next-button"
@@ -42,7 +157,7 @@
             // language=HTML
             const markup = `<h1>Load new site(s)</h1>
             <h2>Step 2. Select the sites that you wish to load</h2>
-            <table class="sitesTable dataTable">
+            <table class="data-table">
                 <tr>
                 <th>Id</th>
                 <th>Site Url</th>
@@ -72,16 +187,48 @@
         }
 
         function loadNewSites_loadSites(seDir, seDirSiteIds){
-            fetchJson("v1/loadSites?path=" + seDir + "&seDirSiteIds=" + seDirSiteIds, indexedSites => showSites(indexedSites));
+            fetchJson("v1/loadSites?path=" + seDir + "&seDirSiteIds=" + seDirSiteIds, status => showStatusWhileRunning());
         }
 
-        function loadSitesDir(siteXmlFile){
-            alert(siteXmlFile)
+        function showStatusOnlyIfRunning(){
+            fetchJson("v1/status", status => {
+                if(!status.running) return;
+                showStatus(status);
+                showStatusWhileRunning()
+            });
+        }
+
+        function showStatusWhileRunning(){
+            fetchJson("v1/status", status => {
+                showStatus(status);
+                if(!status.running) return;
+                sleep(1000).then(() => {
+                    showStatusWhileRunning()
+                });
+            });
+        }
+
+        function loadStatus(){
+            fetchJson("v1/status", status => showStatus(status));
+        }
+
+        function showStatus(status){
+            var statusStr = "<h1>Operation currently in progress...</h1>";
+            statusStr += "<pre>=============================================================================\n";
+            statusStr += status.operationHistory.join("\n");
+            statusStr += "\n";
+            if(status.currentOperationProgress != "") {
+                statusStr += "-----------------------------------------------------------------------------\n";
+                statusStr += status.currentOperationProgress + "\n";
+            }
+            statusStr += "=============================================================================</pre>"
+            $("#content")[0].innerHTML = statusStr
+            return status.running
         }
 
         function showQuestion(question) {
             const markup = `
-                <h3>${question.post.rawPost.title}</h3>
+                <h1>${question.post.rawPost.title}</h1>
                 <div>${question.post.rawPost.body}</div>
                 ${question.post.comments.map(comment =>
                             `<div class="comment">
@@ -97,41 +244,54 @@
 
         function showResults(results){
             const markup = `
-                <br/>
                 ${results.map(question =>
-                            `<a>
-                        <a href="javascript:loadQuestion('${question.post.rawPost.indexedSiteId + "." + question.post.rawPost.id}')">
-                            ${question.post.rawPost.title}
-                        </a>
+                            `<div class="result">
+                        <h2 class="results-heading"><a class="result-link" href="javascript:loadQuestion('${question.post.rawPost.indexedSiteId + "." + question.post.rawPost.id}')">
+                            ${question.post.rawPost.title}:&nbsp;${question.indexedSite.seSite.urlDomain}
+                        </a></h2>
                     </h3>
-                    <div>${question.post.rawPost.body}</div>`).join('')};`
+                    <div class="result-body">${question.post.rawPost.body}</div></div>`).join('')};`
             $("#content")[0].innerHTML = markup
         }
 
         function showSites(indexedSites){
-            const markup = `
-                <table class="sitesTable dataTable">
-                    <tr>
-                        <th></th>
-                        <th>Id</th>
-                        <th>TinyName</th>
-                        <th>Name</th>
-                        <th>Url</th>
-                        <th>Loaded</th>
-                        <th>Errors</th>
-                    </tr>
-                    ${indexedSites.map(indexedSite =>
-                            `<tr>
-                        <td><img src="${indexedSite.seSite.iconUrl}"/></td>
-                        <td>${indexedSite.indexedSiteId}</td>
-                        <td>${indexedSite.seSite.tinyName}</td>
-                        <td>${indexedSite.seSite.name}</td>
-                        <td>${indexedSite.seSite.url}</td>
-                        <td>${indexedSite.success}</td>
-                        <td>${indexedSite.errorMessage}</td>
-                    </tr>`).join('')}
-                </table>`;
-            $("#content")[0].innerHTML = markup
+            if(indexedSites.length == 0){
+                const markup = `
+                <span>You have no sites loaded.  Click here to load sites from a stackdump download</span>
+                <input type="button" onclick="loadNewSites_chooseSitesXmlFile()" value="Load new site(s)"/>
+                `
+                $("#content")[0].innerHTML = markup
+            } else {
+                const markup = `
+                    <table class="data-table content-start-spacer">
+                        <tr>
+                            <th>Id</th>
+                            <th>TinyName</th>
+                            <th>Name</th>
+                            <th>Url</th>
+                            <th>Loaded</th>
+                            <th>Errors</th>
+                            <th>Operation</th>
+                        </tr>
+                        ${indexedSites.map(indexedSite =>
+                    `<tr>
+                            <td>${indexedSite.indexedSiteId}</td>
+                            <td>${indexedSite.seSite.tinyName}</td>
+                            <td>${indexedSite.seSite.name}</td>
+                            <td>${indexedSite.seSite.url}</td>
+                            <td>${indexedSite.success ? `Success`: `Error`}</td>
+                            <td><a href="javascript:purgeSite(${indexedSite.indexedSiteId})">Delete</a></td>
+                        </tr>`).join('')}
+                    </table>`;
+                $("#content")[0].innerHTML = markup
+            }
+        }
+
+        function purgeSite(indexedSiteId){
+            const confirmed = confirm("Do you wish to purge this site from your index?")
+            if(confirmed){
+                fetchJson("v1/purgeSite/" + indexedSiteId, sites => showSites(sites));
+            }
         }
 
         function fetchJson(address, callback) {
@@ -149,17 +309,23 @@
             xmlhttp.send();
         }
 
+        showStatusOnlyIfRunning();
     </script>
 </head>
 <body onload="loadSites()">
-<div>
-    OffStack -
-    <input id="textSearch" type="text" onkeydown="if(event.key === 'Enter') search(value)"/>
+<div class="header">
+    <table width="100%"><tr>
+        <td class="logo-td"><img class="logo" src="stacked-off-white.png"/></td>
+        <td><input class="searchbar" id="textSearch" type="text" onkeydown="if(event.key === 'Enter') search(value)"/></td>
+        <td class="header-links">
+            <input type="button" onclick="loadSites()" value="Sites"/>
+            <input type="button" onclick="loadNewSites_chooseSitesXmlFile()" value="Load new site"/>
+        </td>
+    </tr></table>
 </div>
-<a href="javascript:loadSites()">Sites</a>
-<a href="javascript:loadNewSites_chooseSitesXmlFile()">Load new site</a>
 
 <div id="errors" style="color: red"></div>
 <div id="content"></div>
+<div id="content2"></div>
 </body>
 </html>

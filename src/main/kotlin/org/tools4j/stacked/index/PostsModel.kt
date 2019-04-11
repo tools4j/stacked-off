@@ -30,6 +30,7 @@ interface Post: RawPost {
 
 interface Question: Post {
     val childPosts: List<Post>
+    val indexedSite: IndexedSite
     fun containsPost(postId: String): Boolean
 }
 
@@ -40,8 +41,10 @@ data class PostImpl(val rawPost: RawPost, override val ownerUser: User?, overrid
     }
 }
 
-data class QuestionImpl(val post: Post, override val childPosts: List<Post>): Post by post,
-    Question {
+data class QuestionImpl(
+    val post: Post,
+    override val indexedSite: IndexedSite,
+    override val childPosts: List<Post>): Post by post, Question {
 
     override fun containsPost(postUid: String): Boolean{
         return post.uid == postUid || childPosts.any { it.uid == postUid }

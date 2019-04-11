@@ -46,9 +46,7 @@ data class SeSiteImpl(
     override val lastPost: String?,
     override val oDataEndpoint: String?,
     override val badgeIconUrl: String?) : SeSite {
-
-    override val urlDomain: String?
-        get() = url.replace(Regex("http(s)?://"), "")
+    override val urlDomain: String = url.replace(Regex("http(s)?://"), "")
 
     constructor(doc: Document): this(
             doc.get("seSiteId"),

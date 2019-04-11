@@ -11,17 +11,7 @@ interface JobStatus{
     var currentOperationProgress: String
 }
 
-class NullJobStatus: JobStatus{
-    override var running: Boolean = false
-        get() = throw UnsupportedOperationException()
-
-    override var currentOperationProgress: String = ""
-        get() = throw UnsupportedOperationException()
-
-    override fun addOperation(operation: String) {
-        throw UnsupportedOperationException()
-    }
-
+class NullJobStatus : JobStatus{
     override fun onComplete() {
         throw UnsupportedOperationException()
     }
@@ -29,6 +19,19 @@ class NullJobStatus: JobStatus{
     override fun onStart() {
         throw UnsupportedOperationException()
     }
+
+    override fun addOperation(operation: String) {
+        throw UnsupportedOperationException()
+    }
+
+    override var running: Boolean
+        get() = false
+        set(value) {throw UnsupportedOperationException()}
+
+    override var currentOperationProgress: String
+        get() = "No current operation..."
+        set(value) {throw UnsupportedOperationException()}
+
 }
 
 class JobStatusImpl: JobStatus {
@@ -51,6 +54,7 @@ class JobStatusImpl: JobStatus {
 
     override fun addOperation(s: String) {
         operationHistory.add(s)
+        currentOperationProgress = ""
     }
 
     override fun onStart() {
@@ -63,6 +67,7 @@ class JobStatusImpl: JobStatus {
     }
 
     override fun onComplete(){
+        currentOperationProgress = "Complete"
         running = false
     }
 }

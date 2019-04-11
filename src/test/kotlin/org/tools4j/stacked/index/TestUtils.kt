@@ -31,7 +31,8 @@ fun createPostService(): PostService {
     return PostService(
         createAndLoadPostIndex(),
         createAndLoadCommentIndex(),
-        createAndLoadUserIndex()
+        createAndLoadUserIndex(),
+        createAndLoadIndexedSiteIndex()
     )
 }
 

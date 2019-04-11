@@ -45,9 +45,6 @@ class SeSiteXmlFileParser(val inputStream: InputStream) {
                 }
                 sites.add(handle(element));
                 countOfElementsHandled++
-                if(countOfElementsHandled % printCountUpdateEveryNRows == 0){
-                    println("$countOfElementsHandled sites rows read from xml...")
-                }
             }
         }
         return sites

@@ -121,7 +121,7 @@ class ExtractCallback(
             throw IllegalStateException("Extraction error")
         }
         if(index < 0 || fileInZipParser == null) return
-        println("Completed extracting [${fileInZipParser!!.fileName}], from archive [$archiveFile] with indexedSiteId [$indexedSiteId]")
+        jobStatus.currentOperationProgress = "Completed extracting [${fileInZipParser!!.fileName}], scanning archive for further data files..."
         /*
         At this point we know that writing to the output stream has finished.
         Therefore we need to close the output stream.  This will cause a -1

@@ -6,7 +6,7 @@ class Instance {
     }
 
     val postService: PostService by lazy {
-        PostService(postIndex, commentIndex, userIndex)
+        PostService(postIndex, commentIndex, userIndex, indexedSiteIndex)
     }
 
     val seDirParser: SeDirParser by lazy {

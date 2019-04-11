@@ -27,12 +27,14 @@ class CoffeeSiteAssertions(val indexedSiteId: String) {
     }
 
     fun assertIsQuestion1(question: Question){
+        assertThat(question.indexedSite.indexedSiteId).isEqualTo(indexedSiteId)
         assertIsPost1(question)
         assertThat(question.childPosts).hasSize(1)
         assertHasPost3(question.childPosts)
     }
 
     fun assertIsQuestion2(question: Question){
+        assertThat(question.indexedSite.indexedSiteId).isEqualTo(indexedSiteId)
         assertIsPost2(question)
         assertThat(question.childPosts).isEmpty()
     }

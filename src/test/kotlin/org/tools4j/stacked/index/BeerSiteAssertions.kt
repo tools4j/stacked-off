@@ -27,12 +27,14 @@ class BeerSiteAssertions(val indexedSiteId: String) {
     }
 
     fun assertIsQuestion1(question: Question){
+        assertThat(question.indexedSite.indexedSiteId).isEqualTo(indexedSiteId)
         assertIsPost1(question)
         assertThat(question.childPosts).hasSize(1)
         assertHasPost2(question.childPosts)
     }
 
     fun assertIsQuestion3(question: Question){
+        assertThat(question.indexedSite.indexedSiteId).isEqualTo(indexedSiteId)
         assertIsPost3(question)
         assertThat(question.childPosts).isEmpty()
     }

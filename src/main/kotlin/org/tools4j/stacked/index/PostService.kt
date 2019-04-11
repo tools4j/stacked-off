@@ -5,7 +5,8 @@ import java.lang.IllegalStateException
 class PostService(
     private val postIndex: PostIndex,
     private val commentIndex: CommentIndex,
-    private val userIndex: UserIndex) {
+    private val userIndex: UserIndex,
+    private val indexedSiteIndex: IndexedSiteIndex) {
 
     fun search(searchText: String): Set<Question>{
         val rawPosts = postIndex.search(searchText)
@@ -56,7 +57,8 @@ class PostService(
             val childPosts = postIndex.getByParentUid(uid)
                 .map { convertRawPostToPost(it) }
                 .toList()
-            return QuestionImpl(post, childPosts)
+            val indexedSite = indexedSiteIndex.getByUid(post.indexedSiteId)!!
+            return QuestionImpl(post, indexedSite, childPosts)
         }
     }
 

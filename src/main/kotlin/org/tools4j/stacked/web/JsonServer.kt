@@ -21,7 +21,7 @@ class JsonServer {
         @JvmStatic
         fun main(args: Array<String>) {
             val instance = Instance()
-            val loadInProgress = AtomicReference<JobStatus>()
+            val loadInProgress = AtomicReference<JobStatus>(NullJobStatus())
 
             embeddedServer(Netty) {
                 install(DefaultHeaders)
@@ -83,25 +83,34 @@ class JsonServer {
 
                     get("/v1/loadSites") {
                         val newLoadStatus = JobStatusImpl()
-                        val currentLoadStatus = loadInProgress.getAndUpdate({ previousJobStatus ->
+                        val currentLoadStatus = loadInProgress.updateAndGet({ previousJobStatus ->
                             if(previousJobStatus != null && previousJobStatus.running) previousJobStatus
                             else newLoadStatus
                         })
                         if(currentLoadStatus !== newLoadStatus){
                             call.respond(HttpStatusCode.InternalServerError, "Job already running")
+                        } else {
+                            val seDirPath = call.parameters["path"]!!
+                            val seDirSiteIds = call.parameters["seDirSiteIds"]!!.split(",")
+                            Thread({
+                                instance.seDirParser.parse(
+                                    seDirPath,
+                                    { seSite -> seDirSiteIds.contains(seSite.seSiteId) },
+                                    newLoadStatus
+                                )
+                            }).start()
+                            call.respond(HttpStatusCode.OK, newLoadStatus)
                         }
-                        val seDirPath = call.parameters["path"]!!
-                        val seDirSiteIds = call.parameters["seDirSiteIds"]!!.split(",")
-                        Thread({instance.seDirParser.parse(
-                            seDirPath,
-                            {seSite -> seDirSiteIds.contains(seSite.seSiteId)},
-                            newLoadStatus)}).start()
-
-                        call.respond(HttpStatusCode.OK, newLoadStatus)
                     }
 
                     get("/v1/status") {
                         call.respond(loadInProgress.get())
+                    }
+
+                    get("/v1/purgeSite/{id}") {
+                        instance.indexes.purgeSite(call.parameters["id"]!!)
+                        val sites = instance.indexes.indexedSiteIndex.getAll()
+                        call.respond(sites)
                     }
                 }
             }.start(wait = true)

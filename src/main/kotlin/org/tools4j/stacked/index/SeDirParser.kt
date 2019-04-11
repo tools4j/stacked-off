@@ -54,12 +54,12 @@ class SeDirParser(
         } catch (e: Exception) {
             println(e.message)
             val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
+            jobStatus.addOperation("Error ocurred whilst parsing site ${seSite.urlDomain}, purging loaded data...")
             if (matchingExistingIndexedSites.isNotEmpty()) {
-                jobStatus.addOperation("Error ocurred whilst parsing site ${seSite.urlDomain}, purging loaded data...")
                 indexes.purgeSite(newIndexedSiteId)
                 jobStatus.addOperation("Site purged.")
-                jobStatus.addOperation("Exiting with error\n$exceptionAsString")
             }
+            jobStatus.addOperation("Exiting with error\n$exceptionAsString")
             indexes.indexedSiteIndex.addItem(indexingSite.finished(false, exceptionAsString))
         }
     }
