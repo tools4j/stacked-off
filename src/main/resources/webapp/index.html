@@ -1,0 +1,28 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="static/app.css"/>
+    <script type="text/javascript" src="static/jquery-3.3.1.js"></script>
+    <script type="module" src="./static/navigo.js"></script>
+    <script type="module" src="./static/app.js"></script>
+    <script type="module">
+        import router from "./static/app.js"
+        window.router = router
+    </script>
+</head>
+<body>
+<div class="header">
+    <table width="100%"><tr>
+        <td class="logo-td"><img class="logo" src="static/stacked-off-white.png"/></td>
+        <td><input class="searchbar" id="textSearch" type="text" onkeydown="if(event.key === 'Enter') router.navigate('search?searchText=' + value)"/></td>
+        <td class="header-links">
+            <input type="button" onclick="router.navigate('/sites')" value="Sites"/>
+            <input type="button" onclick="router.navigate('/load/chooseSitesXmlFile')" value="Load new site"/>
+        </td>
+    </tr></table>
+</div>
+
+<div id="errors" style="color: red"></div>
+<div id="content"></div>
+<div id="content2"></div>
+</body>
+</html>

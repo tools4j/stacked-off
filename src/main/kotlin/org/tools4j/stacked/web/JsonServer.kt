@@ -5,6 +5,9 @@ import io.ktor.application.install
 import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.resource
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.routing
@@ -37,12 +40,12 @@ class JsonServer {
                     }
                 }
                 routing {
-                    get("/v1/site") {
+                    get("/rest/sites") {
                         val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
 
-                    get("/v1/post/{id}") {
+                    get("/rest/posts/{id}") {
                         val post = instance.postService.getPost(call.parameters["id"]!!)
                         if (post == null)
                             call.respond(HttpStatusCode.NotFound)
@@ -50,7 +53,7 @@ class JsonServer {
                             call.respond(post)
                     }
 
-                    get("/v1/question/{id}") {
+                    get("/rest/questions/{id}") {
                         val question = instance.postService.getQuestion(call.parameters["id"]!!)
                         if (question == null)
                             call.respond(HttpStatusCode.NotFound)
@@ -58,20 +61,12 @@ class JsonServer {
                             call.respond(question)
                     }
 
-                    get("/v1/question/{id}") {
-                        val question = instance.postService.getQuestion(call.parameters["id"]!!)
-                        if (question == null)
-                            call.respond(HttpStatusCode.NotFound)
-                        else
-                            call.respond(question)
-                    }
-
-                    get("/v1/search") {
+                    get("/rest/search") {
                         val questions = instance.postService.search(call.parameters["searchText"]!!)
                         call.respond(questions)
                     }
 
-                    get("/v1/sedir") {
+                    get("/rest/sedir") {
                         val seDirPath = call.parameters["path"]!!
                         try {
                             val seDirSites = SeDir(seDirPath).getContents().getSites()
@@ -81,7 +76,7 @@ class JsonServer {
                         }
                     }
 
-                    get("/v1/loadSites") {
+                    get("/rest/loadSites") {
                         val newLoadStatus = JobStatusImpl()
                         val currentLoadStatus = loadInProgress.updateAndGet({ previousJobStatus ->
                             if(previousJobStatus != null && previousJobStatus.running) previousJobStatus
@@ -103,14 +98,24 @@ class JsonServer {
                         }
                     }
 
-                    get("/v1/status") {
+                    get("/rest/status") {
                         call.respond(loadInProgress.get())
                     }
 
-                    get("/v1/purgeSite/{id}") {
+                    get("/rest/purgeSite/{id}") {
                         instance.indexes.purgeSite(call.parameters["id"]!!)
                         val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
+                    }
+
+                    resource("/", "webapp/index.html")
+                    resource("/*", "webapp/index.html")
+                    resource("/*/*", "webapp/index.html")
+                    static("static") {
+                        resources("webapp")
+                    }
+                    static("*/static") {
+                        resources("webapp")
                     }
                 }
             }.start(wait = true)
