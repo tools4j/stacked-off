@@ -165,16 +165,63 @@ function showStatus(status){
 function showQuestion(question) {
     const markup = `
                 <h1>${question.post.rawPost.title}</h1>
-                <div>${question.post.rawPost.body}</div>
-                ${question.post.comments.map(comment =>
-        `<div class="comment">
-                        <div class="comment-content">
-                            ${comment.rawComment.text}
-                        </div>
-                        <div>
-                            ${comment.user.displayName}
-                        </div>
-                    </div>`).join('\n')}`
+                <table class="question">
+                    <tr>
+                        <td class="score-details">
+                            <div class="score">${question.post.rawPost.score}</div>
+                            <div class="favorite-count">
+                                ${question.post.rawPost.favoriteCount != null && question.post.rawPost.favoriteCount > 0 ? `
+                                    <img class="star" display="block" width="18" src="static/star.png"/>
+                                    <div class="fav-count">${question.post.rawPost.favoriteCount}</div>    
+                                `: ""}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="post-body">
+                                ${question.post.rawPost.body}
+                            </div>            
+                            <div class="question-details">
+                                <div class="user-details rounded-blue-box">
+                                    <div class="asked">asked ${formatDate(question.post.rawPost.creationDate)}</div>
+                                    <div class="display-name">${question.post.ownerUser.displayName}</div>
+                                    <div class="reputation">${question.post.ownerUser.reputation}</div>
+                                </div>                            
+                                <span class="tags">${question.post.rawPost.tags}</span>
+                                    ${question.post.rawPost.tags
+                                        .split("><")
+                                        .map(tag => tag.replace("<", "").replace(">", ""))
+                                        .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
+                                        .join('')}    
+                                </span>
+                                <span>
+                                    <a class="online-link" href="${question.indexedSite.seSite.url}/questions/${question.post.rawPost.id}">jump to online version</a>
+                                </span>
+                                <span class="last-activity">
+                                    edited ${formatDate(question.post.rawPost.lastActivityDate)}
+                                </span>
+                            </div>
+                            <table class="comments">
+                                ${question.post.comments.map(comment =>
+                                `<tr class="comment">
+                                    <td class="comment-score">
+                                        ${comment.rawComment.score > 0 ? comment.rawComment.score: ""}
+                                    </td>
+                                    <td class="comment-content">
+                                        <span class="comment-text">${comment.rawComment.text}</span>
+                                        <span class="comment-user">&#8211;&nbsp;${comment.user.displayName}</span>
+                                        <span class="comment-datetime">${formatDate(comment.rawComment.creationDate)}</span>
+                                    </td>
+                                </tr>`).join('\n')}
+                           </table>
+                       </td>
+                    </tr>       
+                </table>
+                ${question.childPosts.length == 0 ? "": `<h2>${question.childPosts.length} Answer${question.childPosts.length > 1 ? 's': ''}</h2>
+                <div class="answers">
+                     
+                 
+                </div>
+                `}`;
     $("#content")[0].innerHTML = markup
 }
 
@@ -246,6 +293,10 @@ function fetchJson(address, callback) {
     };
     xmlhttp.open("GET", address , true);
     xmlhttp.send();
+}
+
+function formatDate(dateStr){
+    return dateStr.replace('T', ' ').replace(/:\d\d\.\d\d\d/, '')
 }
 
 showStatusOnlyIfRunning();

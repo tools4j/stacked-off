@@ -9,6 +9,10 @@ body {
     font-size: 15px;
 }
 
+table {
+    font-size: inherit;
+}
+
 h1 {
     font-size: 1.8em;
     font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
@@ -46,7 +50,7 @@ div.result p {
 
 div.header, div.result {
     background: white;
-    border-bottom: 1px solid #eff0f1;
+    border-bottom: 2px solid #eff0f1;
 }
 
 div.result {
@@ -105,4 +109,127 @@ table.data-table th, table.data-table td {
 
 .content-start-spacer {
     margin-top: 1em;
+}
+
+div.question {
+    border-top: 1px solid #eff0f1;
+    padding-top: 1em;
+    overflow: auto;
+}
+
+div.score {
+    color: #6a737c !important;
+    font-size: 1.6em;
+}
+
+div.fav-count {
+    color: rgb(187, 192, 196);
+    text-align: center;
+}
+
+div.question {
+    border-bottom: 2px solid #eff0f1;
+}
+
+div.post-body p {
+    margin-bottom: 15px;
+}
+
+.score-details {
+    text-align: center;
+    vertical-align: top;
+    width: 5em;
+}
+
+.question-details {
+    font-size: 14px;
+    color: rgb(132, 141, 149);
+    text-decoration: none;
+    font-size: 14px;
+    overflow: auto;
+}
+
+.question-details a {
+    text-decoration: none;
+}
+
+span.tag {
+    margin: 2px 5px 2px 0px;
+}
+
+.online-link {
+    margin-left: 3em;
+}
+
+.last-activity {
+    margin-left: 3em;
+}
+
+.rounded-blue-box {
+    padding: 0.4em 0.5em;
+    color: rgb(57, 115, 157);
+    background-color: rgb(225, 236, 244);
+    border-color: rgb(225, 236, 244);
+    position: relative;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+    text-decoration: none;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+}
+
+.user-details {
+    float: right;
+}
+
+.user-details .display-name {
+    font-size: 15px;
+}
+
+.user-details .reputation {
+    color: rgb(106, 115, 124);
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.user-details .asked {
+    color: rgb(106, 115, 124);
+    font-size: 12px;
+}
+
+.user-details div {
+    text-align: left;
+    padding: 0.1em 0.1em;
+    margin: 0.2em 0.1em;
+}
+
+table.comments {
+    border-top: 1px solid #eff0f1;
+    margin-top: 1em;
+}
+
+table.comments td {
+    border-bottom: 1px solid #eff0f1;
+    vertical-align: top;
+    font-size: 13px;
+    line-height: 18px;
+    text-align: left;
+    padding: 0.3em;
+}
+
+td.comment-score {
+    right-padding: 1em;
+    color: rgb(145, 153, 161);
+}
+
+.comment .comment-user {
+    color: rgb(57, 115, 157);
+}
+
+.comment .comment-datetime {
+    color: rgb(132, 141, 149);
 }
