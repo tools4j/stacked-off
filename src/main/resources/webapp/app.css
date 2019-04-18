@@ -111,12 +111,6 @@ table.data-table th, table.data-table td {
     margin-top: 1em;
 }
 
-div.question {
-    border-top: 1px solid #eff0f1;
-    padding-top: 1em;
-    overflow: auto;
-}
-
 div.score {
     color: #6a737c !important;
     font-size: 1.6em;
@@ -128,7 +122,11 @@ div.fav-count {
 }
 
 div.question {
-    border-bottom: 2px solid #eff0f1;
+    border-bottom: 1px solid #eff0f1;
+    border-top: 1px solid #eff0f1;
+    padding-top: 1em;
+    overflow: auto;
+    margin-bottom: 1.5em;
 }
 
 div.post-body p {
@@ -141,7 +139,12 @@ div.post-body p {
     width: 5em;
 }
 
-.question-details {
+.star, .tick {
+    margin-top: 0.5em;
+}
+
+
+.post-details {
     font-size: 14px;
     color: rgb(132, 141, 149);
     text-decoration: none;
@@ -149,27 +152,46 @@ div.post-body p {
     overflow: auto;
 }
 
-.question-details a {
+.post-details a {
     text-decoration: none;
 }
 
+.answer {
+    border-bottom: 1px solid rgb(228, 230, 232);
+    padding-bottom: 1em;
+}
+
 span.tag {
+    padding: 0.4em 0.5em;
     margin: 2px 5px 2px 0px;
+    background-color: rgb(225, 236, 244);
+    border-color: rgb(225, 236, 244);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+    display: inline-block;
+    color: rgb(57, 115, 157);
+    font-size: 12px;
+}
+
+.tags {
+    margin-right: 3em;
 }
 
 .online-link {
-    margin-left: 3em;
+    margin-right: 3em;
 }
 
 .last-activity {
-    margin-left: 3em;
+    margin-right: 3em;
 }
 
-.rounded-blue-box {
+.user-details {
     padding: 0.4em 0.5em;
     color: rgb(57, 115, 157);
-    background-color: rgb(225, 236, 244);
-    border-color: rgb(225, 236, 244);
     position: relative;
     display: inline-block;
     font-size: 12px;
@@ -177,13 +199,15 @@ span.tag {
     white-space: nowrap;
     text-align: center;
     text-decoration: none;
+    float: right;
+}
+
+.question .user-details {
+    background-color: rgb(225, 236, 244);
+    border-color: rgb(225, 236, 244);
     border-width: 1px;
     border-style: solid;
     border-radius: 3px;
-}
-
-.user-details {
-    float: right;
 }
 
 .user-details .display-name {
@@ -205,6 +229,10 @@ span.tag {
     text-align: left;
     padding: 0.1em 0.1em;
     margin: 0.2em 0.1em;
+}
+
+table.post {
+    width: 100%;
 }
 
 table.comments {
@@ -232,4 +260,17 @@ td.comment-score {
 
 .comment .comment-datetime {
     color: rgb(132, 141, 149);
+}
+
+hr {
+    border-top: 0px;
+    border-bottom: 1px solid #eff0f1;
+}
+
+blockquote {
+    background-color: rgb(255, 248, 220);
+    border-left: 2px solid rgb(255, 235, 142);
+    padding: 10px;
+    margin-bottom: 10px;
+    vertical-align: baseline;
 }

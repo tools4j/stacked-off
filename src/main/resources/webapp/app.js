@@ -164,66 +164,84 @@ function showStatus(status){
 
 function showQuestion(question) {
     const markup = `
-                <h1>${question.post.rawPost.title}</h1>
-                <table class="question">
-                    <tr>
-                        <td class="score-details">
-                            <div class="score">${question.post.rawPost.score}</div>
-                            <div class="favorite-count">
-                                ${question.post.rawPost.favoriteCount != null && question.post.rawPost.favoriteCount > 0 ? `
-                                    <img class="star" display="block" width="18" src="static/star.png"/>
-                                    <div class="fav-count">${question.post.rawPost.favoriteCount}</div>    
-                                `: ""}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="post-body">
-                                ${question.post.rawPost.body}
-                            </div>            
-                            <div class="question-details">
-                                <div class="user-details rounded-blue-box">
-                                    <div class="asked">asked ${formatDate(question.post.rawPost.creationDate)}</div>
-                                    <div class="display-name">${question.post.ownerUser.displayName}</div>
-                                    <div class="reputation">${question.post.ownerUser.reputation}</div>
-                                </div>                            
-                                <span class="tags">${question.post.rawPost.tags}</span>
-                                    ${question.post.rawPost.tags
-                                        .split("><")
-                                        .map(tag => tag.replace("<", "").replace(">", ""))
-                                        .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
-                                        .join('')}    
-                                </span>
-                                <span>
-                                    <a class="online-link" href="${question.indexedSite.seSite.url}/questions/${question.post.rawPost.id}">jump to online version</a>
-                                </span>
-                                <span class="last-activity">
-                                    edited ${formatDate(question.post.rawPost.lastActivityDate)}
-                                </span>
-                            </div>
-                            <table class="comments">
-                                ${question.post.comments.map(comment =>
-                                `<tr class="comment">
-                                    <td class="comment-score">
-                                        ${comment.rawComment.score > 0 ? comment.rawComment.score: ""}
-                                    </td>
-                                    <td class="comment-content">
-                                        <span class="comment-text">${comment.rawComment.text}</span>
-                                        <span class="comment-user">&#8211;&nbsp;${comment.user.displayName}</span>
-                                        <span class="comment-datetime">${formatDate(comment.rawComment.creationDate)}</span>
-                                    </td>
-                                </tr>`).join('\n')}
-                           </table>
-                       </td>
-                    </tr>       
-                </table>
-                ${question.childPosts.length == 0 ? "": `<h2>${question.childPosts.length} Answer${question.childPosts.length > 1 ? 's': ''}</h2>
-                <div class="answers">
-                     
-                 
-                </div>
-                `}`;
+        <h1>${question.post.rawPost.title}</h1>
+        <div class="question">
+            ${renderPost(question.post, question.indexedSite.seSite, null)}
+            ${question.childPosts.length == 0 ? "" : `
+                <h2>${question.childPosts.length} Answer${question.childPosts.length > 1 ? 's' : ''}</h2>`}
+        </div>
+        ${question.childPosts.length == 0 ? "" : `
+            <div class="answers">
+                ${question.childPosts.map(post => `
+                <div class="answer"> 
+                    ${renderPost(post, question.indexedSite.seSite, question.post.rawPost.acceptedAnswerId)}
+                </div>`)}     
+            </div>`}`;
     $("#content")[0].innerHTML = markup
 }
+
+function renderPost(post, seSite, acceptedAnswerId){
+    return `
+    <table class="post">
+        <tr>
+            <td class="score-details">
+            <div class="score">${post.rawPost.score}</div>
+            ${post.rawPost.favoriteCount != null && post.rawPost.favoriteCount > 0 ? `
+                <div class="favorite-count">
+                    <img class="star" display="block" width="18" src="static/star.png"/>
+                    <div class="fav-count">${post.rawPost.favoriteCount}</div>    
+                </div>`: ""}
+            ${acceptedAnswerId != null && post.rawPost.id == acceptedAnswerId ? `
+                <div class="favorite-count">
+                    <img class="tick" display="block" width="18" src="static/tick.png"/>
+                </div>`: ""}
+            </div>
+            </td>
+            <td>
+                <div class="post-body">
+                    ${post.rawPost.body}
+                </div>            
+                <div class="post-details">
+                    <div class="user-details rounded-blue-box">
+                        <div class="asked">${post.rawPost.parentId == null ? 'asked': 'answered'} ${formatDate(post.rawPost.creationDate)}</div>
+                        <div class="display-name">${post.ownerUser.displayName}</div>
+                        <div class="reputation">${post.ownerUser.reputation}</div>
+                    </div> 
+                    ${post.rawPost.tags == null ? '': `                                               
+                    <span class="tags">
+                        ${post.rawPost.tags
+                            .split("><")
+                            .map(tag => tag.replace("<", "").replace(">", ""))
+                            .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
+                            .join('')}    
+                    </span>`}
+                    ${post.rawPost.parentId != null ? '': `
+                    <span>
+                        <a class="online-link" href="${seSite.url}/questions/${post.rawPost.id}">jump to online version</a>
+                    </span>`}
+                    <span class="last-activity">
+                        edited ${formatDate(post.rawPost.lastActivityDate)}
+                    </span>
+                </div>
+                <table class="comments">
+                    ${post.comments.map(comment =>
+                    `<tr class="comment">
+                        <td class="comment-score">
+                            ${comment.rawComment.score > 0 ? comment.rawComment.score: ""}
+                        </td>
+                        <td class="comment-content">
+                            <span class="comment-text">${comment.rawComment.text}</span>
+                            <span class="comment-user">&#8211;&nbsp;${comment.user.displayName}</span>
+                            <span class="comment-datetime">${formatDate(comment.rawComment.creationDate)}</span>
+                        </td>
+                    </tr>`).join('\n')}
+                </table>
+            </td>
+        </tr>       
+    </table>`
+}
+
+
 
 function showResults(results){
     const markup = `
