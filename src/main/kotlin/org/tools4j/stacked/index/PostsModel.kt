@@ -7,6 +7,7 @@ import javax.xml.stream.events.StartElement
 
 interface RawPost {
     val uid: String
+    val id: String
     val indexedSiteId: String
     val postTypeId: String?
     val creationDate: String?
@@ -19,6 +20,7 @@ interface RawPost {
     val favoriteCount: String?
     val title: String?
     val parentUid: String?
+    val acceptedAnswerId: String?
     fun convertToDocument(): Document
 }
 
@@ -57,7 +59,7 @@ data class QuestionImpl(
 }
 
 data class RawPostImpl(
-    private val id: String,
+    override val id: String,
     override val indexedSiteId: String,
     override val postTypeId: String?,
     override val creationDate: String?,
@@ -69,7 +71,8 @@ data class RawPostImpl(
     override val tags: String?,
     private val parentId: String?,
     override val favoriteCount: String?,
-    override val title: String?) : RawPost{
+    override val title: String?,
+    override val acceptedAnswerId: String?) : RawPost{
     
     constructor(doc: Document): this(
         doc.get("id"),
@@ -84,7 +87,8 @@ data class RawPostImpl(
         doc.get("tags"),
         doc.get("parentId"),
         doc.get("favoriteCount"),
-        doc.get("title")
+        doc.get("title"),
+        doc.get("acceptedAnswerId")
     )
     
     override val ownerUserUid: String?
@@ -113,6 +117,7 @@ data class RawPostImpl(
         if(parentUid != null) doc.add(StringField("parentUid", parentUid, Field.Store.NO))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
+        if(acceptedAnswerId != null) doc.add(TextField("acceptedAnswerId", acceptedAnswerId, Field.Store.YES))
         return doc
     }
 }
@@ -133,7 +138,8 @@ class PostXmlRowHandler(delegateProvider: () -> ItemHandler<RawPost>): XmlRowHan
             element.getAttributeByName(QName.valueOf("Tags"))?.value,
             element.getAttributeByName(QName.valueOf("ParentId"))?.value,
             element.getAttributeByName(QName.valueOf("FavoriteCount"))?.value,
-            element.getAttributeByName(QName.valueOf("Title"))?.value
+            element.getAttributeByName(QName.valueOf("Title"))?.value,
+            element.getAttributeByName(QName.valueOf("AcceptedAnswerId"))?.value
         )
         delegate.handle(rawPost)
     }

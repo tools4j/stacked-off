@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.io.File
 import java.io.FileInputStream
 import java.lang.IllegalStateException
@@ -17,6 +18,8 @@ import java.util.zip.ZipFile
 private const val SITES_XML_FILE_NAME = "Sites.xml"
 
 data class SeDir(val path: String) {
+    companion object: KLogging()
+
     fun getContents(): SeDirContents {
         val pathDir = File(path)
         validateDumpPathDir(pathDir)
@@ -31,7 +34,7 @@ data class SeDir(val path: String) {
             if (isZipFile(child)) {
                 zipFiles.add(child)
             } else if(!child.name.equals(SITES_XML_FILE_NAME)) {
-                println("Unrecognized file in dump dir [${child.name}]")
+                logger.debug{ "Unrecognized file in dump dir [${child.name}]" }
             }
         }
         if(zipFiles.isEmpty()){

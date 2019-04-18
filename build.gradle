@@ -53,6 +53,7 @@ dependencies {
     compile("io.ktor:ktor-server-netty:$ktor_version")
     compile("io.ktor:ktor-gson:$ktor_version")
     compile("ch.qos.logback:logback-classic:1.2.3")
+    compile "io.github.microutils:kotlin-logging:1.6.20"
     compile("net.sf.sevenzipjbinding:sevenzipjbinding:9.20-2.00beta")
     runtime("net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:9.20-2.00beta")
     implementation 'org.tukaani:xz:1.8'

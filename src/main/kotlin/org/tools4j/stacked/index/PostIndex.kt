@@ -17,6 +17,6 @@ class PostIndex(indexFactory: IndexFactory)
     override fun convertItemToDocument(post: RawPost): Document = post.convertToDocument()
 
     fun getByParentUid(parentUid: String): List<RawPost> {
-        return search{it.search(TermQuery(Term("parentUid", parentUid)), 1)}
+        return search{it.search(TermQuery(Term("parentUid", parentUid)), 10000)}
     }
 }

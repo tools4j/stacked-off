@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.lang.UnsupportedOperationException
 
 
@@ -38,6 +39,7 @@ class JobStatusImpl: JobStatus {
     override var running: Boolean = true
     override var currentOperationProgress: String = ""
     private val operationHistory = ArrayList<String>()
+    companion object: KLogging()
 
     override fun toString(): String {
         if(operationHistory.isEmpty()) return ""
@@ -61,7 +63,7 @@ class JobStatusImpl: JobStatus {
         Thread({
             while(running){
                 Thread.sleep(1000)
-                println(this.toString())
+                logger.debug{ this.toString() }
             }
         }).start()
     }

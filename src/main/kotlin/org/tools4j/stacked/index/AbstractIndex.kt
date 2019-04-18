@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.*
@@ -22,6 +23,7 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
     private lateinit var writer: IndexWriter
+    companion object: KLogging()
 
     override fun init() {
         index = indexFactory.createIndex(name)
@@ -75,7 +77,7 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         val hits = docs.scoreDocs
         val endTimeMs = System.currentTimeMillis()
         val durationMs = endTimeMs - startTimeMs
-        println("Found " + docs.totalHits + " hits. Took $durationMs ms.")
+        logger.debug{"Found " + docs.totalHits + " hits. Took $durationMs ms."}
         return hits.map{indexSearcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 
@@ -136,7 +138,7 @@ abstract class AbstractIndex<T>(val indexFactory: IndexFactory, val name: String
         val searcher = IndexSearcher(DirectoryReader.open(index))
         val docs = searcher.search(MatchAllDocsQuery(), 10000)
         val hits = docs.scoreDocs
-        println("Found " + docs.totalHits + " total records found.")
+        logger.debug{ "Found " + docs.totalHits + " total records found." }
         return hits.map{searcher.doc(it.doc)}.map{convertDocumentToItem(it)}.toList()
     }
 

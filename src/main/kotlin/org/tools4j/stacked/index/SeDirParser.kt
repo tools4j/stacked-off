@@ -1,11 +1,14 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.io.File
 
 class SeDirParser(
     private val zipFileParser: SeZipFileParser,
     private val indexes: Indexes
 ) {
+    companion object: KLogging()
+
     fun parseFromClasspath(pathOnClasspath: String, filter: (SeSite) -> Boolean, jobStatus: JobStatus = JobStatusImpl()) {
         val archiveFile = getFileOnClasspath(this.javaClass,pathOnClasspath)
         return parse(archiveFile.absolutePath, filter, jobStatus)
@@ -52,7 +55,7 @@ class SeDirParser(
             indexes.indexedSiteIndex.addItem(indexingSite.finished(true, null))
 
         } catch (e: Exception) {
-            println(e.message)
+            logger.debug{ e.message }
             val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
             jobStatus.addOperation("Error ocurred whilst parsing site ${seSite.urlDomain}, purging loaded data...")
             if (matchingExistingIndexedSites.isNotEmpty()) {

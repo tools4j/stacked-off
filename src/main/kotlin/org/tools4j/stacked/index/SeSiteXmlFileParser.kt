@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.io.IOException
 import java.io.InputStream
 import javax.xml.namespace.QName
@@ -12,6 +13,7 @@ import javax.xml.stream.events.StartElement
 class SeSiteXmlFileParser(val inputStream: InputStream) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10;
+    companion object: KLogging()
 
     @Throws(IOException::class, XMLStreamException::class)
     fun parse(): Set<SeSite> {
@@ -34,7 +36,7 @@ class SeSiteXmlFileParser(val inputStream: InputStream) {
             if (event.isEndElement() && event.asEndElement().name.localPart == "sites") {
                 val endTimeMs = System.currentTimeMillis()
                 val durationMs = endTimeMs - startTimeMs
-                println("Total of $countOfElementsHandled site rows read from xml. Took $durationMs ms.")
+                logger.debug{ "Total of $countOfElementsHandled site rows read from xml. Took $durationMs ms." }
                 return sites;
             }
             if (event.isStartElement()) {

@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import net.sf.sevenzipjbinding.*
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import java.io.*
@@ -7,12 +8,14 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserProvider) {
+    companion object: KLogging()
+
     fun parse(
         indexedSiteId: String,
         archiveFile: String,
         jobStatus: JobStatus = JobStatusImpl()
     ) {
-        println("Parsing $archiveFile")
+        logger.debug{ "Parsing $archiveFile" }
         RandomAccessFile(archiveFile, "r").use { randomAccessFile ->
             try {
                 SevenZip.openInArchive(
@@ -71,6 +74,7 @@ class ExtractCallback(
     @Volatile lateinit var pathInArchive: String
     @Volatile private var extractedFileInZipSize = 0
     @Volatile var exceptionDuringParsing: Exception? = null
+    companion object: KLogging()
 
     override fun getStream(
         index: Int,
@@ -83,7 +87,7 @@ class ExtractCallback(
             return null
         }
         pathInArchive = archive.getProperty(index, PropID.PATH).toString()
-        println("Extractor calling getStream() for: $pathInArchive")
+        logger.debug{ "Extractor calling getStream() for: $pathInArchive" }
         jobStatus.addOperation("Parsing $pathInArchive from $archiveFile...")
         totalFileInZipSize = archive.getProperty(index, PropID.SIZE).toString().toLong()
         fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)

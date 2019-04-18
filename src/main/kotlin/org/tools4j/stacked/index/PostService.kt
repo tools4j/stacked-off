@@ -56,6 +56,9 @@ class PostService(
         else {
             val childPosts = postIndex.getByParentUid(uid)
                 .map { convertRawPostToPost(it) }
+                .sortedWith(
+                    compareByDescending<RawPost> { post.acceptedAnswerId == it.id }
+                    .thenByDescending { it.score })
                 .toList()
             val indexedSite = indexedSiteIndex.getByUid(post.indexedSiteId)!!
             return QuestionImpl(post, indexedSite, childPosts)

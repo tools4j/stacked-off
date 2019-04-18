@@ -1,12 +1,16 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
+
 class Indexes(val indexedSiteIndex: IndexedSiteIndex,
               val postIndex: PostIndex,
               val commentIndex: CommentIndex,
               val userIndex: UserIndex){
 
+    companion object: KLogging()
+
     fun purgeSite(indexedSiteId: String){
-        println("Purging site with id: $indexedSiteId")
+        logger.debug{ "Purging site with id: $indexedSiteId" }
         indexedSiteIndex.purgeSite(indexedSiteId)
         postIndex.purgeSite(indexedSiteId)
         commentIndex.purgeSite(indexedSiteId)

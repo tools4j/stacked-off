@@ -1,12 +1,14 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.io.InputStream
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLInputFactory
 
 class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
-    private val printCountUpdateEveryNRows = 10;
+    private val printCountUpdateEveryNRows = 10000;
+    companion object: KLogging()
 
     fun parse() {
         try {
@@ -38,14 +40,14 @@ class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val
                     xmlRowHandler.onFinish()
                     val endTimeMs = System.currentTimeMillis()
                     val durationMs = endTimeMs - startTimeMs
-                    println("Total of $countOfElementsHandled $parentElementName rows read from xml. Took $durationMs ms.")
+                    logger.debug{ "Total of $countOfElementsHandled $parentElementName rows read from xml. Took $durationMs ms." }
                     return;
                 }
                 if (event.isStartElement) {
                     val element = event.asStartElement();
                     val elementName = element.getName().getLocalPart();
                     if (elementName != "row") {
-                        println("Exception parsing file...")
+                        logger.debug{ "Exception parsing file..." }
                         throw XmlFileParserException(
                             "Found non 'row' child element within [$parentElementName] with name [$elementName]",
                             countOfElementsHandled + 1
@@ -54,7 +56,7 @@ class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val
                     xmlRowHandler.handle(element, indexedSiteId);
                     countOfElementsHandled++
                     if (countOfElementsHandled % printCountUpdateEveryNRows == 0) {
-                        println("$countOfElementsHandled $parentElementName rows read from xml...")
+                        logger.debug{ "$countOfElementsHandled $parentElementName rows read from xml..." }
                     }
                 }
             } catch (e: XmlFileParserException){
