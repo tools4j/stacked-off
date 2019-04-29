@@ -4,7 +4,7 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.index.Term
 
 class IndexedSiteIndex(indexFactory: IndexFactory)
-    : AbstractIndex<IndexedSite>(indexFactory,"sites") {
+    : SingleTypedIndex<IndexedSite>(indexFactory,"sites") {
 
     override fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = LinkedHashMap()
 

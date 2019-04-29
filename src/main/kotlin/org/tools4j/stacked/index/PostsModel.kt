@@ -34,6 +34,7 @@ interface Question: Post {
     val childPosts: List<Post>
     val indexedSite: IndexedSite
     fun containsPost(postId: String): Boolean
+    fun toPrettyString(): String
 }
 
 data class PostImpl(val rawPost: RawPost, override val ownerUser: User?, override val comments: List<Comment>): RawPost by rawPost,
@@ -55,6 +56,19 @@ data class QuestionImpl(
     override fun containsComment(commentUid: String): Boolean {
         return post.containsComment(commentUid)
                 || childPosts.any { it.containsComment(commentUid) }
+    }
+
+    override fun toPrettyString(): String {
+        val sb = StringBuilder()
+        sb.append("----------------------------------------------------------\n")
+        sb.append(indexedSite.seSite.urlDomain).append(":").append(post.id).append(":").append(post.title).append("\n")
+        sb.append(post.comments.map{"    " + it.uid + ":" + it.text  }.joinToString("\n")).append("\n")
+        sb.append("----------------------------------------------------------\n")
+        for (childPost in childPosts) {
+            sb.append("    ").append(childPost.id).append(":").append(childPost.body!!.substring(0, 10)).append("\n")
+            sb.append(childPost.comments.map{"        " + it.uid + ":" + it.text  }.joinToString("\n")).append("\n")
+        }
+        return sb.toString()
     }
 }
 

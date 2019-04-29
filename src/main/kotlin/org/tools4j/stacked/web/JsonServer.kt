@@ -41,7 +41,7 @@ class JsonServer {
                 }
                 routing {
                     get("/rest/sites") {
-                        val sites = instance.indexes.indexedSiteIndex.getAll()
+                        val sites = instance.stagingIndexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
 
@@ -103,8 +103,8 @@ class JsonServer {
                     }
 
                     get("/rest/purgeSite/{id}") {
-                        instance.indexes.purgeSite(call.parameters["id"]!!)
-                        val sites = instance.indexes.indexedSiteIndex.getAll()
+                        instance.stagingIndexes.purgeSite(call.parameters["id"]!!)
+                        val sites = instance.stagingIndexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
 

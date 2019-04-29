@@ -95,6 +95,12 @@ fun createCommentIndex(): CommentIndex {
     return commentIndex
 }
 
+fun createQuestionIndex(): QuestionIndex {
+    val questionIndex = QuestionIndex(getTestIndexFactory())
+    questionIndex.init()
+    return questionIndex
+}
+
 fun createAndLoadUserIndex(): UserIndex {
     val userIndex = createUserIndex()
     return loadUserIndex(userIndex)
@@ -169,12 +175,21 @@ fun createIndexedSiteIndex(): IndexedSiteIndex {
 
 private fun getTestIndexFactory() = LightweightIndexFactory()
 
-fun createIndexes(): Indexes {
-    return Indexes(
+fun createStagingIndexes(): StagingIndexes {
+    return StagingIndexes(
         createIndexedSiteIndex(),
         createPostIndex(),
         createCommentIndex(),
         createUserIndex())
+}
+
+fun createAndLoadStagingIndexes(): StagingIndexes {
+    return StagingIndexes(
+        createAndLoadIndexedSiteIndex(),
+        createAndLoadPostIndex(),
+        createAndLoadCommentIndex(),
+        createAndLoadUserIndex()
+    )
 }
 
 fun assertHasIndexedSite1(indexedSites: List<IndexedSite>){

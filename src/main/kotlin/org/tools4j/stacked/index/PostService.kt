@@ -1,5 +1,6 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
 import java.lang.IllegalStateException
 
 class PostService(
@@ -7,17 +8,24 @@ class PostService(
     private val commentIndex: CommentIndex,
     private val userIndex: UserIndex,
     private val indexedSiteIndex: IndexedSiteIndex) {
+    companion object: KLogging()
 
     fun search(searchText: String): Set<Question>{
+        logger.debug{"Searching for raw posts"}
         val rawPosts = postIndex.search(searchText)
+        logger.debug{"Searching for raw comments"}
         val rawComments = commentIndex.search(searchText)
 
+        logger.debug{"Getting questions for raw posts"}
         val questionsFromPosts = getQuestionsForRawPosts(rawPosts)
+        logger.debug{"Getting questions from comments"}
         val questionsFromComments = getQuestionsForComments(rawComments, questionsFromPosts)
 
+        logger.debug{"Building up questions list"}
         val allQuestions = LinkedHashSet<Question>()
         allQuestions.addAll(questionsFromPosts)
         allQuestions.addAll(questionsFromComments)
+        logger.debug{"Returning questions"}
         return allQuestions
     }
 

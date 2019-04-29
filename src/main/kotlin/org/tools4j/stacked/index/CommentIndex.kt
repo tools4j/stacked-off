@@ -5,7 +5,7 @@ import org.apache.lucene.index.Term
 import org.apache.lucene.search.TermQuery
 
 class CommentIndex(indexFactory: IndexFactory)
-    : AbstractIndex<RawComment>(indexFactory, "comments") {
+    : SingleTypedIndex<RawComment>(indexFactory, "comments") {
 
     override fun getIndexedFieldsAndRankings(): MutableMap<String, Float> {
         return mutableMapOf("text" to 10.0f)

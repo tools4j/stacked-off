@@ -2,10 +2,10 @@ package org.tools4j.stacked.index
 
 import mu.KLogging
 
-class Indexes(val indexedSiteIndex: IndexedSiteIndex,
-              val postIndex: PostIndex,
-              val commentIndex: CommentIndex,
-              val userIndex: UserIndex){
+class StagingIndexes(val indexedSiteIndex: IndexedSiteIndex,
+                     val postIndex: PostIndex,
+                     val commentIndex: CommentIndex,
+                     val userIndex: UserIndex){
 
     companion object: KLogging()
 

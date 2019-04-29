@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 internal class FileIndexFactoryTest {
-    val indexDir = File("./indexes")
+    val indexDir = File("./stagingIndexes")
 
     @BeforeEach
     fun beforeEach(){
@@ -15,7 +15,7 @@ internal class FileIndexFactoryTest {
 
     @Test
     fun testCreateIndex() {
-        val postIndex = PostIndex(FileIndexFactory("./indexes"))
+        val postIndex = PostIndex(FileIndexFactory("./stagingIndexes"))
         try {
             postIndex.init()
             loadPostIndex(postIndex);
@@ -27,7 +27,7 @@ internal class FileIndexFactoryTest {
 
     @Test
     fun testCreateThenReloadIndex() {
-        val postIndex = PostIndex(FileIndexFactory("./indexes"))
+        val postIndex = PostIndex(FileIndexFactory("./stagingIndexes"))
         try {
             postIndex.init()
             loadPostIndex(postIndex);
@@ -37,7 +37,7 @@ internal class FileIndexFactoryTest {
             postIndex.shutdown()
         }
 
-        val postIndexReloaded = PostIndex(FileIndexFactory("./indexes"))
+        val postIndexReloaded = PostIndex(FileIndexFactory("./stagingIndexes"))
         postIndexReloaded.init()
         try {
             assertThat(postIndexReloaded.search("coffee")).isNotEmpty

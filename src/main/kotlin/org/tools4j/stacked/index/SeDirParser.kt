@@ -5,7 +5,7 @@ import java.io.File
 
 class SeDirParser(
     private val zipFileParser: SeZipFileParser,
-    private val indexes: Indexes
+    private val stagingIndexes: StagingIndexes
 ) {
     companion object: KLogging()
 
@@ -17,7 +17,7 @@ class SeDirParser(
     fun parse(dirPath: String, filter: (SeSite) -> Boolean, jobStatus: JobStatus = JobStatusImpl()) {
         try {
             jobStatus.addOperation("Parsing xml files in $dirPath")
-            var nextIndexedSiteId = indexes.indexedSiteIndex.getHighestIndexedSiteId() + 1
+            var nextIndexedSiteId = stagingIndexes.indexedSiteIndex.getHighestIndexedSiteId() + 1
             val dir = File(dirPath).absolutePath
             val dirContents = SeDir(dir).getContents()
             val seDirSites = dirContents.getSites()
@@ -37,7 +37,7 @@ class SeDirParser(
     ) {
         val seSite = seDirSite.site
         if (!filter(seSite)) return
-        val matchingExistingIndexedSites = indexes.indexedSiteIndex.getMatching(seSite)
+        val matchingExistingIndexedSites = stagingIndexes.indexedSiteIndex.getMatching(seSite)
         val indexingSite = IndexingSiteImpl(
             newIndexedSiteId,
             "2019-10-11T10:00:00",
@@ -51,19 +51,19 @@ class SeDirParser(
             for (matchingExistingIndexedSite in matchingExistingIndexedSites) {
                 jobStatus.addOperation("Purging old site ${matchingExistingIndexedSite.indexedSiteId}. ${matchingExistingIndexedSite.seSite.urlDomain}")
             }
-            indexes.purgeSites(matchingExistingIndexedSites)
-            indexes.indexedSiteIndex.addItem(indexingSite.finished(true, null))
+            stagingIndexes.purgeSites(matchingExistingIndexedSites)
+            stagingIndexes.indexedSiteIndex.addItem(indexingSite.finished(true, null))
 
         } catch (e: Exception) {
             logger.debug{ e.message }
             val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
             jobStatus.addOperation("Error ocurred whilst parsing site ${seSite.urlDomain}, purging loaded data...")
             if (matchingExistingIndexedSites.isNotEmpty()) {
-                indexes.purgeSite(newIndexedSiteId)
+                stagingIndexes.purgeSite(newIndexedSiteId)
                 jobStatus.addOperation("Site purged.")
             }
             jobStatus.addOperation("Exiting with error\n$exceptionAsString")
-            indexes.indexedSiteIndex.addItem(indexingSite.finished(false, exceptionAsString))
+            stagingIndexes.indexedSiteIndex.addItem(indexingSite.finished(false, exceptionAsString))
         }
     }
 }

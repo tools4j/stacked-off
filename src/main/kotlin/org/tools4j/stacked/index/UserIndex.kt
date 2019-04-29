@@ -1,12 +1,9 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.document.Document
-import org.apache.lucene.document.Field
-import org.apache.lucene.document.StoredField
-import org.apache.lucene.document.StringField
 
 class UserIndex(indexFactory: IndexFactory)
-    : AbstractIndex<User>(indexFactory, "users") {
+    : SingleTypedIndex<User>(indexFactory, "users") {
 
     override fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = HashMap()
 

@@ -10,7 +10,7 @@ class Instance {
     }
 
     val seDirParser: SeDirParser by lazy {
-        SeDirParser(seZipFileParser, indexes)
+        SeDirParser(seZipFileParser, stagingIndexes)
     }
 
     private val seSeFileInZipParserProvider: SeFileInZipParserProvider by lazy {
@@ -32,8 +32,8 @@ class Instance {
         FileIndexFactory(diContext.getIndexParentDir())
     }
 
-    val indexes: Indexes by lazy {
-        Indexes(indexedSiteIndex, postIndex, commentIndex, userIndex)
+    val stagingIndexes: StagingIndexes by lazy {
+        StagingIndexes(indexedSiteIndex, postIndex, commentIndex, userIndex)
     }
 
     private val postIndex: PostIndex by lazy {
@@ -50,6 +50,10 @@ class Instance {
 
     private val indexedSiteIndex: IndexedSiteIndex by lazy {
         diContext.addShutdownable(diContext.addInit(IndexedSiteIndex(indexFactory)))
+    }
+
+    private val questionIndex: QuestionIndex by lazy {
+        diContext.addShutdownable(diContext.addInit(QuestionIndex(indexFactory)))
     }
 
     init {

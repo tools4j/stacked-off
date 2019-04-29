@@ -4,8 +4,9 @@ import org.apache.lucene.document.*
 import org.apache.lucene.index.Term
 import org.apache.lucene.search.TermQuery
 
+
 class PostIndex(indexFactory: IndexFactory)
-    : AbstractIndex<RawPost>(indexFactory,"posts") {
+    : SingleTypedIndex<RawPost>(indexFactory,"posts") {
 
     override fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = mutableMapOf(
         "title" to 10.0f,

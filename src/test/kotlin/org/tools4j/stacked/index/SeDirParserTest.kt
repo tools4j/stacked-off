@@ -1,13 +1,12 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.index.Term
-import org.apache.lucene.index.Terms
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class SeDirParserTest {
-    private val indexes = createIndexes()
+    private val indexes = createStagingIndexes()
     private lateinit var users: MutableList<User>
     private lateinit var comments: MutableList<RawComment>
     private lateinit var posts: MutableList<RawPost>
