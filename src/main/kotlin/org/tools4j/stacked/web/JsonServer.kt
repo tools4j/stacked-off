@@ -41,28 +41,20 @@ class JsonServer {
                 }
                 routing {
                     get("/rest/sites") {
-                        val sites = instance.stagingIndexes.indexedSiteIndex.getAll()
+                        val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
 
-                    get("/rest/posts/{id}") {
-                        val post = instance.postService.getPost(call.parameters["id"]!!)
+                    get("/rest/questions/{id}") {
+                        val post = instance.questionIndex.getQuestionByUid(call.parameters["id"]!!)
                         if (post == null)
                             call.respond(HttpStatusCode.NotFound)
                         else
                             call.respond(post)
                     }
 
-                    get("/rest/questions/{id}") {
-                        val question = instance.postService.getQuestion(call.parameters["id"]!!)
-                        if (question == null)
-                            call.respond(HttpStatusCode.NotFound)
-                        else
-                            call.respond(question)
-                    }
-
                     get("/rest/search") {
-                        val questions = instance.postService.search(call.parameters["searchText"]!!)
+                        val questions = instance.questionIndex.search(call.parameters["searchText"]!!)
                         call.respond(questions)
                     }
 
@@ -103,8 +95,9 @@ class JsonServer {
                     }
 
                     get("/rest/purgeSite/{id}") {
-                        instance.stagingIndexes.purgeSite(call.parameters["id"]!!)
-                        val sites = instance.stagingIndexes.indexedSiteIndex.getAll()
+                        instance.indexes.questionIndex.purgeSite(call.parameters["id"]!!)
+                        instance.indexes.indexedSiteIndex.purgeSite(call.parameters["id"]!!)
+                        val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
 

@@ -5,9 +5,8 @@ import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 
-val SITE_1 = "1"
-val SITE_2 = "2"
-
+val beerSiteIndexUtils = SiteIndexUtils("/data/beer", "1")
+val coffeeSiteIndexUtils = SiteIndexUtils("/data/coffee", "2")
 
 fun getFileOnClasspath(pathOnClasspath: String): File {
     val resource = Dummy().javaClass.getResource(pathOnClasspath)
@@ -27,105 +26,38 @@ class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {
     }
 }
 
-fun createPostService(): PostService {
-    return PostService(
-        createAndLoadPostIndex(),
-        createAndLoadCommentIndex(),
-        createAndLoadUserIndex(),
-        createAndLoadIndexedSiteIndex()
-    )
-}
-
-fun createAndLoadPostIndex(): PostIndex {
-    val postIndex = createPostIndex()
-    return loadPostIndex(postIndex)
-}
-
-fun loadPostIndex(postIndex: PostIndex): PostIndex {
-    val coffeeXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/coffee/Posts.xml"),
-        SITE_1,
-        { PostXmlRowHandler({ postIndex.getItemHandler() }) }
-    )
-    coffeeXmlFileParser.parse()
-
-    val beerXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/beer/Posts.xml"),
-        SITE_2,
-        { PostXmlRowHandler({ postIndex.getItemHandler() }) }
-    )
-    beerXmlFileParser.parse()
-    return postIndex
-}
-
-fun createPostIndex(): PostIndex {
-    val postIndex = PostIndex(getTestIndexFactory())
+fun createPostIndex(): StagingPostIndex {
+    val postIndex = StagingPostIndex(getTestIndexFactory())
     postIndex.init()
     postIndex.getItemHandler().onFinish()
     return postIndex
 }
 
-fun createAndLoadCommentIndex(): CommentIndex {
-    val commentIndex = createCommentIndex()
-    return loadCommentIndex(commentIndex)
-}
-
-fun loadCommentIndex(commentIndex: CommentIndex): CommentIndex {
-    val coffeeXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/coffee/Comments.xml"),
-        SITE_1,
-        { CommentXmlRowHandler({ commentIndex.getItemHandler() }) }
-    )
-    coffeeXmlFileParser.parse()
-
-    val beerXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/beer/Comments.xml"),
-        SITE_2,
-        { CommentXmlRowHandler({ commentIndex.getItemHandler() }) }
-    )
-    beerXmlFileParser.parse()
-
-    return commentIndex
-}
-
-fun createCommentIndex(): CommentIndex {
-    val commentIndex = CommentIndex(getTestIndexFactory())
+fun createCommentIndex(): StagingCommentIndex {
+    val commentIndex = StagingCommentIndex(getTestIndexFactory())
     commentIndex.init()
     commentIndex.getItemHandler().onFinish()
     return commentIndex
 }
 
-fun createQuestionIndex(): QuestionIndex {
-    val questionIndex = QuestionIndex(getTestIndexFactory())
+fun createQuestionIndex(indexedSiteIndex: IndexedSiteIndex): QuestionIndex {
+    val questionIndex = QuestionIndex(getTestIndexFactory(), indexedSiteIndex)
     questionIndex.init()
     return questionIndex
 }
 
-fun createAndLoadUserIndex(): UserIndex {
-    val userIndex = createUserIndex()
-    return loadUserIndex(userIndex)
+
+fun createAndLoadQuestionIndex(): QuestionIndex {
+    val indexedSiteIndex = createAndLoadIndexedSiteIndex()
+    val questionIndex = createQuestionIndex(indexedSiteIndex)
+    QuestionIndexer(beerSiteIndexUtils.createAndLoadStagingIndexes(), beerSiteIndexUtils.siteId, questionIndex).index()
+    QuestionIndexer(coffeeSiteIndexUtils.createAndLoadStagingIndexes(), coffeeSiteIndexUtils.siteId, questionIndex).index()
+    return questionIndex
 }
 
-fun loadUserIndex(userIndex: UserIndex): UserIndex {
-    val coffeeXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/coffee/Users.xml"),
-        SITE_1,
-        { UserXmlRowHandler({ userIndex.getItemHandler() }) }
-    )
-    coffeeXmlFileParser.parse()
 
-    val beerXmlFileParser = XmlFileParser(
-        Dummy().javaClass.getResourceAsStream("/data/beer/Users.xml"),
-        SITE_2,
-        { UserXmlRowHandler({ userIndex.getItemHandler() }) }
-    )
-    beerXmlFileParser.parse()
-
-    return userIndex
-}
-
-fun createUserIndex(): UserIndex {
-    val userIndex = UserIndex(getTestIndexFactory())
+fun createUserIndex(): StagingUserIndex {
+    val userIndex = StagingUserIndex(getTestIndexFactory())
     userIndex.init()
     userIndex.getItemHandler().onFinish()
     return userIndex
@@ -173,23 +105,21 @@ fun createIndexedSiteIndex(): IndexedSiteIndex {
     return indexedSiteIndex
 }
 
-private fun getTestIndexFactory() = LightweightIndexFactory()
+fun getTestIndexFactory() = LightweightIndexFactory()
 
 fun createStagingIndexes(): StagingIndexes {
     return StagingIndexes(
-        createIndexedSiteIndex(),
         createPostIndex(),
         createCommentIndex(),
         createUserIndex())
 }
 
-fun createAndLoadStagingIndexes(): StagingIndexes {
-    return StagingIndexes(
-        createAndLoadIndexedSiteIndex(),
-        createAndLoadPostIndex(),
-        createAndLoadCommentIndex(),
-        createAndLoadUserIndex()
-    )
+fun createIndexes(): Indexes {
+    val indexedSiteIndex = createIndexedSiteIndex()
+    return Indexes(
+        indexedSiteIndex,
+        createQuestionIndex(indexedSiteIndex),
+        createStagingIndexes())
 }
 
 fun assertHasIndexedSite1(indexedSites: List<IndexedSite>){
@@ -214,4 +144,11 @@ fun assertIsIndexedSite2(indexedSite: IndexedSite){
     assertThat(indexedSite.success).isEqualTo(false)
     assertThat(indexedSite.errorMessage).startsWith("java.lang.IllegalArgumentException: Boom!")
     assertIsSeSite3(indexedSite.seSite)
+}
+
+fun createXmlRowHandlers(stagingIndexes: StagingIndexes): Map<String, XmlRowHandler<out Any>> {
+    return mapOf(
+        "Posts.xml" to PostXmlRowHandler(stagingIndexes.stagingPostIndex.getItemHandler()),
+        "Users.xml" to UserXmlRowHandler(stagingIndexes.stagingUserIndex.getItemHandler()),
+        "Comments.xml" to CommentXmlRowHandler(stagingIndexes.stagingCommentIndex.getItemHandler()))
 }

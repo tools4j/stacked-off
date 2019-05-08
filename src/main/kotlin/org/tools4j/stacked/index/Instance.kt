@@ -5,12 +5,12 @@ class Instance {
         DiContext()
     }
 
-    val postService: PostService by lazy {
-        PostService(postIndex, commentIndex, userIndex, indexedSiteIndex)
+    val seDirParser: SeDirParser by lazy {
+        SeDirParser(seZipFileParser, {indexes.indexedSiteIndex.getHighestIndexedSiteId()}, parseSiteListener)
     }
 
-    val seDirParser: SeDirParser by lazy {
-        SeDirParser(seZipFileParser, stagingIndexes)
+    private val parseSiteListener: ParseSiteListener by lazy {
+        SeDirParserListener(indexes)
     }
 
     private val seSeFileInZipParserProvider: SeFileInZipParserProvider by lazy {
@@ -21,11 +21,11 @@ class Instance {
         SeZipFileParser(seSeFileInZipParserProvider)
     }
 
-    private val xmlRowHandlersByFileName: Map<String, () -> XmlRowHandler<*>> by lazy {
+    private val xmlRowHandlersByFileName: Map<String, XmlRowHandler<*>> by lazy {
         mapOf(
-            "Posts.xml" to { PostXmlRowHandler { postIndex.getItemHandler() } },
-            "Users.xml" to { UserXmlRowHandler { userIndex.getItemHandler() } },
-            "Comments.xml" to { CommentXmlRowHandler { commentIndex.getItemHandler() } })
+            "Posts.xml" to PostXmlRowHandler(stagingPostIndex.getItemHandler()),
+            "Users.xml" to UserXmlRowHandler(stagingUserIndex.getItemHandler()),
+            "Comments.xml" to CommentXmlRowHandler(stagingCommentIndex.getItemHandler()))
     }
 
     private val indexFactory: IndexFactory by lazy {
@@ -33,27 +33,31 @@ class Instance {
     }
 
     val stagingIndexes: StagingIndexes by lazy {
-        StagingIndexes(indexedSiteIndex, postIndex, commentIndex, userIndex)
+        StagingIndexes(stagingPostIndex, stagingCommentIndex, stagingUserIndex)
     }
 
-    private val postIndex: PostIndex by lazy {
-        diContext.addShutdownable(diContext.addInit(PostIndex(indexFactory)))
+    private val stagingPostIndex: StagingPostIndex by lazy {
+        diContext.addShutdownable(diContext.addInit(StagingPostIndex(indexFactory)))
     }
 
-    private val commentIndex: CommentIndex by lazy {
-        diContext.addShutdownable(diContext.addInit(CommentIndex(indexFactory)))
+    private val stagingCommentIndex: StagingCommentIndex by lazy {
+        diContext.addShutdownable(diContext.addInit(StagingCommentIndex(indexFactory)))
     }
 
-    private val userIndex: UserIndex by lazy {
-        diContext.addShutdownable(diContext.addInit(UserIndex(indexFactory)))
+    private val stagingUserIndex: StagingUserIndex by lazy {
+        diContext.addShutdownable(diContext.addInit(StagingUserIndex(indexFactory)))
     }
 
     private val indexedSiteIndex: IndexedSiteIndex by lazy {
         diContext.addShutdownable(diContext.addInit(IndexedSiteIndex(indexFactory)))
     }
 
-    private val questionIndex: QuestionIndex by lazy {
-        diContext.addShutdownable(diContext.addInit(QuestionIndex(indexFactory)))
+    val questionIndex: QuestionIndex by lazy {
+        diContext.addShutdownable(diContext.addInit(QuestionIndex(indexFactory, indexedSiteIndex)))
+    }
+
+    val indexes: Indexes by lazy {
+        Indexes(indexedSiteIndex, questionIndex, stagingIndexes)
     }
 
     init {

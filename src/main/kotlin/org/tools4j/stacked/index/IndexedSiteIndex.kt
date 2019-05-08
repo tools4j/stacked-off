@@ -4,7 +4,7 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.index.Term
 
 class IndexedSiteIndex(indexFactory: IndexFactory)
-    : SingleTypedIndex<IndexedSite>(indexFactory,"sites") {
+    : TypedIndex<IndexedSite>(indexFactory,"sites") {
 
     override fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = LinkedHashMap()
 
@@ -22,5 +22,11 @@ class IndexedSiteIndex(indexFactory: IndexFactory)
 
     fun getByTinyName(tinyName: String): IndexedSite? {
         return getByTerm(Term("tinyName", tinyName))
+    }
+
+    fun purgeSites(indexedSiteIds: List<String>) {
+        for (indexedSiteId in indexedSiteIds) {
+            purgeSite(indexedSiteId)
+        }
     }
 }

@@ -5,7 +5,7 @@ import java.io.InputStream
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLInputFactory
 
-class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val xmlRowHandlerProvider: () -> XmlRowHandler<*>) {
+class XmlFileParser(val inputStream: InputStream, val xmlRowHandler: XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
     private val printCountUpdateEveryNRows = 10000;
     companion object: KLogging()
@@ -17,7 +17,6 @@ class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val
                 val event = reader.nextEvent()
                 if (event.isStartElement()) {
                     val parentElementName = event.asStartElement().getName().getLocalPart()
-                    val xmlRowHandler = xmlRowHandlerProvider()
                     parseElements(reader, parentElementName, xmlRowHandler)
                 }
             }
@@ -53,7 +52,7 @@ class XmlFileParser(val inputStream: InputStream, val indexedSiteId: String, val
                             countOfElementsHandled + 1
                         )
                     }
-                    xmlRowHandler.handle(element, indexedSiteId);
+                    xmlRowHandler.handle(element);
                     countOfElementsHandled++
                     if (countOfElementsHandled % printCountUpdateEveryNRows == 0) {
                         logger.debug{ "$countOfElementsHandled $parentElementName rows read from xml..." }

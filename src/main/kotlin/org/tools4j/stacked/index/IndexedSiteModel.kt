@@ -29,7 +29,7 @@ class IndexedSiteImpl(
     override val seSite: SeSite) : IndexedSite {
 
     constructor(doc: Document): this(
-        doc.get("uid"),
+        doc.get("id"),
         doc.get("dateTimeIndexed"),
         doc.get("success").toBoolean(),
         doc.get("errorMessage"),
@@ -37,7 +37,7 @@ class IndexedSiteImpl(
 
     override fun convertToDocument(): Document {
         val doc = Document()
-        doc.add(StringField("uid", indexedSiteId, Field.Store.YES))
+        doc.add(StringField("id", indexedSiteId, Field.Store.YES))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         doc.add(StoredField("dateTimeIndexed", dateTimeIndexed))
         doc.add(StringField("success", success.toString(), Field.Store.YES))
@@ -55,6 +55,8 @@ class IndexingSiteImpl(
     override val indexedSiteId: String,
     override val dateTimeIndexed: String,
     override val seSite: SeSite) : IndexingSite {
+
+    constructor(indexedSite: IndexedSite): this(indexedSite.indexedSiteId, indexedSite.dateTimeIndexed, indexedSite.seSite)
 
     override fun finished(success: Boolean, errorMessage: String?): IndexedSite {
         return IndexedSiteImpl(indexedSiteId, dateTimeIndexed, success, errorMessage, seSite )

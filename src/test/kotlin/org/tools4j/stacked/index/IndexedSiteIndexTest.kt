@@ -43,15 +43,15 @@ internal class IndexedSiteIndexTest {
 
     @Test
     fun testGetByUid() {
-        assertIsIndexedSite1(indexedSiteIndex.getByUid("1")!!)
-        assertIsIndexedSite2(indexedSiteIndex.getByUid("2")!!)
+        assertIsIndexedSite1(indexedSiteIndex.getById("1")!!)
+        assertIsIndexedSite2(indexedSiteIndex.getById("2")!!)
     }
 
     @Test
     fun testPurgeBySiteId() {
-        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", SITE_1))).hasSize(1)
-        indexedSiteIndex.purgeSite(SITE_1)
-        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", SITE_1))).isEmpty()
+        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", coffeeSiteIndexUtils.siteId))).hasSize(1)
+        indexedSiteIndex.purgeSite(coffeeSiteIndexUtils.siteId)
+        assertThat(indexedSiteIndex.searchByTerm(Term("indexedSiteId", coffeeSiteIndexUtils.siteId))).isEmpty()
     }
 
     @Test

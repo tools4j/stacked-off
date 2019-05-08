@@ -6,11 +6,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class SeZipFileParserTest {
-    private val s1 = CoffeeSiteAssertions()
-    private val s2 = BeerSiteAssertions()
-    private lateinit var users: MutableList<User>
-    private lateinit var comments: MutableList<RawComment>
-    private lateinit var posts: MutableList<RawPost>
+    private val s1 = CoffeeStagingAssertions()
+    private val s2 = BeerStagingAssertions()
+    private lateinit var users: MutableList<StagingUser>
+    private lateinit var comments: MutableList<StagingComment>
+    private lateinit var posts: MutableList<StagingPost>
 
     @BeforeEach
     fun setup(){
@@ -22,9 +22,9 @@ internal class SeZipFileParserTest {
     private fun createSeHandlerProvider(): SeFileInZipParserProvider {
         return SeFileInZipParserProviderImpl(
             mapOf(
-                "Users.xml" to { UserXmlRowHandler { ToListHandler(users) }},
-                "Posts.xml" to { PostXmlRowHandler { ToListHandler(posts) }},
-                "Comments.xml" to { CommentXmlRowHandler { ToListHandler(comments) }})
+                "Users.xml" to UserXmlRowHandler(ToListHandler(users)),
+                "Posts.xml" to PostXmlRowHandler(ToListHandler(posts)),
+                "Comments.xml" to CommentXmlRowHandler(ToListHandler(comments)))
         )
     }
 
@@ -32,7 +32,7 @@ internal class SeZipFileParserTest {
     fun parseCoffee7z() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-5/coffee.meta.stackexchange.com.7z")
-        SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
         assertCoffeeContents()
     }
 
@@ -40,7 +40,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-4/coffee.meta.stackexchange.com.zip")
-        SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
         assertCoffeeContents()
     }
 
@@ -48,7 +48,7 @@ internal class SeZipFileParserTest {
     fun parseBeer7z() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-4/beer.meta.stackexchange.com.7z")
-        SeZipFileParser(seHandlerProvider).parse(SITE_2, zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
         assertBeerContents()
     }
 
@@ -56,7 +56,7 @@ internal class SeZipFileParserTest {
     fun parseBeerZip() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-5/beer.meta.stackexchange.com.zip")
-        SeZipFileParser(seHandlerProvider).parse(SITE_2, zipFile.absolutePath)
+        SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)
         assertBeerContents()
     }
 
@@ -64,7 +64,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip_badTagInPosts() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-9/coffee.bad.tag.in.Posts.xml.7z")
-        assertThatCode({SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)})
+        assertThatCode({SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)})
             .hasMessageMatching("Found non 'row' child element within \\[posts\\] with name \\[NotARow\\] child number \\[2\\] in file \\[Posts.xml\\] whilst parsing archive \\[[^\\]]*coffee.bad.tag.in.Posts.xml.7z\\]")
     }
 
@@ -72,7 +72,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip_badlyFormedXml() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-9/coffee.badly.formed.xml.in.Users.xml.7z")
-        assertThatCode({SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)})
+        assertThatCode({SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)})
             .hasMessageMatching("Found non 'row' child element within \\[users\\] with name \\[rowasdf\\] child number \\[1\\] in file \\[Users.xml\\] whilst parsing archive \\[[^\\]]*coffee.badly.formed.xml.in.Users.xml.7z\\]")
     }
 
@@ -80,7 +80,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip_rubbishInPostsXml() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-9/coffee.rubbish.in.Posts.xml.7z")
-        assertThatCode({SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)})
+        assertThatCode({SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)})
             .hasMessageMatching("Error parsing file: Unexpected character .*? in prolog.*?expected '\\<'\\s*.*? in file \\[Posts.xml\\] whilst parsing archive \\[[^\\]]*coffee.rubbish.in.Posts.xml.7z\\]")
     }
 
@@ -88,7 +88,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip_corrupted() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-9/coffee.corrupted.7z")
-        assertThatCode({SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)})
+        assertThatCode({SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)})
             .hasMessageMatching("Error occurred whilst parsing file \\[[^\\]]*coffee\\.corrupted\\.7z\\] Archive file can't be opened with none of the registered codecs")
     }
 
@@ -96,7 +96,7 @@ internal class SeZipFileParserTest {
     fun parseCoffeeZip_emptyXml() {
         val seHandlerProvider = createSeHandlerProvider()
         val zipFile = getFileOnClasspath(this.javaClass,"/data/se-example-dir-9/coffee.empty.Comments.xml.7z")
-        assertThatCode({SeZipFileParser(seHandlerProvider).parse(SITE_1, zipFile.absolutePath)})
+        assertThatCode({SeZipFileParser(seHandlerProvider).parse(zipFile.absolutePath)})
             .hasMessageMatching("Error parsing file: Unexpected character .*? in prolog.*?expected '\\<'\\s*.*? in file \\[Comments.xml\\] whilst parsing archive \\[[^\\]]*coffee.empty.Comments.xml.7z\\]")
     }
 
@@ -108,7 +108,7 @@ internal class SeZipFileParserTest {
         s1.assertHasAllComments(comments)
 
         assertThat(posts).hasSize(3)
-        s1.assertHasAllRawPosts(posts)
+        s1.assertHasAllPosts(posts)
     }
 
     private fun assertBeerContents() {
@@ -119,6 +119,6 @@ internal class SeZipFileParserTest {
         s2.assertHasAllComments(comments)
 
         assertThat(posts).hasSize(3)
-        s2.assertHasAllRawPosts(posts)
+        s2.assertHasAllPosts(posts)
     }
 }

@@ -20,10 +20,12 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
     internal lateinit var index: Directory
     private lateinit var analyzer: Analyzer
     private lateinit var writer: IndexWriter
+    lateinit var docIdIndex: DocIdIndex
     companion object: KLogging()
 
     override fun init() {
         index = indexFactory.createIndex(name)
+        docIdIndex = DocIdIndex(index, name)
         analyzer = StandardAnalyzer()
         val config = IndexWriterConfig(analyzer)
         writer = IndexWriter(index, config)
@@ -45,6 +47,16 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         addItems(listOf(doc))
     }
 
+    fun purgeSite(indexedSiteId: String){
+        writer.deleteDocuments(Term("indexedSiteId", indexedSiteId))
+        writer.commit()
+    }
+
+    fun purge() {
+        writer.deleteAll()
+        writer.commit()
+    }
+
     fun <T> getDocumentHandler(converter: (T) -> Document): ItemHandler<T> {
         return object: ItemHandler<T> {
             override fun handle(item: T) {
@@ -58,126 +70,86 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         }
     }
 
-    fun getByUid(uid: String): Document? {
-        var startTime = System.currentTimeMillis()
-        val returnVal = getByTerm(Term("uid", uid))
-        SingleTypedIndex.logger.debug { "Getting by uid [$uid] from $name took " + (System.currentTimeMillis() - startTime) + "ms" }
-        return returnVal
-    }
-
-    fun getByUids(uids: List<String>): List<Document> {
-        var startTime = System.currentTimeMillis()
-        val returnVal = searchAllTermsMustMatch(uids.map { Term("uid", it) }.toList())
-        logger.debug { "Getting by uids [$uids] from $name took " + (System.currentTimeMillis() - startTime) + "ms" }
-        return returnVal
-    }
-
     fun getByTerm(term: Term): Document? {
-        return getByQuery(TermQuery(term))
+        return getDocFromDocId(docIdIndex.getByTerm(term))
     }
 
     fun getByTerms(terms: Map<String, String>): Document? {
-        val queryBuilder = BooleanQuery.Builder()
-        for (e in terms.entries) {
-            queryBuilder.add(TermQuery(Term(e.key, e.value)), BooleanClause.Occur.MUST)
-        }
-        return getByQuery(queryBuilder.build())
+        return getDocFromDocId(docIdIndex.getByTerms(terms))
+
     }
 
     fun getByQuery(query: Query): Document? {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(query, 2)
-        val hits = docs.scoreDocs
-        if (docs.totalHits == 0L) {
-            return null
-        } else if (docs.totalHits == 1L) {
-            return searcher.doc(hits.get(0).doc);
-        } else {
-            throw IllegalStateException("Found more than one document with query [$query] " +
-                    "Items:\n${hits.map{searcher.doc(it.doc)}.joinToString("\n")}")
-        }
+        return getDocFromDocId(docIdIndex.getByQuery(query))
     }
 
     fun searchByTerm(term: Term): List<Document> {
-        return searchByQuery(TermQuery(term))
+        return getDocsFromDocIds(docIdIndex.searchByTerm(term))
     }
 
     fun searchByTerm(key: String, value: String): List<Document> {
-        return searchByTerm(Term(key, value))
+        return getDocsFromDocIds(docIdIndex.searchByTerm(key, value))
     }
 
     fun searchAllTermsMustMatch(terms: List<Term>): List<Document> {
-        return searchByTerms(terms, BooleanClause.Occur.MUST)
+        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms))
     }
 
     fun searchAllTermsMustMatch(terms: Map<String, String>): List<Document> {
-        return searchByTerms(terms, BooleanClause.Occur.MUST)
+        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms))
     }
 
     fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur): List<Document> {
-        return searchByTerms(terms.entries.map { Term(it.key, it.value) }.toList(), booleanClause)
+        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause))
     }
 
     fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur): List<Document> {
-        val query = BooleanQuery.Builder()
-        for (term in terms) {
-            query.add(TermQuery(term), booleanClause)
-        }
-        return searchByQuery(query.build())
+        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause))
     }
 
     fun searchAnyTermsCanMatch(terms: Map<String, String>): List<Document> {
-        return searchByTerms(terms, BooleanClause.Occur.SHOULD)
+        return getDocsFromDocIds(docIdIndex.searchAnyTermsCanMatch(terms))
     }
 
     fun searchByQuery(query: Query): List<Document> {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(query, 10000)
-        val hits = docs.scoreDocs
-        return hits.map{searcher.doc(it.doc)}.toList()
+        return getDocsFromDocIds(docIdIndex.searchByQuery(query))
     }
 
     fun getAll(): List<Document> {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(MatchAllDocsQuery(), 10000)
-        val hits = docs.scoreDocs
-        logger.debug{ "Found " + docs.totalHits + " total records found." }
-        return hits.map{searcher.doc(it.doc)}.toList()
+        return getDocsFromDocIds(docIdIndex.getAll())
     }
 
     fun search(searchLambda: (IndexSearcher)-> TopDocs): List<Document> {
-        val reader = DirectoryReader.open(index)
-        val searcher = IndexSearcher(reader)
-        val docs = searchLambda(searcher)
-        val hits = docs.scoreDocs
-        if (docs.totalHits > 0) {
-            return hits
-                .map{it.doc}
-                .map{searcher.doc(it)}
-                .toList()
-        }
-        return emptyList()
+        return getDocsFromDocIds(docIdIndex.search(searchLambda))
     }
 
-    fun purgeSite(indexedSiteId: String){
-        writer.deleteDocuments(Term("indexedSiteId", indexedSiteId))
-        writer.commit()
-    }
-
-    fun forEachDocumentInIndex(worker: (Document) -> Unit){
+    fun forEachDocumentInIndex(worker: (Document, Int, Int) -> Unit){
         val reader = DirectoryReader.open(index)
-        for (i in 0 until reader.maxDoc()) {
+        val maxDoc = reader.maxDoc()
+        for (i in 0 until maxDoc) {
             val doc = reader.document(i)
-            worker(doc)
+            worker(doc, i, maxDoc)
         }
     }
 
-    fun forEachElementInIndex(worker: (Document) -> Unit){
-        forEachDocumentInIndex { doc -> worker(doc) }
+    fun forEachElementInIndex(worker: (Document, Int, Int) -> Unit){
+        forEachDocumentInIndex { doc, index, totalCount -> worker(doc, index, totalCount) }
     }
 
     fun addDocsAsBlock(docs: List<Document>) {
         writer.addDocuments(docs)
         writer.commit()
+    }
+
+    private fun getDocsFromDocIds(docIds: List<Int>): List<Document> {
+        if(docIds.isEmpty()) return emptyList()
+        val indexSearcher = IndexSearcher(DirectoryReader.open(index))
+        return docIds.map { indexSearcher.doc(it) }
+    }
+
+    private fun getDocFromDocId(docId: Int?): Document? {
+        if(docId == null) return null
+        val indexSearcher = IndexSearcher(DirectoryReader.open(index))
+        return indexSearcher.doc(docId)
     }
 }

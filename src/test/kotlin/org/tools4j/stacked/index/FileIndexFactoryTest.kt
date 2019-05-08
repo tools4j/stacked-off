@@ -15,11 +15,11 @@ internal class FileIndexFactoryTest {
 
     @Test
     fun testCreateIndex() {
-        val postIndex = PostIndex(FileIndexFactory("./stagingIndexes"))
+        val postIndex = StagingPostIndex(FileIndexFactory("./stagingIndexes"))
         try {
             postIndex.init()
-            loadPostIndex(postIndex);
-            assertThat(postIndex.search("coffee")).isNotEmpty
+            coffeeSiteIndexUtils.loadPostIndex(postIndex);
+            assertThat(postIndex.getById("1")).isNotNull
         } finally {
             postIndex.shutdown()
         }
@@ -27,20 +27,20 @@ internal class FileIndexFactoryTest {
 
     @Test
     fun testCreateThenReloadIndex() {
-        val postIndex = PostIndex(FileIndexFactory("./stagingIndexes"))
+        val postIndex = StagingPostIndex(FileIndexFactory("./stagingIndexes"))
         try {
             postIndex.init()
-            loadPostIndex(postIndex);
-            assertThat(postIndex.search("coffee")).isNotEmpty
+            coffeeSiteIndexUtils.loadPostIndex(postIndex);
+            assertThat(postIndex.getById("1")).isNotNull
             postIndex.shutdown()
         } finally {
             postIndex.shutdown()
         }
 
-        val postIndexReloaded = PostIndex(FileIndexFactory("./stagingIndexes"))
+        val postIndexReloaded = StagingPostIndex(FileIndexFactory("./stagingIndexes"))
         postIndexReloaded.init()
         try {
-            assertThat(postIndexReloaded.search("coffee")).isNotEmpty
+            assertThat(postIndex.getById("1")).isNotNull
         } finally {
             postIndex.shutdown()
         }

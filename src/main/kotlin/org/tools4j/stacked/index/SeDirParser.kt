@@ -2,27 +2,37 @@ package org.tools4j.stacked.index
 
 import mu.KLogging
 import java.io.File
+import java.util.*
 
 class SeDirParser(
     private val zipFileParser: SeZipFileParser,
-    private val stagingIndexes: StagingIndexes
+    private val highestCurrentIndexedSiteIdProvider: () -> Long,
+    private val parseSiteListener: ParseSiteListener
 ) {
     companion object: KLogging()
 
-    fun parseFromClasspath(pathOnClasspath: String, filter: (SeSite) -> Boolean, jobStatus: JobStatus = JobStatusImpl()) {
+    fun parseFromClasspath(
+        pathOnClasspath: String,
+        filter: (SeSite) -> Boolean,
+        jobStatus: JobStatus = JobStatusImpl()) {
+
         val archiveFile = getFileOnClasspath(this.javaClass,pathOnClasspath)
-        return parse(archiveFile.absolutePath, filter, jobStatus)
+        parse(archiveFile.absolutePath, filter, jobStatus)
     }
 
-    fun parse(dirPath: String, filter: (SeSite) -> Boolean, jobStatus: JobStatus = JobStatusImpl()) {
+    fun parse(
+        dirPath: String,
+        filter: (SeSite) -> Boolean,
+        jobStatus: JobStatus = JobStatusImpl()) {
+
         try {
             jobStatus.addOperation("Parsing xml files in $dirPath")
-            var nextIndexedSiteId = stagingIndexes.indexedSiteIndex.getHighestIndexedSiteId() + 1
+            var nextIndexedSiteId = highestCurrentIndexedSiteIdProvider() + 1
             val dir = File(dirPath).absolutePath
             val dirContents = SeDir(dir).getContents()
-            val seDirSites = dirContents.getSites()
+            val seDirSites = dirContents.getSites().filter{filter(it.site)}
             for (seDirSite in seDirSites) {
-                parseSeSite(seDirSite, filter, nextIndexedSiteId++.toString(), jobStatus)
+                parseSeSite(seDirSite, nextIndexedSiteId++.toString(), jobStatus)
             }
         } finally {
             jobStatus.onComplete()
@@ -31,39 +41,34 @@ class SeDirParser(
 
     private fun parseSeSite(
         seDirSite: SeDirSite,
-        filter: (SeSite) -> Boolean,
         newIndexedSiteId: String,
         jobStatus: JobStatus = JobStatusImpl()
-    ) {
+    ){
         val seSite = seDirSite.site
-        if (!filter(seSite)) return
-        val matchingExistingIndexedSites = stagingIndexes.indexedSiteIndex.getMatching(seSite)
         val indexingSite = IndexingSiteImpl(
             newIndexedSiteId,
-            "2019-10-11T10:00:00",
+            Date().toString(),
             seSite
         )
         try {
+            parseSiteListener.onStartParseSite(seSite)
             for (zipFile in seDirSite.zipFiles) {
-                zipFileParser.parse(newIndexedSiteId, zipFile.absolutePath, jobStatus)
+                zipFileParser.parse(zipFile.absolutePath, jobStatus)
             }
-            jobStatus.addOperation("Finished parsing site ${seSite.urlDomain}")
-            for (matchingExistingIndexedSite in matchingExistingIndexedSites) {
-                jobStatus.addOperation("Purging old site ${matchingExistingIndexedSite.indexedSiteId}. ${matchingExistingIndexedSite.seSite.urlDomain}")
-            }
-            stagingIndexes.purgeSites(matchingExistingIndexedSites)
-            stagingIndexes.indexedSiteIndex.addItem(indexingSite.finished(true, null))
+            parseSiteListener.onFinishParseSite(indexingSite.finished(true, null), jobStatus)
 
         } catch (e: Exception) {
-            logger.debug{ e.message }
+            logger.error{ e.message }
             val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
-            jobStatus.addOperation("Error ocurred whilst parsing site ${seSite.urlDomain}, purging loaded data...")
-            if (matchingExistingIndexedSites.isNotEmpty()) {
-                stagingIndexes.purgeSite(newIndexedSiteId)
-                jobStatus.addOperation("Site purged.")
-            }
-            jobStatus.addOperation("Exiting with error\n$exceptionAsString")
-            stagingIndexes.indexedSiteIndex.addItem(indexingSite.finished(false, exceptionAsString))
+            parseSiteListener.onFinishParseSite(indexingSite.finished(false, exceptionAsString), jobStatus)
         }
     }
+}
+
+interface ParseSiteListener {
+    fun onStartParseSite(seSite: SeSite)
+    fun onFinishParseSite(
+        indexedSite: IndexedSite,
+        jobStatus: JobStatus
+    )
 }

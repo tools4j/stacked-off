@@ -4,16 +4,13 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.*
-import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.search.BooleanClause
-import org.apache.lucene.search.BooleanQuery
-import org.apache.lucene.search.TermQuery
 
-abstract class SingleTypedIndex<T>(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
+abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
     private val docIndex = DocIndex(indexFactory, name);
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
@@ -46,27 +43,12 @@ abstract class SingleTypedIndex<T>(val indexFactory: IndexFactory, val name: Str
         return docIndex.getDocumentHandler<T>{doc -> convertItemToDocument(doc)}
     }
 
-    fun search(queryString: String, hitsPerPage: Int = 10): List<T> {
-        logger.debug{"Searching with query [$queryString]"}
-        val startTimeMs = System.currentTimeMillis()
-        val q = queryParser.parse(queryString);
-        val reader = DirectoryReader.open(docIndex.index)
-        val indexSearcher = IndexSearcher(reader)
-        val docs = indexSearcher.search(q, hitsPerPage)
-        val hits = docs.scoreDocs
-        val endTimeMs = System.currentTimeMillis()
-        val durationMs = endTimeMs - startTimeMs
-        val results = hits.map { indexSearcher.doc(it.doc) }.map { convertDocumentToItem(it) }
-        logger.debug{"Found " + docs.totalHits + " hits. Took $durationMs ms."}
-        return results.toList()
+    fun getById(id: String): T? {
+        return getByTerm(Term("id", id))
     }
 
-    fun getByUid(uid: String): T? {
-        return convertDocumentToItemOrNull(docIndex.getByUid(uid))
-    }
-
-    fun getByUids(uids: List<String>): List<T> {
-        return docIndex.searchAllTermsMustMatch(uids.map { Term("uid", it) }).map { convertDocumentToItem(it) }.toList()
+    fun getByIds(uids: List<String>): List<T> {
+        return searchByTerms(uids.map { Term("id", it) }.toList(), BooleanClause.Occur.SHOULD)
     }
 
     fun getByTerm(term: Term): T? {
@@ -121,20 +103,24 @@ abstract class SingleTypedIndex<T>(val indexFactory: IndexFactory, val name: Str
         return docIndex.search(searchLambda).map { convertDocumentToItem(it) }
     }
 
-    fun purgeSite(indexedSiteId: String){
-        docIndex.purgeSite(indexedSiteId)
-    }
-
-    fun forEachDocumentInIndex(worker: (Document) -> Unit){
+    fun forEachDocumentInIndex(worker: (Document, Int, Int) -> Unit){
         docIndex.forEachDocumentInIndex(worker)
     }
 
-    fun forEachElementInIndex(worker: (T) -> Unit){
-        docIndex.forEachDocumentInIndex { doc -> worker(convertDocumentToItem(doc)) }
+    fun forEachElementInIndex(worker: (T, Int, Int) -> Unit){
+        docIndex.forEachDocumentInIndex { doc, index, total -> worker(convertDocumentToItem(doc), index, total) }
     }
 
     fun convertDocumentToItemOrNull(doc: Document?): T?{
         return if(doc == null) null else convertDocumentToItem(doc)
+    }
+
+    fun purge() {
+        docIndex.purge()
+    }
+
+    fun purgeSite(indexedSiteId: String){
+        docIndex.purgeSite(indexedSiteId)
     }
 
     abstract fun getIndexedFieldsAndRankings(): MutableMap<String, Float>;

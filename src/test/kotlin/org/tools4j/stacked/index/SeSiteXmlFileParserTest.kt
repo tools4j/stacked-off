@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 internal class SeSiteXmlFileParserTest {
     @Test
     fun testLoadFromXml() {
-        val posts = ArrayList<RawPost>()
+        val posts = ArrayList<StagingPost>()
         val xmlRowParser = SeSiteXmlFileParser(this.javaClass.getResourceAsStream("/data/Sites.xml"));
         val sites = xmlRowParser.parse()
         assertThat(sites).hasSize(3)

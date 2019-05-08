@@ -11,7 +11,6 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
     companion object: KLogging()
 
     fun parse(
-        indexedSiteId: String,
         archiveFile: String,
         jobStatus: JobStatus = JobStatusImpl()
     ) {
@@ -28,7 +27,6 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
                     }
                     val extractCallback =
                         ExtractCallback(
-                            indexedSiteId,
                             archiveFile,
                             archive,
                             seFileInZipParserProvider,
@@ -60,7 +58,6 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
 }
 
 class ExtractCallback(
-    private val indexedSiteId: String,
     private val archiveFile: String,
     private val archive: IInArchive,
     private val seFileInZipParserProvider: SeFileInZipParserProvider,
@@ -90,7 +87,7 @@ class ExtractCallback(
         logger.debug{ "Extractor calling getStream() for: $pathInArchive" }
         jobStatus.addOperation("Parsing $pathInArchive from $archiveFile...")
         totalFileInZipSize = archive.getProperty(index, PropID.SIZE).toString().toLong()
-        fileInZipParser = seFileInZipParserProvider.getFileInZipParser(indexedSiteId, pathInArchive)
+        fileInZipParser = seFileInZipParserProvider.getFileInZipParser(pathInArchive)
         if(fileInZipParser == null){
             return null
         }
@@ -153,20 +150,20 @@ class ExtractorException(val archiveFile: String, val fileInZipParserException: 
 }
 
 interface SeFileInZipParserProvider {
-    fun getFileInZipParser(indexedSiteId: String, pathInArchive: String): FileInZipParser?;
+    fun getFileInZipParser(pathInArchive: String): FileInZipParser?;
 }
 
 class SeFileInZipParserProviderImpl (
-    val rowHandlers: Map<String, () -> XmlRowHandler<*>>) : SeFileInZipParserProvider {
+    val rowHandlers: Map<String, XmlRowHandler<*>>) : SeFileInZipParserProvider {
 
-    override fun getFileInZipParser(indexedSiteId: String, pathInArchive: String): FileInZipParser? {
+    override fun getFileInZipParser(pathInArchive: String): FileInZipParser? {
         if(!rowHandlers.containsKey(pathInArchive)){
             return null
         }
         val xmlRowHandlerProvider = rowHandlers.getValue(pathInArchive)
         val pipedInputStream = PipedInputStream()
         val pipedOutputStream = PipedOutputStream(pipedInputStream)
-        val xmlFileParser = XmlFileParser(pipedInputStream, indexedSiteId, xmlRowHandlerProvider )
+        val xmlFileParser = XmlFileParser(pipedInputStream, xmlRowHandlerProvider )
 
         return FileInZipParser(pathInArchive, xmlFileParser, pipedOutputStream)
     }
