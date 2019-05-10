@@ -54,7 +54,8 @@ class JsonServer {
                     }
 
                     get("/rest/search") {
-                        val questions = instance.questionIndex.search(call.parameters["searchText"]!!)
+                        val pageIndex = call.parameters["page"]?.toInt() ?: 0
+                        val questions = instance.questionIndex.search(call.parameters["searchText"]!!, 10, pageIndex)
                         call.respond(questions)
                     }
 
@@ -92,6 +93,10 @@ class JsonServer {
 
                     get("/rest/status") {
                         call.respond(loadInProgress.get())
+                    }
+
+                    get("/rest/indexes") {
+                        call.respond(IndexStats(instance.indexes))
                     }
 
                     get("/rest/purgeSite/{id}") {

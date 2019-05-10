@@ -11,6 +11,7 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
         jobStatus: JobStatus
     ) {
         if(indexedSite.success){
+            indexes.stagingIndexes.onNewDataAddedToIndexes()
             jobStatus.addOperation("Finished parsing site ${indexedSite.seSite.urlDomain}")
             try {
                 QuestionIndexer(
@@ -27,7 +28,7 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
 
             } catch (e: Exception){
                 indexes.questionIndex.purgeSite(indexedSite.indexedSiteId)
-                indexes.indexedSiteIndex.addItem(IndexingSiteImpl(indexedSite).finished(false, e.message))
+                indexes.indexedSiteIndex.addItem(IndexingSiteImpl(indexedSite).finished(false, ExceptionToString(e).toString()))
             }
         } else {
             jobStatus.addOperation("Error parsing site ${indexedSite.seSite.urlDomain}:\n${indexedSite.errorMessage}")

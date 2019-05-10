@@ -56,14 +56,14 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     fun getAll(): List<Question>{
-        return search(MatchAllDocsQuery());
+        return search(MatchAllDocsQuery(), GetMaxSizeCollector());
     }
 
-    fun search(searchTerm: String): List<Question>{
-        return search(queryParser.parse(searchTerm))
+    fun search(searchTerm: String, pageSize: Int = 10, pageIndex: Int = 0): List<Question>{
+        return search(queryParser.parse(searchTerm), PageCollector(pageSize, pageIndex))
     }
 
-    fun search(q: Query): List<Question> {
+    fun search(q: Query, docCollector: DocCollector): List<Question> {
         val childSearchQuery = BooleanQuery.Builder()
         childSearchQuery.add(BooleanClause(q, BooleanClause.Occur.MUST))
         childSearchQuery.add(BooleanClause(TermQuery(Term("child", "Y")), BooleanClause.Occur.MUST))
@@ -80,21 +80,14 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         val reader = DirectoryReader.open(docIndex.index)
         CheckJoinIndex.check(reader, parentsFilter)
 
-        val indexSearcher = IndexSearcher(reader)
-        val docs = indexSearcher.search(childAndParentQuery.build(), 10000)
-        val questions = ArrayList<Question>()
-        docs.scoreDocs.map{it.doc}.forEach{ docId ->
-            questions.add(getQuestion(indexSearcher, docId))
-        }
-        return questions
+        return docIndex.docIdIndex.searchByQuery(childAndParentQuery.build(), docCollector).map { getQuestion(it) }
     }
 
     private fun getQuestion(
-        indexSearcher: IndexSearcher,
         docId: Int
     ): Question {
-        val parentDoc = indexSearcher.doc(docId)
-        val childDocs = getChildDocsUsingBitset(indexSearcher, docId)
+        val parentDoc = docIndex.getSearcher().doc(docId)
+        val childDocs = getChildDocsUsingBitset(docIndex.getSearcher(), docId)
         val indexedSite = indexedSiteIndex.getById(parentDoc.get("indexedSiteId"))!!
         val question = ParentAndChildDocs(indexedSite, parentDoc, childDocs).convertToQuestion()
         return question
@@ -104,18 +97,16 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         val docId = docIndex.docIdIndex.getByTerms(mapOf("uid" to uid, "child" to "N"))
         if(docId == null) return null
         val reader = DirectoryReader.open(docIndex.index)
-        val indexSearcher = IndexSearcher(reader)
-        return getQuestion(indexSearcher, docId)
+        return getQuestion(docId)
     }
 
     private fun getChildDocsUsingQuery(
-        parentDocId: Int,
-        indexSearcher: IndexSearcher
+        parentDocId: Int
     ): List<Document> {
         val start = System.currentTimeMillis()
         val childrenQuery = ParentChildrenBlockJoinQuery(parentsFilter, MatchAllDocsQuery(), parentDocId.toInt())
-        val matchingChildren = indexSearcher.search(childrenQuery, 1000)
-        val childrenDocs = matchingChildren.scoreDocs.map { indexSearcher.doc(it.doc) }
+        val matchingChildren = docIndex.getSearcher().search(childrenQuery, 1000)
+        val childrenDocs = matchingChildren.scoreDocs.map { docIndex.getSearcher().doc(it.doc) }
         println("Took: " + (System.currentTimeMillis() - start))
         return childrenDocs
     }
@@ -141,6 +132,18 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         }
         logger.info { "Fetching children took: " + (System.currentTimeMillis() - start) }
         return childDocs
+    }
+
+    fun onNewDataAddedToIndex() {
+        docIndex.onNewDataAddedToIndex()
+    }
+
+    fun commit() {
+        docIndex.commit()
+    }
+
+    fun size(): Int {
+        return docIndex.size()
     }
 }
 

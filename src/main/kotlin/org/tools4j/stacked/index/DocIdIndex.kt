@@ -1,13 +1,8 @@
 package org.tools4j.stacked.index
 
 import mu.KLogging
-import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.*
-import org.apache.lucene.index.DirectoryReader
-import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.index.IndexWriterConfig
-import org.apache.lucene.index.Term
+import org.apache.lucene.index.*
 import org.apache.lucene.search.*
 import org.apache.lucene.store.Directory
 import org.apache.lucene.search.BooleanClause
@@ -18,9 +13,25 @@ import org.apache.lucene.search.TermQuery
 
 class DocIdIndex(val index: Directory, val name: String) {
     companion object: KLogging()
+    lateinit var reader: IndexReader
+    lateinit var searcher: IndexSearcher
+
+    fun init(){
+        reader = DirectoryReader.open(index)
+        searcher = IndexSearcher(reader)
+    }
+
+    fun onNewDataAddedToIndex(){
+        reader = DirectoryReader.open(index)
+        searcher = IndexSearcher(reader)
+    }
 
     fun getByTerm(term: Term): Int? {
         return getByQuery(TermQuery(term))
+    }
+
+    fun getDoc(docId: Int): Document?{
+        return searcher.doc(docId)
     }
 
     fun getByTerms(terms: Map<String, String>): Int? {
@@ -32,7 +43,6 @@ class DocIdIndex(val index: Directory, val name: String) {
     }
 
     fun getByQuery(query: Query): Int? {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
         val docs = searcher.search(query, 2)
         val hits = docs.scoreDocs
         if (docs.totalHits == 0L) {
@@ -45,63 +55,52 @@ class DocIdIndex(val index: Directory, val name: String) {
         }
     }
 
-    fun searchByTerm(term: Term): List<Int> {
-        return searchByQuery(TermQuery(term))
+    fun searchByTerm(term: Term, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByQuery(TermQuery(term), docCollector)
     }
 
-    fun searchByTerm(key: String, value: String): List<Int> {
-        return searchByTerm(Term(key, value))
+    fun searchByTerm(key: String, value: String, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByTerm(Term(key, value), docCollector)
     }
 
-    fun searchAllTermsMustMatch(terms: List<Term>): List<Int> {
-        return searchByTerms(terms, BooleanClause.Occur.MUST)
+    fun searchAllTermsMustMatch(terms: List<Term>, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByTerms(terms, BooleanClause.Occur.MUST, docCollector)
     }
 
-    fun searchAllTermsMustMatch(terms: Map<String, String>): List<Int> {
-        return searchByTerms(terms, BooleanClause.Occur.MUST)
+    fun searchAllTermsMustMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByTerms(terms, BooleanClause.Occur.MUST, docCollector)
     }
 
-    fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur): List<Int> {
-        return searchByTerms(terms.entries.map { Term(it.key, it.value) }.toList(), booleanClause)
+    fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByTerms(terms.entries.map { Term(it.key, it.value) }.toList(), booleanClause, docCollector)
     }
 
-    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur): List<Int> {
-        val query = BooleanQuery.Builder()
-        for (term in terms) {
-            query.add(TermQuery(term), booleanClause)
+    fun searchAnyTermsCanMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByTerms(terms, BooleanClause.Occur.SHOULD, docCollector)
+    }
+
+    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        val chunks = terms.chunked(BooleanQuery.getMaxClauseCount())
+        val results = ArrayList<Int>()
+        for(chunk in chunks){
+            val query = BooleanQuery.Builder()
+            for (term in chunk) {
+                query.add(TermQuery(term), booleanClause)
+            }
+            results.addAll(searchByQuery(query.build(), docCollector))
         }
-        return searchByQuery(query.build())
+        return results
     }
 
-    fun searchAnyTermsCanMatch(terms: Map<String, String>): List<Int> {
-        return searchByTerms(terms, BooleanClause.Occur.SHOULD)
-    }
-
-    fun searchByQuery(query: Query): List<Int> {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(query, 10000)
-        val hits = docs.scoreDocs
-        return hits.map{it.doc}.toList()
+    fun searchByQuery(query: Query, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return docCollector.search(searcher, query)
     }
 
     fun getAll(): List<Int> {
-        val searcher = IndexSearcher(DirectoryReader.open(index))
-        val docs = searcher.search(MatchAllDocsQuery(), 10000)
-        val hits = docs.scoreDocs
-        logger.debug{ "Found " + docs.totalHits + " total records found." }
-        return hits.map{it.doc}.toList()
+        return GetMaxSizeCollector().search(searcher, MatchAllDocsQuery())
     }
 
-    fun search(searchLambda: (IndexSearcher)-> TopDocs): List<Int> {
-        val reader = DirectoryReader.open(index)
-        val searcher = IndexSearcher(reader)
-        val docs = searchLambda(searcher)
-        val hits = docs.scoreDocs
-        if (docs.totalHits > 0) {
-            return hits
-                .map{it.doc}
-                .toList()
-        }
-        return emptyList()
+    fun size(): Int {
+        return reader.numDocs()
     }
 }

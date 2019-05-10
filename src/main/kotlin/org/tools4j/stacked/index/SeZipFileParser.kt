@@ -69,7 +69,7 @@ class ExtractCallback(
     private var totalFileInZipSize: Long = 0;
     @Volatile var parsingFuture: Future<*>? = null
     @Volatile lateinit var pathInArchive: String
-    @Volatile private var extractedFileInZipSize = 0
+    @Volatile private var extractedFileInZipSize: Long = 0
     @Volatile var exceptionDuringParsing: Exception? = null
     companion object: KLogging()
 

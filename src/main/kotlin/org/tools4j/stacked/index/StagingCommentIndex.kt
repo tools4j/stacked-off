@@ -16,6 +16,6 @@ class StagingCommentIndex(indexFactory: IndexFactory)
     override fun convertItemToDocument(comment: StagingComment): Document = comment.convertToDocument()
 
     fun getByPostId(postUid: String): List<StagingComment> {
-        return search{it.search(TermQuery(Term("postId", postUid)), 100)}
+        return searchByTerm(Term("postId", postUid))
     }
 }

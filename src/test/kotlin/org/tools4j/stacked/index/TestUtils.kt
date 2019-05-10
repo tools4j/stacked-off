@@ -95,6 +95,7 @@ fun loadIndexedSiteIndex(indexedSiteIndex: IndexedSiteIndex): IndexedSiteIndex {
         sites.first { it.tinyName == "coffeeme" })
 
     indexedSiteIndex.addItems(listOf(beerIndexedSite, coffeeIndexedSite))
+    indexedSiteIndex.onNewDataAddedToIndex()
     return indexedSiteIndex
 }
 

@@ -33,10 +33,12 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
 
     fun addItems(items: List<T>){
         docIndex.addItems(items.map { convertItemToDocument(it) })
+        docIndex.onNewDataAddedToIndex()
     }
 
     fun addItem(item: T){
         docIndex.addItems(listOf(convertItemToDocument(item)))
+        docIndex.onNewDataAddedToIndex()
     }
 
     fun getItemHandler(): ItemHandler<T> {
@@ -63,44 +65,40 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
         return convertDocumentToItemOrNull(docIndex.getByQuery(query))
     }
 
-    fun searchByTerm(term: Term): List<T> {
-        return docIndex.searchByTerm(term).map{ convertDocumentToItem(it) }
+    fun searchByTerm(term: Term, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchByTerm(term, docCollector).map{ convertDocumentToItem(it) }
     }
 
-    fun searchByTerm(key: String, value: String): List<T> {
-        return docIndex.searchByTerm(Term(key, value)).map { convertDocumentToItem(it) }
+    fun searchByTerm(key: String, value: String, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchByTerm(Term(key, value), docCollector).map { convertDocumentToItem(it) }
     }
 
-    fun searchAllTermsMustMatch(terms: List<Term>): List<T> {
-        return docIndex.searchAllTermsMustMatch(terms).map { convertDocumentToItem(it) }
+    fun searchAllTermsMustMatch(terms: List<Term>, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchAllTermsMustMatch(terms, docCollector).map { convertDocumentToItem(it) }
     }
 
-    fun searchAllTermsMustMatch(terms: Map<String, String>): List<T> {
-        return docIndex.searchAllTermsMustMatch(terms).map { convertDocumentToItem(it) }
+    fun searchAllTermsMustMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchAllTermsMustMatch(terms, docCollector).map { convertDocumentToItem(it) }
     }
 
-    private fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur): List<T> {
-        return docIndex.searchByTerms(terms, booleanClause).map {convertDocumentToItem(it)}
+    private fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchByTerms(terms, booleanClause, docCollector).map {convertDocumentToItem(it)}
     }
 
-    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur): List<T> {
-        return docIndex.searchByTerms(terms, booleanClause).map { convertDocumentToItem(it) }
+    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchByTerms(terms, booleanClause, docCollector).map { convertDocumentToItem(it) }
     }
 
-    fun searchAnyTermsCanMatch(terms: Map<String, String>): List<T> {
-        return docIndex.searchAnyTermsCanMatch(terms).map { convertDocumentToItem(it) }
+    fun searchAnyTermsCanMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchAnyTermsCanMatch(terms, docCollector).map { convertDocumentToItem(it) }
     }
 
-    fun searchByQuery(query: Query): List<T> {
-        return docIndex.searchByQuery(query).map{convertDocumentToItem(it)}.toList()
+    fun searchByQuery(query: Query, docCollector: DocCollector = GetMaxSizeCollector()): List<T> {
+        return docIndex.searchByQuery(query, docCollector).map{convertDocumentToItem(it)}.toList()
     }
 
     fun getAll(): List<T> {
         return docIndex.getAll().map{convertDocumentToItem(it)}.toList()
-    }
-
-    fun search(searchLambda: (IndexSearcher)-> TopDocs): List<T> {
-        return docIndex.search(searchLambda).map { convertDocumentToItem(it) }
     }
 
     fun forEachDocumentInIndex(worker: (Document, Int, Int) -> Unit){
@@ -121,6 +119,14 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
 
     fun purgeSite(indexedSiteId: String){
         docIndex.purgeSite(indexedSiteId)
+    }
+
+    fun onNewDataAddedToIndex() {
+        docIndex.onNewDataAddedToIndex()
+    }
+
+    fun size(): Int {
+        return docIndex.size()
     }
 
     abstract fun getIndexedFieldsAndRankings(): MutableMap<String, Float>;

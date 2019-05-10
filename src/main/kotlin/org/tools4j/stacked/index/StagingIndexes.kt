@@ -14,4 +14,10 @@ class StagingIndexes(val stagingPostIndex: StagingPostIndex,
         stagingCommentIndex.purge()
         stagingUserIndex.purge()
     }
+
+    fun onNewDataAddedToIndexes() {
+        stagingPostIndex.onNewDataAddedToIndex()
+        stagingCommentIndex.onNewDataAddedToIndex()
+        stagingUserIndex.onNewDataAddedToIndex()
+    }
 }

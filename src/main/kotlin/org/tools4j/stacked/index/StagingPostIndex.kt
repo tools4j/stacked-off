@@ -15,6 +15,6 @@ class StagingPostIndex(indexFactory: IndexFactory)
     override fun convertItemToDocument(post: StagingPost): Document = post.convertToDocument()
 
     fun getByParentId(parentId: String): List<StagingPost> {
-        return search{it.search(TermQuery(Term("parentId", parentId)), 10000)}
+        return searchByTerm(Term("parentId", parentId))
     }
 }

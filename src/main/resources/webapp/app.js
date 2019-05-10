@@ -37,6 +37,10 @@ router
             console.log("/status")
             showStatusWhileRunning()
         },
+        '/indexes': function (params) {
+            console.log("/indexes")
+            fetchJson("/rest/indexes", indexStats => showIndexStats(indexStats))
+        },
         '*': function () {
             console.log("Resolved to wildcard")
             fetchJson("/rest/sites", sites => showSites(sites));
@@ -162,19 +166,33 @@ function showStatus(status){
     return status.running
 }
 
+function showIndexStats(indexStats) {
+    const markup = `
+        <h1>Indexes</h1>
+        <table class="data-table">
+            <tr><th>index</th><th># docs</th></tr>
+            <tr><td>questionIndex</td><td>${indexStats.indexSizes.questionIndex}</td></tr>
+            <tr><td>indexedSiteIndex</td><td>${indexStats.indexSizes.indexedSiteIndex}</td></tr>
+            <tr><td>stagingPostIndex</td><td>${indexStats.indexSizes.stagingPostIndex}</td></tr>
+            <tr><td>stagingCommentIndex</td><td>${indexStats.indexSizes.stagingCommentIndex}</td></tr>
+            <tr><td>stagingUserIndex</td><td>${indexStats.indexSizes.stagingUserIndex}</td></tr>
+        </table>`;
+    $("#content")[0].innerHTML = markup
+}
+
 function showQuestion(question) {
     const markup = `
-        <h1>${question.post.rawPost.title}</h1>
+        <h1>${question.title}</h1>
         <div class="question">
-            ${renderPost(question.post, question.indexedSite.seSite, null)}
-            ${question.childPosts.length == 0 ? "" : `
-                <h2>${question.childPosts.length} Answer${question.childPosts.length > 1 ? 's' : ''}</h2>`}
+            ${renderPost(question, question.indexedSite.seSite, null)}
+            ${question.answers.length == 0 ? "" : `
+                <h2>${question.answers.length} Answer${question.answers.length > 1 ? 's' : ''}</h2>`}
         </div>
-        ${question.childPosts.length == 0 ? "" : `
+        ${question.answers.length == 0 ? "" : `
             <div class="answers">
-                ${question.childPosts.map(post => `
+                ${question.answers.map(post => `
                 <div class="answer"> 
-                    ${renderPost(post, question.indexedSite.seSite, question.post.rawPost.acceptedAnswerId)}
+                    ${renderPost(post, question.indexedSite.seSite, question.acceptedAnswerId)}
                 </div>`)}     
             </div>`}`;
     $("#content")[0].innerHTML = markup
@@ -185,13 +203,13 @@ function renderPost(post, seSite, acceptedAnswerId){
     <table class="post">
         <tr>
             <td class="score-details">
-            <div class="score">${post.rawPost.score}</div>
-            ${post.rawPost.favoriteCount != null && post.rawPost.favoriteCount > 0 ? `
+            <div class="score">${post.score}</div>
+            ${post.favoriteCount != null && post.favoriteCount > 0 ? `
                 <div class="favorite-count">
                     <img class="star" display="block" width="18" src="static/star.png"/>
-                    <div class="fav-count">${post.rawPost.favoriteCount}</div>    
+                    <div class="fav-count">${post.favoriteCount}</div>    
                 </div>`: ""}
-            ${acceptedAnswerId != null && post.rawPost.id == acceptedAnswerId ? `
+            ${acceptedAnswerId != null && post.id == acceptedAnswerId ? `
                 <div class="favorite-count">
                     <img class="tick" display="block" width="18" src="static/tick.png"/>
                 </div>`: ""}
@@ -199,40 +217,40 @@ function renderPost(post, seSite, acceptedAnswerId){
             </td>
             <td>
                 <div class="post-body">
-                    ${post.rawPost.body}
+                    ${post.body}
                 </div>            
                 <div class="post-details">
                     <div class="user-details rounded-blue-box">
-                        <div class="asked">${post.rawPost.parentId == null ? 'asked': 'answered'} ${formatDate(post.rawPost.creationDate)}</div>
-                        <div class="display-name">${post.ownerUser.displayName}</div>
-                        <div class="reputation">${post.ownerUser.reputation}</div>
+                        <div class="asked">${post.parentId == null ? 'asked': 'answered'} ${formatDate(post.creationDate)}</div>
+                        <div class="display-name">${post. userDisplayName}</div>
+                        <div class="reputation">${post.userReputation}</div>
                     </div> 
-                    ${post.rawPost.tags == null ? '': `                                               
+                    ${post.tags == null ? '': `                                               
                     <span class="tags">
-                        ${post.rawPost.tags
+                        ${post.tags
                             .split("><")
                             .map(tag => tag.replace("<", "").replace(">", ""))
                             .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
                             .join('')}    
                     </span>`}
-                    ${post.rawPost.parentId != null ? '': `
+                    ${post.parentId != null ? '': `
                     <span>
-                        <a class="online-link" href="${seSite.url}/questions/${post.rawPost.id}">jump to online version</a>
+                        <a class="online-link" href="${seSite.url}/questions/${post.id}">jump to online version</a>
                     </span>`}
                     <span class="last-activity">
-                        edited ${formatDate(post.rawPost.lastActivityDate)}
+                        edited ${formatDate(post.lastActivityDate)}
                     </span>
                 </div>
                 <table class="comments">
                     ${post.comments.map(comment =>
                     `<tr class="comment">
                         <td class="comment-score">
-                            ${comment.rawComment.score > 0 ? comment.rawComment.score: ""}
+                            ${comment.score > 0 ? comment.score: ""}
                         </td>
                         <td class="comment-content">
-                            <span class="comment-text">${comment.rawComment.text}</span>
-                            <span class="comment-user">&#8211;&nbsp;${comment.user.displayName}</span>
-                            <span class="comment-datetime">${formatDate(comment.rawComment.creationDate)}</span>
+                            <span class="comment-text">${comment.text}</span>
+                            <span class="comment-user">&#8211;&nbsp;${comment.userDisplayName}</span>
+                            <span class="comment-datetime">${formatDate(comment.creationDate)}</span>
                         </td>
                     </tr>`).join('\n')}
                 </table>
@@ -247,11 +265,11 @@ function showResults(results){
     const markup = `
                 ${results.map(question =>
         `<div class="result">
-                        <h2 class="results-heading"><a class="result-link" data-navigo href="/questions/${question.post.rawPost.indexedSiteId}.${question.post.rawPost.id}">
-                            ${question.post.rawPost.title}:&nbsp;${question.indexedSite.seSite.urlDomain}
+                        <h2 class="results-heading"><a class="result-link" data-navigo href="/questions/${question.uid}">
+                            ${question.title}:&nbsp;${question.indexedSite.seSite.urlDomain}
                         </a></h2>
                     </h3>
-                    <div class="result-body">${question.post.rawPost.body}</div></div>`).join('')};
+                    <div class="result-body">${question.body}</div></div>`).join('')};
                     <script javascript="router.updatePageLinks()"/>`
     $("#content")[0].innerHTML = markup
 }

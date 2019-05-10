@@ -4,10 +4,7 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.*
-import org.apache.lucene.index.DirectoryReader
-import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.index.IndexWriterConfig
-import org.apache.lucene.index.Term
+import org.apache.lucene.index.*
 import org.apache.lucene.search.*
 import org.apache.lucene.store.Directory
 import org.apache.lucene.search.BooleanClause
@@ -28,8 +25,11 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         docIdIndex = DocIdIndex(index, name)
         analyzer = StandardAnalyzer()
         val config = IndexWriterConfig(analyzer)
+        config.setMaxBufferedDocs(10_000)
+        config.setRAMBufferSizeMB(256.0)
         writer = IndexWriter(index, config)
         writer.commit()
+        docIdIndex.init()
     }
 
     override fun shutdown() {
@@ -50,11 +50,13 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
     fun purgeSite(indexedSiteId: String){
         writer.deleteDocuments(Term("indexedSiteId", indexedSiteId))
         writer.commit()
+        onNewDataAddedToIndex()
     }
 
     fun purge() {
         writer.deleteAll()
         writer.commit()
+        onNewDataAddedToIndex()
     }
 
     fun <T> getDocumentHandler(converter: (T) -> Document): ItemHandler<T> {
@@ -83,44 +85,40 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         return getDocFromDocId(docIdIndex.getByQuery(query))
     }
 
-    fun searchByTerm(term: Term): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchByTerm(term))
+    fun searchByTerm(term: Term, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchByTerm(term, docCollector))
     }
 
-    fun searchByTerm(key: String, value: String): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchByTerm(key, value))
+    fun searchByTerm(key: String, value: String, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchByTerm(key, value, docCollector))
     }
 
-    fun searchAllTermsMustMatch(terms: List<Term>): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms))
+    fun searchAllTermsMustMatch(terms: List<Term>, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms, docCollector))
     }
 
-    fun searchAllTermsMustMatch(terms: Map<String, String>): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms))
+    fun searchAllTermsMustMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchAllTermsMustMatch(terms, docCollector))
     }
 
-    fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause))
+    fun searchByTerms(terms: Map<String, String>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause, docCollector))
     }
 
-    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause))
+    fun searchByTerms(terms: List<Term>, booleanClause: BooleanClause.Occur, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchByTerms(terms, booleanClause, docCollector))
     }
 
-    fun searchAnyTermsCanMatch(terms: Map<String, String>): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchAnyTermsCanMatch(terms))
+    fun searchAnyTermsCanMatch(terms: Map<String, String>, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchAnyTermsCanMatch(terms, docCollector))
     }
 
-    fun searchByQuery(query: Query): List<Document> {
-        return getDocsFromDocIds(docIdIndex.searchByQuery(query))
+    fun searchByQuery(query: Query, docCollector: DocCollector = GetMaxSizeCollector()): List<Document> {
+        return getDocsFromDocIds(docIdIndex.searchByQuery(query, docCollector))
     }
 
     fun getAll(): List<Document> {
         return getDocsFromDocIds(docIdIndex.getAll())
-    }
-
-    fun search(searchLambda: (IndexSearcher)-> TopDocs): List<Document> {
-        return getDocsFromDocIds(docIdIndex.search(searchLambda))
     }
 
     fun forEachDocumentInIndex(worker: (Document, Int, Int) -> Unit){
@@ -138,18 +136,31 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
 
     fun addDocsAsBlock(docs: List<Document>) {
         writer.addDocuments(docs)
+    }
+
+    fun commit(){
         writer.commit()
     }
 
     private fun getDocsFromDocIds(docIds: List<Int>): List<Document> {
         if(docIds.isEmpty()) return emptyList()
-        val indexSearcher = IndexSearcher(DirectoryReader.open(index))
-        return docIds.map { indexSearcher.doc(it) }
+        return docIds.map { docIdIndex.getDoc(it) }.filterNotNull().toList()
     }
 
     private fun getDocFromDocId(docId: Int?): Document? {
         if(docId == null) return null
-        val indexSearcher = IndexSearcher(DirectoryReader.open(index))
-        return indexSearcher.doc(docId)
+        return docIdIndex.getDoc(docId)
+    }
+
+    fun getSearcher(): IndexSearcher {
+        return docIdIndex.searcher
+    }
+
+    fun onNewDataAddedToIndex() {
+        docIdIndex.onNewDataAddedToIndex()
+    }
+
+    fun size(): Int {
+        return docIdIndex.size()
     }
 }
