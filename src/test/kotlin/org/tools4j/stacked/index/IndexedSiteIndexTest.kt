@@ -31,7 +31,7 @@ internal class IndexedSiteIndexTest {
         val beerIndexedSite = IndexedSiteImpl(
             "1",
             "2019-02-25T10:00:00",
-            true,
+            Status.LOADED,
             null,
             sites.first { it.tinyName == "beerme" })
 
@@ -56,8 +56,6 @@ internal class IndexedSiteIndexTest {
 
     @Test
     fun testQueryWithMultipleCriteria(){
-        assertIsIndexedSite1(indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "success" to "true"))!!)
+        assertIsIndexedSite1(indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "status" to "LOADED"))!!)
     }
-
-
 }

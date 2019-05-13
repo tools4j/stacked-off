@@ -2,17 +2,24 @@ package org.tools4j.stacked.index
 
 class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
 
-    override fun onStartParseSite(seSite: SeSite) {
+    override fun onStartParseSite(indexedSite: IndexedSite) {
         indexes.stagingIndexes.purge()
+        indexes.indexedSiteIndex.addItem(indexedSite)
+        indexes.indexedSiteIndex.onNewDataAddedToIndex()
     }
 
     override fun onFinishParseSite(
         indexedSite: IndexedSite,
         jobStatus: JobStatus
     ) {
-        if(indexedSite.success){
+        indexes.indexedSiteIndex.purgeSite(indexedSite.indexedSiteId)
+        indexes.indexedSiteIndex.addItem(indexedSite)
+
+        if(indexedSite.status != Status.ERROR){
+            indexes.indexedSiteIndex.purgeSite(indexedSite.indexedSiteId)
+            indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.LINKING_STAGING_INDICES))
             indexes.stagingIndexes.onNewDataAddedToIndexes()
-            jobStatus.addOperation("Finished parsing site ${indexedSite.seSite.urlDomain}")
+            jobStatus.addOperation("Linking staging indexes ${indexedSite.seSite.urlDomain}")
             try {
                 QuestionIndexer(
                     indexes.stagingIndexes,
@@ -20,19 +27,21 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
                     indexes.questionIndex,
                     jobStatus
                 ).index()
-                val matchingExistingIndexedSiteIds = indexes.indexedSiteIndex.getMatching(indexedSite.seSite).map { it.indexedSiteId }
-                indexes.indexedSiteIndex.purgeSites(matchingExistingIndexedSiteIds)
-                indexes.questionIndex.purgeSites(matchingExistingIndexedSiteIds)
-                indexes.indexedSiteIndex.addItem(indexedSite)
+                val olderVersionsOfThisSite = indexes.indexedSiteIndex.getMatching(indexedSite.seSite)
+                    .map { it.indexedSiteId }
+                    .filter { it != indexedSite.indexedSiteId }
+                indexes.indexedSiteIndex.purgeSite(indexedSite.indexedSiteId)
+                indexes.indexedSiteIndex.purgeSites(olderVersionsOfThisSite)
+                indexes.questionIndex.purgeSites(olderVersionsOfThisSite)
+                indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.LOADED))
                 indexes.stagingIndexes.purge()
 
             } catch (e: Exception){
                 indexes.questionIndex.purgeSite(indexedSite.indexedSiteId)
-                indexes.indexedSiteIndex.addItem(IndexingSiteImpl(indexedSite).finished(false, ExceptionToString(e).toString()))
+                indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.ERROR, ExceptionToString(e).toString()))
             }
         } else {
             jobStatus.addOperation("Error parsing site ${indexedSite.seSite.urlDomain}:\n${indexedSite.errorMessage}")
-            indexes.indexedSiteIndex.addItem(indexedSite)
         }
     }
 }

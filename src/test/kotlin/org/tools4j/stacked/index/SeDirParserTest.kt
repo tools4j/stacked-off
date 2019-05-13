@@ -86,22 +86,21 @@ class SeDirParserTest {
     }
 
     private fun assertCoffeeSiteLoaded(): IndexedSite {
-        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "success" to "true"))!!
+        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "status" to Status.LOADED.name))!!
         val coffeeAssertions = CoffeeSiteAssertions(coffeeIndexedSite.indexedSiteId)
         coffeeAssertions.assertHasAllQuestions(indexes.questionIndex.getAll())
         return coffeeIndexedSite
     }
 
     private fun assertBeerSiteLoaded(): IndexedSite {
-        val beerIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "success" to "true"))!!
+        val beerIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "beerme", "status" to Status.LOADED.name))!!
         val beerAssertions = BeerSiteAssertions(beerIndexedSite.indexedSiteId)
         beerAssertions.assertHasAllQuestions(indexes.questionIndex.getAll())
         return beerIndexedSite
     }
 
     private fun assertCoffeeSiteLoadedWithErrorMatching(message: String): IndexedSite {
-        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "success" to "false"))!!
-        assertThat(coffeeIndexedSite.success).isFalse()
+        val coffeeIndexedSite = indexes.indexedSiteIndex.getByTerms(mapOf("tinyName" to "coffeeme", "status" to Status.ERROR.name))!!
         assertThat(coffeeIndexedSite.errorMessage).matches(message)
         return coffeeIndexedSite
     }

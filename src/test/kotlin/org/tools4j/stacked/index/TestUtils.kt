@@ -79,7 +79,7 @@ fun loadIndexedSiteIndex(indexedSiteIndex: IndexedSiteIndex): IndexedSiteIndex {
     val beerIndexedSite = IndexedSiteImpl(
         "1",
         "2019-02-25T10:00:00",
-        true,
+        Status.LOADED,
         null,
         sites.first { it.tinyName == "beerme" })
 
@@ -90,7 +90,7 @@ fun loadIndexedSiteIndex(indexedSiteIndex: IndexedSiteIndex): IndexedSiteIndex {
     val coffeeIndexedSite = IndexedSiteImpl(
         "2",
         "2019-02-01T05:00:00",
-        false,
+        Status.ERROR,
         exceptionAsString,
         sites.first { it.tinyName == "coffeeme" })
 
@@ -134,7 +134,7 @@ fun assertHasIndexedSite2(indexedSites: List<IndexedSite>){
 fun assertIsIndexedSite1(indexedSite: IndexedSite){
     assertThat(indexedSite.indexedSiteId).isEqualTo("1")
     assertThat(indexedSite.dateTimeIndexed).isEqualTo("2019-02-25T10:00:00")
-    assertThat(indexedSite.success).isEqualTo(true)
+    assertThat(indexedSite.status).isEqualTo(Status.LOADED)
     assertThat(indexedSite.errorMessage).isNull()
     assertIsSeSite2(indexedSite.seSite)
 }
@@ -142,7 +142,7 @@ fun assertIsIndexedSite1(indexedSite: IndexedSite){
 fun assertIsIndexedSite2(indexedSite: IndexedSite){
     assertThat(indexedSite.indexedSiteId).isEqualTo("2")
     assertThat(indexedSite.dateTimeIndexed).isEqualTo("2019-02-01T05:00:00")
-    assertThat(indexedSite.success).isEqualTo(false)
+    assertThat(indexedSite.status).isEqualTo(Status.ERROR)
     assertThat(indexedSite.errorMessage).startsWith("java.lang.IllegalArgumentException: Boom!")
     assertIsSeSite3(indexedSite.seSite)
 }

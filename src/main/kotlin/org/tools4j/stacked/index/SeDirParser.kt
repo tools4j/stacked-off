@@ -45,28 +45,30 @@ class SeDirParser(
         jobStatus: JobStatus = JobStatusImpl()
     ){
         val seSite = seDirSite.site
-        val indexingSite = IndexingSiteImpl(
+        val indexedSite = IndexedSiteImpl(
             newIndexedSiteId,
             Date().toString(),
+            Status.LOADING_STAGING_INDICES,
+            null,
             seSite
         )
         try {
-            parseSiteListener.onStartParseSite(seSite)
+            parseSiteListener.onStartParseSite(indexedSite)
             for (zipFile in seDirSite.zipFiles) {
                 zipFileParser.parse(zipFile.absolutePath, jobStatus)
             }
-            parseSiteListener.onFinishParseSite(indexingSite.finished(true, null), jobStatus)
+            parseSiteListener.onFinishParseSite(indexedSite, jobStatus)
 
         } catch (e: Exception) {
             logger.error{ e.message }
             val exceptionAsString = if(e is ExtractorException) e.message else ExceptionToString(e).toString()
-            parseSiteListener.onFinishParseSite(indexingSite.finished(false, exceptionAsString), jobStatus)
+            parseSiteListener.onFinishParseSite(indexedSite.withStatus(Status.ERROR, exceptionAsString), jobStatus)
         }
     }
 }
 
 interface ParseSiteListener {
-    fun onStartParseSite(seSite: SeSite)
+    fun onStartParseSite(indexedSite: IndexedSite)
     fun onFinishParseSite(
         indexedSite: IndexedSite,
         jobStatus: JobStatus

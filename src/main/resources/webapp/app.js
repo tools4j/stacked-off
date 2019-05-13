@@ -203,7 +203,7 @@ function renderPost(post, seSite, acceptedAnswerId){
     <table class="post">
         <tr>
             <td class="score-details">
-            <div class="score">${post.score}</div>
+            <span class="score">${post.score}</span>
             ${post.favoriteCount != null && post.favoriteCount > 0 ? `
                 <div class="favorite-count">
                     <img class="star" display="block" width="18" src="static/star.png"/>
@@ -299,7 +299,6 @@ function showSites(indexedSites){
                             <th>Name</th>
                             <th>Url</th>
                             <th>Loaded</th>
-                            <th>Errors</th>
                             <th>Operation</th>
                         </tr>
                         ${indexedSites.map(indexedSite =>
@@ -308,7 +307,7 @@ function showSites(indexedSites){
                             <td>${indexedSite.seSite.tinyName}</td>
                             <td>${indexedSite.seSite.name}</td>
                             <td>${indexedSite.seSite.url}</td>
-                            <td>${indexedSite.success ? `Success`: `Error`}</td>
+                            <td>${indexedSite.status.toLowerCase().replace("_", " ")}</td>
                             <td><input type="button" value="Delete" onclick="router.purgeSite('${indexedSite.indexedSiteId}')"/></td>
                         </tr>`).join('')}
                     </table>`;

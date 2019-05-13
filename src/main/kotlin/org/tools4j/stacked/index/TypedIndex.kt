@@ -115,10 +115,12 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
 
     fun purge() {
         docIndex.purge()
+        onNewDataAddedToIndex()
     }
 
     fun purgeSite(indexedSiteId: String){
         docIndex.purgeSite(indexedSiteId)
+        onNewDataAddedToIndex()
     }
 
     fun onNewDataAddedToIndex() {

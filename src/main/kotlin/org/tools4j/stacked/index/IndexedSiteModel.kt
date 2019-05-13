@@ -8,30 +8,31 @@ import org.apache.lucene.document.StringField
 interface IndexedSite{
     val indexedSiteId: String
     val dateTimeIndexed: String
-    val success: Boolean
+    val status: Status
     val errorMessage: String?
     val seSite: SeSite
     fun convertToDocument(): Document
+    fun withStatus(status: Status, errorMessage: String? = null): IndexedSite
 }
 
 interface IndexingSite{
     val indexedSiteId: String
     val dateTimeIndexed: String
     val seSite: SeSite
-    fun finished(success: Boolean, errorMessage: String?): IndexedSite
+    fun finished(status: String, errorMessage: String?): IndexedSite
 }
 
 class IndexedSiteImpl(
     override val indexedSiteId: String,
     override val dateTimeIndexed: String,
-    override val success: Boolean,
+    override val status: Status,
     override val errorMessage: String?,
     override val seSite: SeSite) : IndexedSite {
 
     constructor(doc: Document): this(
         doc.get("id"),
         doc.get("dateTimeIndexed"),
-        doc.get("success").toBoolean(),
+        Status.valueOf(doc.get("status")),
         doc.get("errorMessage"),
         SeSiteImpl(doc))
 
@@ -40,27 +41,26 @@ class IndexedSiteImpl(
         doc.add(StringField("id", indexedSiteId, Field.Store.YES))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         doc.add(StoredField("dateTimeIndexed", dateTimeIndexed))
-        doc.add(StringField("success", success.toString(), Field.Store.YES))
+        doc.add(StringField("status", status.name, Field.Store.YES))
         if(errorMessage != null) doc.add(StoredField("errorMessage", errorMessage))
         seSite.addTo(doc)
         return doc
     }
 
     override fun toString(): String {
-        return "IndexedSiteImpl(indexedSiteId='$indexedSiteId', dateTimeIndexed='$dateTimeIndexed', success=$success, errorMessage=$errorMessage, seSite=$seSite)"
+        return "IndexedSiteImpl(indexedSiteId='$indexedSiteId', dateTimeIndexed='$dateTimeIndexed', status=$status, errorMessage=$errorMessage, seSite=$seSite)"
+    }
+
+    override fun withStatus(status: Status, errorMessage: String?): IndexedSite {
+        return IndexedSiteImpl(indexedSiteId, dateTimeIndexed, status, errorMessage, seSite)
     }
 }
 
-class IndexingSiteImpl(
-    override val indexedSiteId: String,
-    override val dateTimeIndexed: String,
-    override val seSite: SeSite) : IndexingSite {
-
-    constructor(indexedSite: IndexedSite): this(indexedSite.indexedSiteId, indexedSite.dateTimeIndexed, indexedSite.seSite)
-
-    override fun finished(success: Boolean, errorMessage: String?): IndexedSite {
-        return IndexedSiteImpl(indexedSiteId, dateTimeIndexed, success, errorMessage, seSite )
-    }
+enum class Status {
+    LOADING_STAGING_INDICES,
+    LINKING_STAGING_INDICES,
+    ERROR,
+    LOADED
 }
 
 interface IndexedSiteIdGenerator{

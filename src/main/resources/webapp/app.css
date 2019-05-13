@@ -111,9 +111,12 @@ table.data-table th, table.data-table td {
     margin-top: 1em;
 }
 
-div.score {
+.score {
     color: #6a737c !important;
     font-size: 1.6em;
+    border: 1px solid #bbc0c4;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
 }
 
 div.fav-count {
