@@ -1,8 +1,17 @@
 package org.tools4j.stacked.index
 
+import mu.KLogging
+
 class Instance {
+    companion object: KLogging()
+
     val diContext: DiContext by lazy {
         DiContext()
+    }
+
+    init {
+        logger.info { "initializing context...." }
+        diContext.init()
     }
 
     val seDirParser: SeDirParser by lazy {
@@ -29,7 +38,7 @@ class Instance {
     }
 
     private val indexFactory: IndexFactory by lazy {
-        FileIndexFactory(diContext.getIndexParentDir())
+        FileIndexFactory(diContext.getIndexParentDir()!!)
     }
 
     val stagingIndexes: StagingIndexes by lazy {
@@ -58,10 +67,5 @@ class Instance {
 
     val indexes: Indexes by lazy {
         Indexes(indexedSiteIndex, questionIndex, stagingIndexes)
-    }
-
-    init {
-        assert(this.seDirParser != null)
-        diContext.init()
     }
 }

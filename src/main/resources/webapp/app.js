@@ -6,18 +6,28 @@ const router = new Navigo(root);
 
 router
     .on({
+        '/admin': function (params, queryString) {
+            console.log("Resolved to /admin")
+            var queryParams = convertQueryStringToJson(queryString)
+            let parentIndexDir = queryParams["parentIndexDir"];
+            if(parentIndexDir != null && parentIndexDir != ""){
+                doPost("/rest/admin", parentIndexDir => showAdmin(parentIndexDir), "parentIndexDir=" + parentIndexDir);
+            } else {
+                doGet("/rest/admin", parentIndexDir => showAdmin(parentIndexDir));
+            }
+        },
         '/sites': function () {
             console.log("Resolved to /sites")
-            fetchJson("/rest/sites", sites => showSites(sites));
+            doGet("/rest/sites", sites => showSites(sites));
         },
         '/search': function (params, queryString) {
             console.log("Resolved to /search")
             var queryParams = convertQueryStringToJson(queryString)
-            fetchJson("/rest/search?searchText=" + queryParams.searchText, results => showResults(results));
+            doGet("/rest/search?searchText=" + queryParams.searchText, results => showResults(results));
         },
         '/questions/:questionUid': function (params) {
-            console.log("Resolved to /questions/:questionUid")
-            fetchJson("/rest/questions/" + params.questionUid, question => showQuestion(question));
+            console.log("Resolved to /questions/:uid")
+            doGet("/rest/questions/" + params.questionUid, question => showQuestion(question));
         },
         '/load/chooseSitesXmlFile': function (params) {
             console.log("/load/chooseSitesXmlFile")
@@ -26,12 +36,12 @@ router
         '/load/selectSitesToLoad': function (params, queryString) {
             console.log("/load/selectSitesToLoad")
             var queryParams = convertQueryStringToJson(queryString)
-            fetchJson("/rest/sedir?path=" + queryParams.path, seDirSites => loadNewSites_selectSitesToLoad(queryParams.path, seDirSites));
+            doGet("/rest/sedir?path=" + queryParams.path, seDirSites => loadNewSites_selectSitesToLoad(queryParams.path, seDirSites));
         },
         '/load/run': function (params, queryString) {
             console.log("/load/run")
             var queryParams = convertQueryStringToJson(queryString)
-            fetchJson("/rest/loadSites?path=" + queryParams.path + "&seDirSiteIds=" + queryParams.seDirSiteIds, status => showStatusWhileRunning());
+            doGet("/rest/loadSites?path=" + queryParams.path + "&seDirSiteIds=" + queryParams.seDirSiteIds, status => showStatusWhileRunning());
         },
         '/status': function (params) {
             console.log("/status")
@@ -39,11 +49,11 @@ router
         },
         '/indexes': function (params) {
             console.log("/indexes")
-            fetchJson("/rest/indexes", indexStats => showIndexStats(indexStats))
+            doGet("/rest/indexes", indexStats => showIndexes(indexStats))
         },
         '*': function () {
             console.log("Resolved to wildcard")
-            fetchJson("/rest/sites", sites => showSites(sites));
+            doGet("/rest/sites", sites => showSites(sites));
         }
     })
     .resolve();
@@ -66,16 +76,43 @@ function convertQueryStringToJson(queryString) {
     return JSON.parse(JSON.stringify(result));
 }
 
+function showAdmin(parentIndexDir){
+    const markup = `<h1>Index Directory</h1>
+                <p>Please select the directory where your indexes are/will be stored.</p>
+                <p>If you already have sites loaded, and you change this directory.  Your indexes will still 
+                be on disk, but you won't see them in StackedOff.  To see them again, set the directory back to where
+                it was pointing to previously.</p>
+                <br/>
+                <p><i>(This cannot be a file chooser due to browser security restrictions.)</i></p>
+                <br/>
+                <div class="div-load-sites">
+                    <input id="index-parent-dir"
+                            class="wide-text-input text-input"
+                            type="text"
+                            value="${parentIndexDir}"/>
+                </div>
+                <br/>
+                <input id="sites-xml-chosen-next-button"
+                    type="button"
+                    value="OK"
+                    onclick="router.navigate('/admin?parentIndexDir=' + $('#index-parent-dir')[0].value.replace(/\\\\/g, '/'))">
+                `;
+    $("#content")[0].innerHTML = markup
+}
+
 function loadNewSites_chooseSitesXmlFile(){
     const markup = `<h1>Load new site(s)</h1>
                 <h2>Step 1. Enter the path of the a downloaded stack dump directory</h2>
-                <span>(This cannot be a file chooser due to browser security restrictions.)</span>
+                <div><i>(This cannot be a file chooser due to browser security restrictions.)</i></div>
+                <br/>
                 <div class="div-load-sites">
                     <input id="sites-xml-chooser"
+                            class="wide-text-input text-input"
                             type="text"
                             value="C:/Users/ben/Downloads/stackexchange"
                             onchange="$('#sites-xml-chosen-next-button')[0].disabled=false"/>
                 </div>
+                <br/>
                 <input id="sites-xml-chosen-next-button"
                     type="button"
                     value="Next"
@@ -86,16 +123,14 @@ function loadNewSites_chooseSitesXmlFile(){
 
 function loadNewSites_selectSitesToLoad(seDir, seDirSites){
     // language=HTML
-    const nextButton = `<input
-                id="sites-selected-to-load-button"
+    const markup = `<h1>Load new site(s)</h1>
+            <h2>Step 2. Select the sites that you wish to load</h2>
+            <input
+                class="sites-selected-to-load-button"
                 type="button"
                 value="Next"
                 disabled="true"
-                onclick="router.navigate('/load/run?path=${seDir}&seDirSiteIds=' + $('.site-selection-checkbox:checkbox:checked').map(function(){return this.value}).get().join(','))"/>`;
-
-    const markup = `<h1>Load new site(s)</h1>
-            <h2>Step 2. Select the sites that you wish to load</h2>
-            ${nextButton}
+                onclick="router.navigate('/load/run?path=${seDir}&seDirSiteIds=' + $('.site-selection-checkbox:checkbox:checked').map(function(){return this.value}).get().join(','))"/>
             <table class="data-table">
                 <tr>
                 <th>Id</th>
@@ -112,18 +147,17 @@ function loadNewSites_selectSitesToLoad(seDir, seDirSites){
                             type="checkbox"
                             class="site-selection-checkbox"
                             value="${seDirSite.site.seSiteId}"
-                            onchange="$('#sites-selected-to-load-button')[0].disabled=false">
+                            onchange="$('.sites-selected-to-load-button')[0].disabled=false">
                     </td>
                 </tr>`).join('')}
             </table>
-            ${nextButton}
             `
 
     $("#content")[0].innerHTML = markup
 }
 
 function showStatusOnlyIfRunning(){
-    fetchJson("/rest/status", status => {
+    doGet("/rest/status", status => {
         if(!status.running) return;
         showStatus(status);
         showStatusWhileRunning()
@@ -134,7 +168,7 @@ function showStatusWhileRunning(){
     router.pause();
     router.navigate('/status');
     router.resume();
-    fetchJson("/rest/status", status => {
+    doGet("/rest/status", status => {
         showStatus(status);
         if(!status.running) return;
         sleep(1000).then(() => {
@@ -144,7 +178,7 @@ function showStatusWhileRunning(){
 }
 
 function loadStatus(){
-    fetchJson("/rest/status", status => showStatus(status));
+    doGet("/rest/status", status => showStatus(status));
 }
 
 function showStatus(status){
@@ -166,7 +200,7 @@ function showStatus(status){
     return status.running
 }
 
-function showIndexStats(indexStats) {
+function showIndexes(indexStats) {
     const markup = `
         <h1>Indexes</h1>
         <table class="data-table">
@@ -198,18 +232,18 @@ function showQuestion(question) {
     $("#content")[0].innerHTML = markup
 }
 
-function renderPost(post, seSite, acceptedAnswerId){
+function renderPost(question, seSite, acceptedAnswerId){
     return `
     <table class="post">
         <tr>
             <td class="score-details">
-            <span class="score">${post.score}</span>
-            ${post.favoriteCount != null && post.favoriteCount > 0 ? `
+            <span class="score">${question.score}</span>
+            ${question.favoriteCount != null && question.favoriteCount > 0 ? `
                 <div class="favorite-count">
                     <img class="star" display="block" width="18" src="static/star.png"/>
-                    <div class="fav-count">${post.favoriteCount}</div>    
+                    <div class="fav-count">${question.favoriteCount}</div>    
                 </div>`: ""}
-            ${acceptedAnswerId != null && post.id == acceptedAnswerId ? `
+            ${acceptedAnswerId != null && question.id == acceptedAnswerId ? `
                 <div class="favorite-count">
                     <img class="tick" display="block" width="18" src="static/tick.png"/>
                 </div>`: ""}
@@ -217,40 +251,40 @@ function renderPost(post, seSite, acceptedAnswerId){
             </td>
             <td>
                 <div class="post-body">
-                    ${post.body}
+                    ${question.htmlContent}
                 </div>            
                 <div class="post-details">
                     <div class="user-details rounded-blue-box">
-                        <div class="asked">${post.parentId == null ? 'asked': 'answered'} ${formatDate(post.creationDate)}</div>
-                        <div class="display-name">${post. userDisplayName}</div>
-                        <div class="reputation">${post.userReputation}</div>
+                        <div class="asked">${question.parentUid == null ? 'asked': 'answered'} ${formatDateTime(question.creationDate)}</div>
+                        <div class="display-name">${question. userDisplayName}</div>
+                        <div class="reputation">${question.userReputation}</div>
                     </div> 
-                    ${post.tags == null ? '': `                                               
+                    ${question.tags == null ? '': `                                               
                     <span class="tags">
-                        ${post.tags
+                        ${question.tags
                             .split("><")
                             .map(tag => tag.replace("<", "").replace(">", ""))
                             .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
                             .join('')}    
                     </span>`}
-                    ${post.parentId != null ? '': `
+                    ${question.parentId != null ? '': `
                     <span>
-                        <a class="online-link" href="${seSite.url}/questions/${post.id}">jump to online version</a>
+                        <a class="online-link" href="${seSite.url}/questions/${question.id}">jump to online version</a>
                     </span>`}
                     <span class="last-activity">
-                        edited ${formatDate(post.lastActivityDate)}
+                        edited ${formatDateTime(question.lastActivityDate)}
                     </span>
                 </div>
                 <table class="comments">
-                    ${post.comments.map(comment =>
+                    ${question.comments.map(comment =>
                     `<tr class="comment">
                         <td class="comment-score">
                             ${comment.score > 0 ? comment.score: ""}
                         </td>
                         <td class="comment-content">
-                            <span class="comment-text">${comment.text}</span>
+                            <span class="comment-text">${comment.textContent}</span>
                             <span class="comment-user">&#8211;&nbsp;${comment.userDisplayName}</span>
-                            <span class="comment-datetime">${formatDate(comment.creationDate)}</span>
+                            <span class="comment-datetime">${formatDateTime(comment.creationDate)}</span>
                         </td>
                     </tr>`).join('\n')}
                 </table>
@@ -264,13 +298,34 @@ function renderPost(post, seSite, acceptedAnswerId){
 function showResults(results){
     const markup = `
                 ${results.map(question =>
-        `<div class="result">
-                        <h2 class="results-heading"><a class="result-link" data-navigo href="/questions/${question.uid}">
-                            ${question.title}:&nbsp;${question.indexedSite.seSite.urlDomain}
-                        </a></h2>
-                    </h3>
-                    <div class="result-body">${question.body}</div></div>`).join('')};
-                    <script javascript="router.updatePageLinks()"/>`
+        `<table class="result">
+            <tr>
+                <td class="result-score-td">
+                    <span class="result-score">
+                        ${question.score}
+                    </span>    
+                </td>
+                <td>
+                    <div class="result-content">
+                        <h2 class="results-heading">
+                            <a class="result-link" data-navigo href="/questions/${question.uid}">
+                                ${question.title}
+                            </a>
+                        </h2>
+                        <div class="result-meta">
+                            <span>${question.numberOfAnswers} answer${question.numberOfAnswers == 1 ? "": "s"}</span>
+                            <span class="result-tags">tags: ${question.tags.replace('<', '').replace('>', ' ')}</span>
+                            <span class="result-site">${question.siteDomain}</span>
+                        </div>
+                        <div class="result-body">
+                            <span class="result-createddate">${formatDate(question.createdDate)} - </span>
+                            <span>${question.searchResultText}</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+         </table>`).join('')};
+         <script javascript="router.updatePageLinks()"/>`
     $("#content")[0].innerHTML = markup
 }
 
@@ -278,7 +333,7 @@ function showResults(results){
 function purgeSite(indexedSiteId){
     const confirmed = confirm("Do you wish to purge this site from your index?")
     if(confirmed){
-        fetchJson("/rest/purgeSite/" + indexedSiteId, sites => showSites(sites));
+        doGet("/rest/purgeSite/" + indexedSiteId, sites => showSites(sites));
     }
 }
 
@@ -315,23 +370,43 @@ function showSites(indexedSites){
     }
 }
 
-function fetchJson(address, callback) {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            var obj = JSON.parse(this.responseText);
-            $("#errors")[0].innerHTML = ""
-            callback(obj)
-        } else if(this.status == 500 || this.status == 404){
-            $("#errors")[0].innerHTML = this.responseText
+
+function doGet(address, callback){
+    $.ajax({
+        url: address,
+        type: 'get',
+        success: function( data, textStatus, jQxhr ){
+            callback(data)
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            $("#errors")[0].innerHTML = errorThrown
         }
-    };
-    xmlhttp.open("GET", address , true);
-    xmlhttp.send();
+    });
+}
+
+function doPost(address, callback, params){
+    $.ajax({
+        url: address,
+        dataType: 'json',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: params,
+        success: function( data, textStatus, jQxhr ){
+            callback(data)
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            $("#errors")[0].innerHTML = errorThrown + ":  " + jqXhr.responseText
+        }
+    });
+}
+
+
+function formatDateTime(dateStr){
+    return dateStr.replace('T', ' ').replace(/:\d\d\.\d\d\d/, '')
 }
 
 function formatDate(dateStr){
-    return dateStr.replace('T', ' ').replace(/:\d\d\.\d\d\d/, '')
+    return dateStr.replace(/T.*/, '')
 }
 
 showStatusOnlyIfRunning();

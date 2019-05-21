@@ -45,6 +45,7 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     compile("org.apache.lucene:lucene-core:7.6.0")
     compile("org.apache.lucene:lucene-queryparser:7.6.0")
+    compile("org.apache.lucene:lucene-highlighter:7.6.0")
     compile("org.apache.lucene:lucene-join:7.6.0")
     compile("com.fasterxml.jackson.core:jackson-core:2.9.8")
     compile("com.fasterxml.jackson.core:jackson-annotations:2.9.8")

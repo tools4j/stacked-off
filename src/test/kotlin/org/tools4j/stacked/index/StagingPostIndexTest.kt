@@ -33,4 +33,15 @@ internal class StagingPostIndexTest {
         stagingPostIndex.purge()
         assertThat(stagingPostIndex.getAll()).isEmpty()
     }
+
+    @Test
+    fun testTrimHtmlAndMultiWhitespace(){
+        assertThat(stripHtmlTagsAndMultiWhitespace("" +
+                "<html>\n" +
+                "    <body>\n" +
+                "        <span>Hi there my name is Ben</span>\n" +
+                "        <span>and I live in London.</span>\n" +
+                "    </body>\n" +
+                "</html>\n\n")).isEqualTo("Hi there my name is Ben and I live in London.")
+    }
 }

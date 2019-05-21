@@ -3,8 +3,6 @@ package org.tools4j.stacked.index
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
-
 internal class UtilsKtTest {
     @Test
     fun toProgress() {
@@ -21,5 +19,30 @@ internal class UtilsKtTest {
         assertThat(formatProgressDouble(9.2)).isEqualTo("9.2")
         assertThat(formatProgressDouble(10.2)).isEqualTo("10")
         assertThat(formatProgressDouble(100.0)).isEqualTo("100")
+    }
+
+    @Test
+    fun testUserSettingsDir(){
+        val settingsDir = getOrCreateStackedOffSettingsDir()
+        assertThat(settingsDir).exists()
+        assertThat(settingsDir.deleteRecursively()).isTrue()
+    }
+
+    @Test
+    fun testUserPropertiesFile(){
+        val userPropertiesFile = getOrCreateStackedOffPropertiesFile()
+        assertThat(userPropertiesFile.exists())
+        assertThat(userPropertiesFile.delete()).isTrue()
+    }
+
+    @Test
+    fun testWritingToUserPropertiesFile(){
+        val userProperties = getOrCreateStackedOffProperties()
+        userProperties.setProperty("ben", "was here")
+        assertThat(userProperties.getProperty("ben")).isEqualTo("was here")
+        saveStackedOffUserProperties(userProperties)
+
+        val reReadOfUserProperties = getOrCreateStackedOffProperties()
+        userProperties.setProperty("ben", "was here")
     }
 }

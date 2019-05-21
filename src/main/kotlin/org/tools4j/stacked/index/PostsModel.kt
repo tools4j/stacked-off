@@ -23,7 +23,7 @@ class StagingPost(
         doc.get("creationDate"),
         doc.get("score"),
         doc.get("viewCount"),
-        doc.get("body"),
+        doc.get("htmlContent"),
         doc.get("lastActivityDate"),
         doc.get("tags"),
         doc.get("favoriteCount"),
@@ -39,7 +39,7 @@ class StagingPost(
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
         if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
-        if(body != null) doc.add(TextField("body", body, Field.Store.YES))
+        if(body != null) doc.add(TextField("htmlContent", body, Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(tags != null) doc.add(TextField("tags", tags, Field.Store.YES))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
@@ -62,7 +62,8 @@ class StagingPost(
         if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
-        if(body != null) doc.add(TextField("body", body, Field.Store.YES))
+        if(body != null) doc.add(StoredField("htmlContent", body))
+        if(body != null) doc.add(TextField("textContent", stripHtmlTagsAndMultiWhitespace(body), Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
@@ -80,7 +81,8 @@ class StagingPost(
         doc.add(StringField("parentUid", "p$indexedSiteId.$parentId", Field.Store.YES))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
-        if(body != null) doc.add(TextField("body", body, Field.Store.YES))
+        if(body != null) doc.add(StoredField("htmlContent", body))
+        if(body != null) doc.add(TextField("textContent", stripHtmlTagsAndMultiWhitespace(body), Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
@@ -115,7 +117,8 @@ interface Post: ContainsPrimaryUserFields {
     val indexedSiteId: String
     val creationDate: String?
     val score: String?
-    val body: String?
+    val htmlContent: String?
+    val textContent: String?
     val lastActivityDate: String?
     val favoriteCount: String?
     val comments: List<Comment>
@@ -132,7 +135,8 @@ data class Question(
     val viewCount: String?,
     override val creationDate: String?,
     override val score: String?,
-    override val body: String?,
+    override val htmlContent: String?,
+    override val textContent: String?,
     override val lastActivityDate: String?,
     override val favoriteCount: String?,
     override val userUid: String?,
@@ -155,7 +159,8 @@ data class Question(
         doc.get("viewCount"),
         doc.get("creationDate"),
         doc.get("score"),
-        doc.get("body"),
+        doc.get("htmlContent"),
+        doc.get("textContent"),
         doc.get("lastActivityDate"),
         doc.get("favoriteCount"),
         doc.get("userUid"),
@@ -175,7 +180,8 @@ data class Question(
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
-        if(body != null) doc.add(TextField("body", body, Field.Store.YES))
+        if(htmlContent != null) doc.add(StoredField("htmlContent", htmlContent))
+        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userUid != null) doc.add(StoredField("userUid", userUid))
@@ -192,11 +198,11 @@ data class Question(
         val sb = StringBuilder()
         sb.append("----------------------------------------------------------\n")
         sb.append(indexedSite.seSite.urlDomain).append(":").append(uid).append(":").append(title).append("\n")
-        sb.append(comments.map{"    " + it.uid + ":" + it.text  }.joinToString("\n")).append("\n")
+        sb.append(comments.map{"    " + it.uid + ":" + it.textContent  }.joinToString("\n")).append("\n")
         sb.append("----------------------------------------------------------\n")
         for (childPost in answers) {
-            sb.append("    ").append(childPost.uid).append(":").append(childPost.body!!.substring(0, 10)).append("\n")
-            sb.append(childPost.comments.map{"        " + it.uid + ":" + it.text  }.joinToString("\n")).append("\n")
+            sb.append("    ").append(childPost.uid).append(":").append(childPost.htmlContent!!.substring(0, 10)).append("\n")
+            sb.append(childPost.comments.map{"        " + it.uid + ":" + it.textContent  }.joinToString("\n")).append("\n")
         }
         return sb.toString()
     }
@@ -208,7 +214,8 @@ data class Answer(override val uid: String,
                   override val indexedSiteId: String,
                   override val creationDate: String?,
                   override val score: String?,
-                  override val body: String?,
+                  override val htmlContent: String?,
+                  override val textContent: String?,
                   override val lastActivityDate: String?,
                   override val favoriteCount: String?,
                   override val userUid: String?,
@@ -225,7 +232,8 @@ data class Answer(override val uid: String,
         doc.get("indexedSiteId"),
         doc.get("creationDate"),
         doc.get("score"),
-        doc.get("body"),
+        doc.get("htmlContent"),
+        doc.get("textContent"),
         doc.get("lastActivityDate"),
         doc.get("favoriteCount"),
         doc.get("userUid"),
@@ -241,7 +249,8 @@ data class Answer(override val uid: String,
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
-        if(body != null) doc.add(TextField("body", body, Field.Store.YES))
+        if(htmlContent != null) doc.add(StoredField("htmlContent", htmlContent))
+        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userUid != null) doc.add(StoredField("userUid", userUid))
@@ -250,5 +259,12 @@ data class Answer(override val uid: String,
         doc.add(StringField("parentUid", parentUid, Field.Store.YES))
         return doc
     }
+}
+
+public fun stripHtmlTagsAndMultiWhitespace(html: String): String {
+    return html
+        .replace(Regex("\\<.*?>"), "")
+        .replace(Regex("\\s\\s+"), " ")
+        .trim()
 }
 

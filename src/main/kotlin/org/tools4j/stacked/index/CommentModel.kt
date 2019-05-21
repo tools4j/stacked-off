@@ -40,7 +40,7 @@ class StagingComment(
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         if(postId != null) doc.add(StringField("postUid", "p$indexedSiteId.$postId", Field.Store.YES))
         if(score != null) doc.add(StoredField("score", score))
-        if(text != null) doc.add(TextField("text", text, Field.Store.YES))
+        if(text != null) doc.add(TextField("textContent", text, Field.Store.YES))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
         if(user?.reputation != null) doc.add(StoredField("userReputation", user.reputation))
@@ -67,7 +67,7 @@ data class Comment(
     val uid: String,
     val postUid: String?,
     val score: String?,
-    val text: String?,
+    val textContent: String?,
     val creationDate: String?,
     override val userUid: String?,
     override val userReputation: String?,
@@ -79,7 +79,7 @@ data class Comment(
         doc.get("uid"),
         doc.get("postUid"),
         doc.get("score"),
-        doc.get("text"),
+        doc.get("textContent"),
         doc.get("creationDate"),
         doc.get("userUid"),
         doc.get("userReputation"),
@@ -91,7 +91,7 @@ data class Comment(
         doc.add(StringField("uid", uid, Field.Store.YES))
         if(postUid != null) doc.add(StringField("postUid", postUid, Field.Store.YES))
         if(score != null) doc.add(StoredField("score", score))
-        if(text != null) doc.add(TextField("text", text, Field.Store.YES))
+        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(userUid != null) doc.add(StoredField("userUid", userUid))
         if(userReputation != null) doc.add(StoredField("userReputation", userReputation))

@@ -1,33 +1,41 @@
 package org.tools4j.stacked.web
 
+import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.http.content.resource
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
+import io.ktor.request.path
+import io.ktor.request.receive
 import io.ktor.response.respond
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import io.ktor.response.respondRedirect
+import io.ktor.routing.*
 import org.tools4j.stacked.index.*
 import java.text.DateFormat
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.io.File
 import java.lang.Exception
 import java.util.concurrent.atomic.AtomicReference
 
 
-class JsonServer {
+class Server {
     companion object {
+        var instance = Instance()
+
         @JvmStatic
         fun main(args: Array<String>) {
-            val instance = Instance()
             val loadInProgress = AtomicReference<JobStatus>(NullJobStatus())
 
             embeddedServer(Netty) {
-                install(DefaultHeaders)
+                install(DefaultHeaders){
+                    header("cacheDirSet", (instance.diContext.getIndexParentDir() != null).toString())
+                }
                 install(Compression)
                 install(CallLogging)
                 install(CORS) {
@@ -39,7 +47,44 @@ class JsonServer {
                         setPrettyPrinting()
                     }
                 }
+
                 routing {
+                    intercept(ApplicationCallPipeline.Setup) {
+                        if (instance.diContext.getIndexParentDir() == null
+                            && !call.request.path().startsWith("/admin")
+                            && !call.request.path().startsWith("/rest/admin")
+                            && !call.request.path().contains("static")
+                            && !call.request.path().contains("favicon.ico")) {
+
+                            call.respondRedirect("/admin", false)
+                            return@intercept finish()
+                        }
+                    }
+
+                    post("/rest/admin") {
+                        val parameters = call.receive<Parameters>()
+                        val parentIndexDir = parameters["parentIndexDir"]
+                        if(parentIndexDir == null || parentIndexDir.isEmpty()) {
+                            call.respond(HttpStatusCode.InternalServerError, "Please enter an index directory path")
+                        } else if(!File(parentIndexDir).exists()){
+                            call.respond(HttpStatusCode.InternalServerError, "Dir does not exist: $parentIndexDir")
+                        } else if(!File(parentIndexDir).isDirectory()){
+                            call.respond(HttpStatusCode.InternalServerError, "Path is not a directory: $parentIndexDir")
+                        } else {
+                            instance.diContext.setIndexParentDir(parentIndexDir)
+                            instance = Instance()
+                            val response = object {
+                                val message = "Index directory has been updated."
+                                val indexParentDir = parentIndexDir
+                            }
+                            call.respond(response)
+                        }
+                    }
+
+                    get("/rest/admin") {
+                        call.respond(instance.diContext.getIndexParentDir() ?: "")
+                    }
+
                     get("/rest/sites") {
                         val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
@@ -55,7 +100,11 @@ class JsonServer {
 
                     get("/rest/search") {
                         val pageIndex = call.parameters["page"]?.toInt() ?: 0
-                        val questions = instance.questionIndex.search(call.parameters["searchText"]!!, 10, pageIndex)
+                        val questions = instance.questionIndex.searchForQuestionSummaries(
+                            call.parameters["searchText"]!!,
+                            10,
+                            pageIndex
+                        )
                         call.respond(questions)
                     }
 
@@ -64,18 +113,21 @@ class JsonServer {
                         try {
                             val seDirSites = SeDir(seDirPath).getContents().getSites()
                             call.respond(seDirSites)
-                        } catch (e: Exception){
-                            call.respond(HttpStatusCode.InternalServerError, e.message ?: "Error parsing dir: [${seDirPath}]")
+                        } catch (e: Exception) {
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                e.message ?: "Error parsing dir: [${seDirPath}]"
+                            )
                         }
                     }
 
                     get("/rest/loadSites") {
                         val newLoadStatus = JobStatusImpl()
                         val currentLoadStatus = loadInProgress.updateAndGet({ previousJobStatus ->
-                            if(previousJobStatus != null && previousJobStatus.running) previousJobStatus
+                            if (previousJobStatus != null && previousJobStatus.running) previousJobStatus
                             else newLoadStatus
                         })
-                        if(currentLoadStatus !== newLoadStatus){
+                        if (currentLoadStatus !== newLoadStatus) {
                             call.respond(HttpStatusCode.InternalServerError, "Job already running")
                         } else {
                             val seDirPath = call.parameters["path"]!!
@@ -105,7 +157,6 @@ class JsonServer {
                         val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
                     }
-
                     resource("/", "webapp/index.html")
                     resource("/*", "webapp/index.html")
                     resource("/*/*", "webapp/index.html")
@@ -118,5 +169,18 @@ class JsonServer {
                 }
             }.start(wait = true)
         }
+
+        fun setupResourcesAndSettings(route: Route){
+            route.resource("/", "webapp/index.html")
+            route.resource("/*", "webapp/index.html")
+            route.resource("/*/*", "webapp/index.html")
+            route.static("static") {
+                route.resources("webapp")
+            }
+            route.static("*/static") {
+                route.resources("webapp")
+            }
+        }
+
     }
 }

@@ -27,12 +27,63 @@ h2 {
 }
 
 h2.results-heading {
-    margin-bottom: 0.5em
+    margin-top: 0;
+    margin-bottom: 0.3em
 }
 
-h2 a.result-link {
+table.result td {
+    vertical-align: top;
+}
+
+.result {
+    margin-bottom: 2em;
+}
+
+a.result-link {
     text-decoration-line: none;
     text-decoration-style: solid
+}
+
+.result-meta {
+    color: #777;
+    font-size: 13px;
+    margin-bottom: 0.4em;
+}
+
+.result-body {
+    color: #545454;
+    font-size: 13px;
+    max-width: 55em;
+    line-height: 20px;
+}
+
+.post-body img {
+    max-width: 55em;
+}
+
+.post-body img:after {
+    content: "\f127" " Broken Image of " attr(alt);
+    display: block;
+    font-size: 12px;
+}
+
+.result-tags, .result-site {
+    margin-left: 1em;
+}
+
+td.result-score-td {
+    font-size: 1.2em;
+    width: 4em;
+    text-align: right;
+}
+
+.result-score {
+    color: #6a737c !important;
+    border: 1px solid #bbc0c4;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    margin: 0.1em 0.4em 0 0;
+    display: inline-block;
 }
 
 a {
@@ -48,13 +99,19 @@ div.result p {
     font-size: 1em;
 }
 
-div.header, div.result {
-    background: white;
-    border-bottom: 2px solid #eff0f1;
+div.header {
+    background: black;
+    margin-bottom: 2em;
+}
+
+a.header-link {
+    margin-right: 1em;
+    text-decoration-color: #f1d637;
+    color: #f1d637;
 }
 
 div.result {
-    padding-bottom: 1em;
+    padding-bottom: 1.5em;
 }
 
 img.logo {
@@ -66,18 +123,25 @@ td.logo-td {
 }
 
 input.searchbar {
+    width: 100%;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.15384615;
+}
+
+input.text-input {
     border-color: #bbc0c4;
     background-color: #FFF;
     box-shadow: none;
     color: #3b4045;
     -webkit-appearance: none;
-    width: 100%;
-    margin: 0;
     padding: .6em .7em;
     border: 1px solid #bbc0c4;
     border-radius: 3px;
-    font-size: 13px;
-    line-height: 1.15384615;
+}
+
+input.wide-text-input {
+    width: 50em;
 }
 
 td.header-links {

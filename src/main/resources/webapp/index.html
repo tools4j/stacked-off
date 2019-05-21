@@ -12,11 +12,12 @@
 <body>
 <div class="header">
     <table width="100%"><tr>
-        <td class="logo-td"><img class="logo" src="static/stacked-off-white.png"/></td>
-        <td><input class="searchbar" id="textSearch" type="text" onkeydown="if(event.key === 'Enter') router.navigate('search?searchText=' + value)"/></td>
+        <td class="logo-td"><a href="/sites"><img class="logo" src="static/stacked-off-black.png"/></a></td>
+        <td><input class="searchbar text-input" id="textSearch" type="text" onkeydown="if(event.key === 'Enter') router.navigate('search?searchText=' + value)"/></td>
         <td class="header-links">
-            <a href="/indexes">indexes</a>
-            <input type="button" onclick="router.navigate('/sites')" value="Sites"/>
+            <a class="header-link" href="/admin">admin</a>
+            <a class="header-link" href="/indexes">indexes</a>
+            <a class="header-link" href="/sites">sites</a>
             <input type="button" onclick="router.navigate('/load/chooseSitesXmlFile')" value="Load new site"/>
         </td>
     </tr></table>
