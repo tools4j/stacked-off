@@ -16,11 +16,12 @@ internal class InstanceTest {
 
     @Test
     fun testSetupWithLoadingOfDirectory(){
-        val setup = Instance()
+        val instance = Instance()
+        instance.diContext.setIndexParentDir("./data")
         val path = File(this.javaClass.getResource("/data/se-example-dir-6").toURI())
-        setup.seDirParser.parse(path.absolutePath, {true});
-        assertSite1AndSite2Loaded(setup.indexes)
-        setup.diContext.shutdown()
+        instance.seDirParser.parse(path.absolutePath, {true});
+        assertSite1AndSite2Loaded(instance.indexes)
+        instance.diContext.shutdown()
     }
 
     private fun assertSite1AndSite2Loaded(indexes: Indexes) {
