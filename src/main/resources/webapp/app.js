@@ -228,8 +228,20 @@ function showQuestion(question) {
                 <div class="answer"> 
                     ${renderPost(post, question.indexedSite.seSite, question.acceptedAnswerId)}
                 </div>`)}     
-            </div>`}`;
+            </div>`
+        }`;
     $("#content")[0].innerHTML = markup
+    // $('div.post img').error(function () {
+    //     $(this).addClass('broken');
+    // });
+    // $(document).ready(function () {
+    //     $('img').onerror="this.src='stacked-off-white.png';"
+    // });
+    $(document).ready(function () {
+        $('.no_broken img').error(function () {
+            $(this).addClass('broken');
+        });
+    });
 }
 
 function renderPost(question, seSite, acceptedAnswerId){
@@ -297,7 +309,9 @@ function renderPost(question, seSite, acceptedAnswerId){
 
 function showResults(results){
     const markup = `
-                ${results.map(question =>
+                <div class="result-summary">${results.totalHits} results${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>
+                ${results.questionSummaries.map(question =>
+        
         `<table class="result">
             <tr>
                 <td class="result-score-td">
@@ -316,6 +330,7 @@ function showResults(results){
                             <span>${question.numberOfAnswers} answer${question.numberOfAnswers == 1 ? "": "s"}</span>
                             <span class="result-tags">tags: ${question.tags.replace('<', '').replace('>', ' ')}</span>
                             <span class="result-site">${question.siteDomain}</span>
+                            <span class="result-query-score">query-score: ${question.queryScore}</span>
                         </div>
                         <div class="result-body">
                             <span class="result-createddate">${formatDate(question.createdDate)} - </span>
@@ -324,7 +339,7 @@ function showResults(results){
                     </div>
                 </td>
             </tr>
-         </table>`).join('')};
+         </table>`).join('')}
          <script javascript="router.updatePageLinks()"/>`
     $("#content")[0].innerHTML = markup
 }

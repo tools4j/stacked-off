@@ -26,6 +26,13 @@ h2 {
     font-weight: normal;
 }
 
+.result-summary {
+    font-size: 0.9em;
+    color: #777;
+    margin-left: 2em;
+    margin-bottom: 1.4em;
+}
+
 h2.results-heading {
     margin-top: 0;
     margin-bottom: 0.3em
@@ -61,13 +68,12 @@ a.result-link {
     max-width: 55em;
 }
 
-.post-body img:after {
-    content: "\f127" " Broken Image of " attr(alt);
-    display: block;
-    font-size: 12px;
+img.broken {
+    background-image: url(stacked-off-white.png);
+    opacity: 0;
 }
 
-.result-tags, .result-site {
+.result-tags, .result-site, .result-query-score {
     margin-left: 1em;
 }
 
@@ -101,7 +107,7 @@ div.result p {
 
 div.header {
     background: black;
-    margin-bottom: 2em;
+    margin-bottom: 1em;
 }
 
 a.header-link {

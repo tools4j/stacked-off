@@ -100,12 +100,12 @@ class Server {
 
                     get("/rest/search") {
                         val pageIndex = call.parameters["page"]?.toInt() ?: 0
-                        val questions = instance.questionIndex.searchForQuestionSummaries(
+                        val searchResults = instance.questionIndex.searchForQuestionSummaries(
                             call.parameters["searchText"]!!,
                             10,
                             pageIndex
                         )
-                        call.respond(questions)
+                        call.respond(searchResults)
                     }
 
                     get("/rest/sedir") {

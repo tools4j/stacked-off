@@ -64,19 +64,27 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     fun search(q: Query, docCollector: DocCollector): List<Question> {
-        return searchQuestionDocs(q, docCollector).map { it.convertToQuestion() }
+        return searchQuestionDocs(q, docCollector).scoreDocs.map { getQuestionDocs(it.doc, it.score).convertToQuestion() }
     }
 
-    fun searchForQuestionSummaries(searchTerm: String, pageSize: Int = 10, pageIndex: Int = 0): List<QuestionSummary> {
+    fun searchForQuestionSummaries(searchTerm: String, pageSize: Int = 10, pageIndex: Int = 0): SearchResults {
         return searchForQuestionSummaries(queryParser.parse(searchTerm), PageCollector(pageSize, pageIndex))
     }
 
-    fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): List<QuestionSummary> {
+    fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): SearchResults {
         val fragmenter = Fragmenter(docIndex, q, analyzer)
-        return searchQuestionDocs(q, docCollector).map { fragmenter.getQuestionSummary(it) }
+        val topDocs = searchQuestionDocs(q, docCollector)
+        val questionSummaries = topDocs.scoreDocs.map {
+            val questionDocs = getQuestionDocs(it.doc, it.score)
+            fragmenter.getQuestionSummary(questionDocs)
+        }
+        return SearchResults(
+            questionSummaries,
+            if(topDocs.maxScore.isNaN()) 0.0f else topDocs.maxScore,
+            topDocs.totalHits)
     }
 
-    fun searchQuestionDocs(q: Query, docCollector: DocCollector): List<QuestionDocs> {
+    private fun searchQuestionDocs(q: Query, docCollector: DocCollector): TopDocs {
         val childSearchQuery = BooleanQuery.Builder()
         childSearchQuery.add(BooleanClause(q, BooleanClause.Occur.MUST))
         childSearchQuery.add(BooleanClause(TermQuery(Term("child", "Y")), BooleanClause.Occur.MUST))
@@ -94,17 +102,15 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         val reader = DirectoryReader.open(docIndex.index)
         CheckJoinIndex.check(reader, parentsFilter)
 
-        val questionDocIds = docIndex.docIdIndex.searchByQuery(childAndParentQuery, docCollector)
-        val questionsDocs = questionDocIds.map { getQuestionDocs(it) }
-        return questionsDocs
+        return docIndex.docIdIndex.searchByQueryForTopDocs(childAndParentQuery, docCollector)
     }
 
-    private fun getQuestionDocs(questionDocId: Int): QuestionDocs {
+    private fun getQuestionDocs(questionDocId: Int, queryScore: Float = 0.0f): QuestionDocs {
         val questionDocWithId = DocWithId(questionDocId, docIndex.getSearcher().doc(questionDocId))
         val childDocIds = getChildDocIdsUsingBitset(docIndex.getSearcher(), questionDocId)
         val childDocAndIds = childDocIds.map { DocWithId(it, docIndex.getSearcher().doc(it)) }
         val indexedSite = indexedSiteIndex.getById(questionDocWithId.doc.get("indexedSiteId")!!)!!
-        return QuestionDocs(questionDocWithId, childDocAndIds, indexedSite)
+        return QuestionDocs(questionDocWithId, childDocAndIds, indexedSite, queryScore)
     }
 
     fun getQuestionByUid(uid: String): Question? {
@@ -151,10 +157,11 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
 
 data class DocWithId(val docId: Int, val doc: Document)
 
-class QuestionDocs(
+open class QuestionDocs(
     val questionDoc: DocWithId,
     val childDocs: List<DocWithId>,
-    val indexedSite: IndexedSite
+    val indexedSite: IndexedSite,
+    val queryScore: Float = 0.0f
 ){
     fun convertToQuestion(): Question{
         val comments = childDocs.map{ it.doc }.filter { it.get("type") == "comment" }.map { Comment(it) }.toList()
@@ -184,7 +191,13 @@ class QuestionSummary (
     val numberOfAnswers: Int,
     val tags: String?,
     val score: String?,
-    val searchResultText: String)
+    val searchResultText: String,
+    val queryScore: Float)
+
+class SearchResults (
+    val questionSummaries: List<QuestionSummary>,
+    val maxScore: Float,
+    val totalHits: Long )
 
 class Fragmenter(
     val docIndex: DocIndex,
@@ -231,7 +244,8 @@ class Fragmenter(
             question.answers.size,
             question.tags,
             question.score,
-            summary
+            summary,
+            questionDocs.queryScore
         )
     }
 

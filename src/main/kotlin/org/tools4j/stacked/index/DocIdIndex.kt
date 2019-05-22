@@ -93,11 +93,15 @@ class DocIdIndex(val index: Directory, val name: String) {
     }
 
     fun searchByQuery(query: Query, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
+        return searchByQueryForTopDocs(query, docCollector).scoreDocs.map { it.doc }
+    }
+
+    fun searchByQueryForTopDocs(query: Query, docCollector: DocCollector): TopDocs{
         return docCollector.search(searcher, query)
     }
 
     fun getAll(): List<Int> {
-        return GetMaxSizeCollector().search(searcher, MatchAllDocsQuery())
+        return GetMaxSizeCollector().search(searcher, MatchAllDocsQuery()).scoreDocs.map { it.doc }
     }
 
     fun size(): Int {
