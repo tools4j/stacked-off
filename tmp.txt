@@ -1,6 +1,0 @@
-http://blah.com:8080
-https://blah.com:8080
-https://blah.com
-https://localhost
-https://localhost:8080
-https://localhost:8080

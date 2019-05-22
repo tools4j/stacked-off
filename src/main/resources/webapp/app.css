@@ -114,6 +114,7 @@ a.header-link {
     margin-right: 1em;
     text-decoration-color: #f1d637;
     color: #f1d637;
+    text-decoration: none;
 }
 
 div.result {
