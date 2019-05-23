@@ -99,11 +99,13 @@ class Server {
                     }
 
                     get("/rest/search") {
-                        val pageIndex = call.parameters["page"]?.toInt() ?: 0
+                        val fromDocIndexInclusive = call.parameters["fromDocIndexInclusive"]?.toInt() ?: 0
+                        val toDocIndexExclusive = call.parameters["toDocIndexExclusive"]?.toInt() ?: 10
+
                         val searchResults = instance.questionIndex.searchForQuestionSummaries(
                             call.parameters["searchText"]!!,
-                            10,
-                            pageIndex
+                            fromDocIndexInclusive,
+                            toDocIndexExclusive
                         )
                         call.respond(searchResults)
                     }

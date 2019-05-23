@@ -60,8 +60,17 @@ a.result-link {
 .result-body {
     color: #545454;
     font-size: 13px;
-    max-width: 55em;
     line-height: 20px;
+}
+
+
+.result-body, #more-button-div {
+    max-width: 55em;
+}
+
+#more-button-div {
+    text-align: center;
+    margin-bottom: 2em;
 }
 
 .post-body img {
@@ -162,6 +171,7 @@ td.header-links input {
 
 div#content {
     padding: 0em 2em;
+    border-bottom: 1px solid #eff0f1;
 }
 
 table.data-table td {

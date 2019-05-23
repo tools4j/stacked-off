@@ -59,16 +59,16 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         return search(MatchAllDocsQuery(), GetMaxSizeCollector());
     }
 
-    fun search(searchTerm: String, pageSize: Int = 10, pageIndex: Int = 0): List<Question>{
-        return search(queryParser.parse(searchTerm), PageCollector(pageSize, pageIndex))
+    fun search(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10): List<Question>{
+        return search(queryParser.parse(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
     }
 
     fun search(q: Query, docCollector: DocCollector): List<Question> {
         return searchQuestionDocs(q, docCollector).scoreDocs.map { getQuestionDocs(it.doc, it.score).convertToQuestion() }
     }
 
-    fun searchForQuestionSummaries(searchTerm: String, pageSize: Int = 10, pageIndex: Int = 0): SearchResults {
-        return searchForQuestionSummaries(queryParser.parse(searchTerm), PageCollector(pageSize, pageIndex))
+    fun searchForQuestionSummaries(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10): SearchResults {
+        return searchForQuestionSummaries(queryParser.parse(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
     }
 
     fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): SearchResults {

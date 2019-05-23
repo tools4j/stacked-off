@@ -14,12 +14,10 @@ open class TopNCollector(val size: Int): DocCollector {
 
 class GetMaxSizeCollector(): TopNCollector(1024*1000)
 
-class PageCollector(val pageSize: Int, val pageIndex: Int): DocCollector{
-    private val collector = TopScoreDocCollector.create(pageSize)
-
+class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: Int): DocCollector{
     override fun search(searcher: IndexSearcher, query: Query): TopDocs {
-        val startIndex = pageIndex * pageSize
-        searcher.search(query, collector)
-        return collector.topDocs()
+        val topDocs = searcher.search(query, toDocIndexExclusive)
+        val lastDocs = topDocs.scoreDocs.toList().takeLast(toDocIndexExclusive - fromDocIndexInclusive)
+        return TopDocs(topDocs.totalHits, lastDocs.toTypedArray(), topDocs.maxScore)
     }
 }

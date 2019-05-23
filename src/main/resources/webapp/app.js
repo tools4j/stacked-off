@@ -4,6 +4,9 @@ const root = document.location.href.replace(/((?:\w+:\/\/)?[^\/]+).*/, "$1")
 console.log("root:" + root)
 const router = new Navigo(root);
 
+var currentToDocIndexExclusive = 0
+var lastSearchText = ""
+
 router
     .on({
         '/admin': function (params, queryString) {
@@ -23,7 +26,28 @@ router
         '/search': function (params, queryString) {
             console.log("Resolved to /search")
             var queryParams = convertQueryStringToJson(queryString)
-            doGet("/rest/search?searchText=" + queryParams.searchText, results => showResults(results));
+            if(lastSearchText != queryParams.searchText){
+                currentToDocIndexExclusive = 0;
+                lastSearchText = queryParams.searchText
+            }
+            var fromDocIndexInclusive;
+            var toDocIndexExclusive;
+            if(queryParams.toDoc != null){
+                fromDocIndexInclusive = currentToDocIndexExclusive
+                toDocIndexExclusive = parseInt(queryParams.toDoc)
+            } else {
+                fromDocIndexInclusive = 0
+                toDocIndexExclusive = 10
+            }
+            doGet("/rest/search?fromDocIndexInclusive=" + fromDocIndexInclusive +
+                               "&toDocIndexExclusive=" + toDocIndexExclusive +
+                               "&searchText=" + queryParams.searchText, results => {
+
+                var hasMoreResults = results.totalHits > toDocIndexExclusive
+                var newSearchPage = (fromDocIndexInclusive == 0)
+                currentToDocIndexExclusive = toDocIndexExclusive
+                showResults(results, newSearchPage, hasMoreResults)
+            });
         },
         '/questions/:questionUid': function (params) {
             console.log("Resolved to /questions/:uid")
@@ -307,9 +331,12 @@ function renderPost(question, seSite, acceptedAnswerId){
 
 
 
-function showResults(results){
-    const markup = `
-                <div class="result-summary">${results.totalHits} results${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>
+function showResults(results, newSearchPage, hasMoreResults){
+    if(newSearchPage){
+        $("#content")[0].innerHTML = `<div class="result-summary">${results.totalHits} results${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>`
+    }
+    $("#more-button-div").remove()
+    $("#content")[0].innerHTML += `
                 ${results.questionSummaries.map(question =>
         
         `<table class="result">
@@ -328,7 +355,7 @@ function showResults(results){
                         </h2>
                         <div class="result-meta">
                             <span>${question.numberOfAnswers} answer${question.numberOfAnswers == 1 ? "": "s"}</span>
-                            <span class="result-tags">tags: ${question.tags.replace('<', '').replace('>', ' ')}</span>
+                            <span class="result-tags">tags: ${question.tags == null ? "": question.tags.replace('<', '').replace('>', ' ')}</span>
                             <span class="result-site">${question.siteDomain}</span>
                             <span class="result-query-score">query-score: ${question.queryScore}</span>
                         </div>
@@ -339,9 +366,19 @@ function showResults(results){
                     </div>
                 </td>
             </tr>
-         </table>`).join('')}
-         <script javascript="router.updatePageLinks()"/>`
-    $("#content")[0].innerHTML = markup
+         </table>`).join('')}`;
+
+    if(hasMoreResults){
+        var nextToDocIndexExclusive=currentToDocIndexExclusive + 10
+        $("#content")[0].innerHTML += `
+            <div id="more-button-div">
+                <input type="button" 
+                    id="more-button" 
+                    value="Load more results..." 
+                    onclick='router.navigate("/search?searchText=${lastSearchText}&toDoc=${nextToDocIndexExclusive}")'/>
+            </div>`
+    }
+    router.updatePageLinks()
 }
 
 
