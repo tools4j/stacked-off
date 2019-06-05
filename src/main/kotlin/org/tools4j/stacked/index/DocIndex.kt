@@ -3,14 +3,15 @@ package org.tools4j.stacked.index
 import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
-import org.apache.lucene.document.*
-import org.apache.lucene.index.*
-import org.apache.lucene.search.*
-import org.apache.lucene.store.Directory
+import org.apache.lucene.document.Document
+import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.index.IndexWriter
+import org.apache.lucene.index.IndexWriterConfig
+import org.apache.lucene.index.Term
 import org.apache.lucene.search.BooleanClause
-import org.apache.lucene.search.BooleanQuery
-import org.apache.lucene.search.TermQuery
-
+import org.apache.lucene.search.IndexSearcher
+import org.apache.lucene.search.Query
+import org.apache.lucene.store.Directory
 
 
 class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
@@ -68,6 +69,7 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
 
             override fun onFinish() {
                 writer.commit()
+                writer.forceMerge(1)
             }
         }
     }

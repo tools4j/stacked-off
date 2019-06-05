@@ -1,8 +1,7 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.Term
-import org.apache.lucene.search.TermQuery
+
 
 class StagingCommentIndex(indexFactory: IndexFactory)
     : TypedIndex<StagingComment>(indexFactory, "comments") {
@@ -16,6 +15,6 @@ class StagingCommentIndex(indexFactory: IndexFactory)
     override fun convertItemToDocument(comment: StagingComment): Document = comment.convertToDocument()
 
     fun getByPostId(postUid: String): List<StagingComment> {
-        return searchByTerm(Term("postId", postUid))
+        return searchByTerm("postId", postUid, UnscoredCollector())
     }
 }

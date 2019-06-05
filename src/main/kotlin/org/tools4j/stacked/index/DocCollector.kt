@@ -21,3 +21,24 @@ class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: In
         return TopDocs(topDocs.totalHits, lastDocs.toTypedArray(), topDocs.maxScore)
     }
 }
+
+class UnscoredCollector(): DocCollector{
+    override fun search(searcher: IndexSearcher, query: Query): TopDocs {
+        val unscoredCollector = UnscoredSimpleCollector()
+        searcher.search(query, unscoredCollector)
+        val scoreDocs = unscoredCollector.docIds.map { ScoreDoc(it, 0.0f) }
+        return TopDocs(scoreDocs.size.toLong(), scoreDocs.toTypedArray(), 0.0f)
+    }
+}
+
+private class UnscoredSimpleCollector: SimpleCollector() {
+    val docIds = ArrayList<Int>()
+
+    override fun needsScores(): Boolean {
+        return false
+    }
+
+    override fun collect(doc: Int) {
+        docIds.add(doc)
+    }
+}

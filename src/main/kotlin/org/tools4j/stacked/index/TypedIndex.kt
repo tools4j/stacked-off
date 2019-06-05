@@ -3,15 +3,15 @@ package org.tools4j.stacked.index
 import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
-import org.apache.lucene.document.*
+import org.apache.lucene.document.Document
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.*
 import org.apache.lucene.search.BooleanClause
+import org.apache.lucene.search.Query
 
 abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): Initializable, Shutdownable {
-    private val docIndex = DocIndex(indexFactory, name);
+    val docIndex = DocIndex(indexFactory, name);
     private lateinit var analyzer: Analyzer
     private lateinit var queryParser: QueryParser
     companion object: KLogging()
@@ -50,7 +50,7 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
     }
 
     fun getByIds(uids: List<String>): List<T> {
-        return searchByTerms(uids.map { Term("id", it) }.toList(), BooleanClause.Occur.SHOULD)
+        return searchByTerms(uids.map { Term("id", it) }.toList(), BooleanClause.Occur.SHOULD, UnscoredCollector())
     }
 
     fun getByTerm(term: Term): T? {

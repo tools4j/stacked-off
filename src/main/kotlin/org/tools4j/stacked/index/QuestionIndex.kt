@@ -2,8 +2,8 @@ package org.tools4j.stacked.index
 
 import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.standard.StandardAnalyzer
-import org.apache.lucene.document.*
+import org.apache.lucene.analysis.en.EnglishAnalyzer
+import org.apache.lucene.document.Document
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.ReaderUtil
 import org.apache.lucene.index.Term
@@ -11,7 +11,11 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.search.highlight.*
-import org.apache.lucene.search.join.*
+import org.apache.lucene.search.join.CheckJoinIndex
+import org.apache.lucene.search.join.QueryBitSetProducer
+import org.apache.lucene.search.join.ScoreMode
+import org.apache.lucene.search.join.ToParentBlockJoinQuery
+import java.lang.Integer.min
 import java.util.*
 
 
@@ -24,7 +28,7 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
 
     override fun init() {
         val fields: MutableMap<String, Float> = getIndexedFieldsAndRankings()
-        analyzer = StandardAnalyzer()
+        analyzer = EnglishAnalyzer()
         queryParser = MultiFieldQueryParser(
             fields.keys.toTypedArray(),
             analyzer,
@@ -38,8 +42,8 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     private fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = mutableMapOf(
-        "title" to 10.0f, //post
-        "textContent" to 7.0f)  //comment
+        "title" to 10.0f, //posts
+        "textContent" to 7.0f)  //posts & comments
 
     fun addDocsAsBlock(docs: List<Document>){
         docIndex.addDocsAsBlock(docs);
@@ -227,7 +231,8 @@ class Fragmenter(
             summary += " ..."
         }
         if(summary.isEmpty()){
-            summary = questionDoc.get("textContent").substring(0, 120) + "..."
+            val questionTextContent = questionDoc.get("textContent")
+            summary = questionTextContent.substring(0, min(questionTextContent.length, 120)) + "..."
         }
 
         summary = summary.replace(Regex("^[^\\w]]+"), "").trim()

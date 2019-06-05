@@ -1,8 +1,6 @@
 package org.tools4j.stacked.index
 
-import org.apache.lucene.document.*
-import org.apache.lucene.index.Term
-import org.apache.lucene.search.TermQuery
+import org.apache.lucene.document.Document
 
 
 class StagingPostIndex(indexFactory: IndexFactory)
@@ -15,6 +13,6 @@ class StagingPostIndex(indexFactory: IndexFactory)
     override fun convertItemToDocument(post: StagingPost): Document = post.convertToDocument()
 
     fun getByParentId(parentId: String): List<StagingPost> {
-        return searchByTerm(Term("parentId", parentId))
+        return searchByTerm("parentId", parentId, UnscoredCollector())
     }
 }
