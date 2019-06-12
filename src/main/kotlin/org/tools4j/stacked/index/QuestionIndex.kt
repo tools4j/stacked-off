@@ -142,7 +142,6 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         for (childDoc in prevParent + 1 until localParentDocId) {
             childDocs.add(leaf.docBase + childDoc)
         }
-        logger.info { "Fetching children took: " + (System.currentTimeMillis() - start) }
         return childDocs
     }
 
