@@ -69,7 +69,6 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
 
             override fun onFinish() {
                 writer.commit()
-                writer.forceMerge(1)
             }
         }
     }
