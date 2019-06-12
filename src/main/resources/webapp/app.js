@@ -23,31 +23,39 @@ router
             console.log("Resolved to /sites")
             doGet("/rest/sites", sites => showSites(sites));
         },
-        '/search': function (params, queryString) {
-            console.log("Resolved to /search")
-            var queryParams = convertQueryStringToJson(queryString)
-            if(lastSearchText != queryParams.searchText){
-                currentToDocIndexExclusive = 0;
-                lastSearchText = queryParams.searchText
-            }
-            var fromDocIndexInclusive;
-            var toDocIndexExclusive;
-            if(queryParams.toDoc != null){
-                fromDocIndexInclusive = currentToDocIndexExclusive
-                toDocIndexExclusive = parseInt(queryParams.toDoc)
-            } else {
-                fromDocIndexInclusive = 0
-                toDocIndexExclusive = 10
-            }
-            doGet("/rest/search?fromDocIndexInclusive=" + fromDocIndexInclusive +
-                               "&toDocIndexExclusive=" + toDocIndexExclusive +
-                               "&searchText=" + queryParams.searchText, results => {
+        '/search': {
+            uses: function (params, queryString) {
+                console.log("Resolved to /search")
+                var queryParams = convertQueryStringToJson(queryString)
+                if(lastSearchText != queryParams.searchText){
+                    currentToDocIndexExclusive = 0;
+                    lastSearchText = queryParams.searchText
+                }
+                var fromDocIndexInclusive;
+                var toDocIndexExclusive;
+                if(queryParams.toDoc != null){
+                    fromDocIndexInclusive = currentToDocIndexExclusive
+                    toDocIndexExclusive = parseInt(queryParams.toDoc)
+                } else {
+                    fromDocIndexInclusive = 0
+                    toDocIndexExclusive = 10
+                }
+                doGet("/rest/search?fromDocIndexInclusive=" + fromDocIndexInclusive +
+                    "&toDocIndexExclusive=" + toDocIndexExclusive +
+                    "&searchText=" + queryParams.searchText, results => {
 
-                var hasMoreResults = results.totalHits > toDocIndexExclusive
-                var newSearchPage = (fromDocIndexInclusive == 0)
-                currentToDocIndexExclusive = toDocIndexExclusive
-                showResults(results, newSearchPage, hasMoreResults)
-            });
+                    var hasMoreResults = results.totalHits > toDocIndexExclusive
+                    var newSearchPage = (fromDocIndexInclusive == 0)
+                    currentToDocIndexExclusive = toDocIndexExclusive
+                    showResults(results, newSearchPage, hasMoreResults)
+                });
+            },
+            hooks: {
+                leave: function (params) {
+                    currentToDocIndexExclusive = 0;
+                    lastSearchText = ""
+                }
+            }
         },
         '/questions/:questionUid': function (params) {
             console.log("Resolved to /questions/:uid")
