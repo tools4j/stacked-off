@@ -14,13 +14,15 @@ import io.ktor.request.path
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
-import io.ktor.routing.*
-import org.tools4j.stacked.index.*
-import java.text.DateFormat
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import org.tools4j.stacked.index.*
 import java.io.File
-import java.lang.Exception
+import java.text.DateFormat
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -101,11 +103,13 @@ class Server {
                     get("/rest/search") {
                         val fromDocIndexInclusive = call.parameters["fromDocIndexInclusive"]?.toInt() ?: 0
                         val toDocIndexExclusive = call.parameters["toDocIndexExclusive"]?.toInt() ?: 10
+                        val explain = call.parameters.contains("explain")
 
                         val searchResults = instance.questionIndex.searchForQuestionSummaries(
                             call.parameters["searchText"]!!,
                             fromDocIndexInclusive,
-                            toDocIndexExclusive
+                            toDocIndexExclusive,
+                            explain
                         )
                         call.respond(searchResults)
                     }

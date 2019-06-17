@@ -31,7 +31,7 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
                 documents.addAll(answers.map { it.convertToAnswerDocument(indexedSiteId, usersById[it.userId]) })
                 documents.addAll(questionComments.map { it.convertToDocument(indexedSiteId, usersById[it.userId]) })
                 documents.addAll(answerComments.map { it.convertToDocument(indexedSiteId, usersById[it.userId]) })
-                documents.add(question.convertToQuestionDocument(indexedSiteId, usersById[question.userId]))
+                documents.add(question.convertToQuestionDocument(indexedSiteId, usersById[question.userId], answers.size))
 
                 questionIndex.addDocsAsBlock(documents)
                 jobStatus.currentOperationProgress = "Joined $index of $total posts"

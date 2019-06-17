@@ -232,6 +232,7 @@ function showStatus(status){
     return status.running
 }
 
+
 function showIndexes(indexStats) {
     const markup = `
         <h1>Indexes</h1>
@@ -245,6 +246,7 @@ function showIndexes(indexStats) {
         </table>`;
     $("#content")[0].innerHTML = markup
 }
+
 
 function showQuestion(question) {
     const markup = `
@@ -263,12 +265,6 @@ function showQuestion(question) {
             </div>`
         }`;
     $("#content")[0].innerHTML = markup
-    // $('div.post img').error(function () {
-    //     $(this).addClass('broken');
-    // });
-    // $(document).ready(function () {
-    //     $('img').onerror="this.src='stacked-off-white.png';"
-    // });
     $(document).ready(function () {
         $('.no_broken img').error(function () {
             $(this).addClass('broken');
@@ -276,18 +272,19 @@ function showQuestion(question) {
     });
 }
 
-function renderPost(question, seSite, acceptedAnswerId){
+
+function renderPost(post, seSite, acceptedAnswerId){
     return `
     <table class="post">
         <tr>
             <td class="score-details">
-            <span class="score">${question.score}</span>
-            ${question.favoriteCount != null && question.favoriteCount > 0 ? `
+            <span class="score">${post.score}</span>
+            ${post.favoriteCount != null && post.favoriteCount > 0 ? `
                 <div class="favorite-count">
                     <img class="star" display="block" width="18" src="static/star.png"/>
-                    <div class="fav-count">${question.favoriteCount}</div>    
+                    <div class="fav-count">${post.favoriteCount}</div>    
                 </div>`: ""}
-            ${acceptedAnswerId != null && question.id == acceptedAnswerId ? `
+            ${acceptedAnswerId != null && post.id == acceptedAnswerId ? `
                 <div class="favorite-count">
                     <img class="tick" display="block" width="18" src="static/tick.png"/>
                 </div>`: ""}
@@ -295,32 +292,32 @@ function renderPost(question, seSite, acceptedAnswerId){
             </td>
             <td>
                 <div class="post-body">
-                    ${question.htmlContent}
+                    ${post.htmlContent}
                 </div>            
                 <div class="post-details">
                     <div class="user-details rounded-blue-box">
-                        <div class="asked">${question.parentUid == null ? 'asked': 'answered'} ${formatDateTime(question.creationDate)}</div>
-                        <div class="display-name">${question. userDisplayName}</div>
-                        <div class="reputation">${question.userReputation}</div>
+                        <div class="asked">${post.parentUid == null ? 'asked': 'answered'} ${formatDateTime(post.creationDate)}</div>
+                        <div class="display-name"><a class="online-link" href="http://stackexchange.com/users/${post.userAccountId}">${post.userDisplayName}</a></div>
+                        <div class="reputation">${post.userReputation}</div>
                     </div> 
-                    ${question.tags == null ? '': `                                               
+                    ${post.tags == null ? '': `                                               
                     <span class="tags">
-                        ${question.tags
+                        ${post.tags
                             .split("><")
                             .map(tag => tag.replace("<", "").replace(">", ""))
                             .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
                             .join('')}    
                     </span>`}
-                    ${question.parentId != null ? '': `
+                    ${post.parentId != null ? '': `
                     <span>
-                        <a class="online-link" href="${seSite.url}/questions/${question.id}">jump to online version</a>
+                        <a class="online-link" href="${seSite.url}/questions/${post.id}">jump to online version</a>
                     </span>`}
                     <span class="last-activity">
-                        edited ${formatDateTime(question.lastActivityDate)}
+                        edited ${formatDateTime(post.lastActivityDate)}
                     </span>
                 </div>
                 <table class="comments">
-                    ${question.comments.map(comment =>
+                    ${post.comments.map(comment =>
                     `<tr class="comment">
                         <td class="comment-score">
                             ${comment.score > 0 ? comment.score: ""}
@@ -338,15 +335,14 @@ function renderPost(question, seSite, acceptedAnswerId){
 }
 
 
-
 function showResults(results, newSearchPage, hasMoreResults){
     if(newSearchPage){
-        $("#content")[0].innerHTML = `<div class="result-summary">${results.totalHits} results${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>`
+        $("#content")[0].innerHTML = `<div class="result-summary">${results.totalHits} results, took ${results.queryTimeMs}ms${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>`
     }
     $("#more-button-div").remove()
     $("#content")[0].innerHTML += `
                 ${results.questionSummaries.map(question =>
-        
+
         `<table class="result">
             <tr>
                 <td class="result-score-td">
@@ -371,6 +367,19 @@ function showResults(results, newSearchPage, hasMoreResults){
                             <span class="result-createddate">${formatDate(question.createdDate)} - </span>
                             <span>${question.searchResultText}</span>
                         </div>
+                        ${question.queryExplanation == null ? "": `
+                            <a href="javascript:void(0);" id="show-${question.uid.replace('.', '-')}" 
+                                onclick="document.getElementById('explain-${question.uid.replace('.', '-')}').style.display='block'; 
+                                         document.getElementById('show-${question.uid.replace('.', '-')}').style.display='none';
+                                         document.getElementById('hide-${question.uid.replace('.', '-')}').style.display='inline';
+                                         ">explain</a>
+                            <a href="javascript:void(0);" id="hide-${question.uid.replace('.', '-')}" style="display:none"
+                                onclick="document.getElementById('explain-${question.uid.replace('.', '-')}').style.display='none'; 
+                                         document.getElementById('show-${question.uid.replace('.', '-')}').style.display='inline';
+                                         document.getElementById('hide-${question.uid.replace('.', '-')}').style.display='none';
+                                         ">hide</a>
+                            <pre style="display:none" id="explain-${question.uid.replace('.', '-')}">${question.queryExplanation}</pre>
+                        `} 
                     </div>
                 </td>
             </tr>

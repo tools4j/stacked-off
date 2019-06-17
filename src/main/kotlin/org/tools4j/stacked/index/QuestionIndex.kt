@@ -4,9 +4,9 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.en.EnglishAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.DirectoryReader
-import org.apache.lucene.index.ReaderUtil
-import org.apache.lucene.index.Term
+import org.apache.lucene.index.*
+import org.apache.lucene.queries.CustomScoreProvider
+import org.apache.lucene.queries.CustomScoreQuery
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
@@ -15,6 +15,7 @@ import org.apache.lucene.search.join.CheckJoinIndex
 import org.apache.lucene.search.join.QueryBitSetProducer
 import org.apache.lucene.search.join.ScoreMode
 import org.apache.lucene.search.join.ToParentBlockJoinQuery
+import java.io.IOException
 import java.lang.Integer.min
 import java.util.*
 
@@ -63,64 +64,72 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         return search(MatchAllDocsQuery(), GetMaxSizeCollector());
     }
 
-    fun search(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10): List<Question>{
-        return search(queryParser.parse(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
+    fun search(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10, provideExplainPlans: Boolean = false): List<Question>{
+        return search(parseSearchTerms(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
     }
 
-    fun search(q: Query, docCollector: DocCollector): List<Question> {
-        return searchQuestionDocs(q, docCollector).scoreDocs.map { getQuestionDocs(it.doc, it.score).convertToQuestion() }
+    fun search(q: Query, docCollector: DocCollector, provideExplainPlans: Boolean = false): List<Question> {
+        return searchQuestionDocs(q, docCollector).map { getDocsForQuestion(it).convertToQuestion() }
     }
 
-    fun searchForQuestionSummaries(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10): SearchResults {
-        return searchForQuestionSummaries(queryParser.parse(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
+    fun searchForQuestionSummaries(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10, provideExplainPlans: Boolean = false): SearchResults {
+        return searchForQuestionSummaries(parseSearchTerms(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive, provideExplainPlans))
+    }
+
+    private fun parseSearchTerms(searchTerm: String): Query {
+        return queryParser.parse(searchTerm)
     }
 
     fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): SearchResults {
         val fragmenter = Fragmenter(docIndex, q, analyzer)
-        val topDocs = searchQuestionDocs(q, docCollector)
-        val questionSummaries = topDocs.scoreDocs.map {
-            val questionDocs = getQuestionDocs(it.doc, it.score)
+        val startMs = System.currentTimeMillis()
+        val docs = searchQuestionDocs(q, docCollector)
+        val questionSummaries = docs.map {
+            val questionDocs = getDocsForQuestion(it)
             fragmenter.getQuestionSummary(questionDocs)
         }
         return SearchResults(
             questionSummaries,
-            if(topDocs.maxScore.isNaN()) 0.0f else topDocs.maxScore,
-            topDocs.totalHits)
+            if(docs.maxScore.isNaN()) 0.0f else docs.maxScore,
+            docs.totalHits,
+            System.currentTimeMillis() - startMs)
     }
 
-    private fun searchQuestionDocs(q: Query, docCollector: DocCollector): TopDocs {
-        val childSearchQuery = BooleanQuery.Builder()
-        childSearchQuery.add(BooleanClause(q, BooleanClause.Occur.MUST))
-        childSearchQuery.add(BooleanClause(TermQuery(Term("child", "Y")), BooleanClause.Occur.MUST))
-        val childQuery = ToParentBlockJoinQuery(childSearchQuery.build(), parentsFilter, ScoreMode.Avg)
+    private fun searchQuestionDocs(q: Query, docCollector: DocCollector, provideExplainPlans: Boolean = false): Docs {
+        val childQueryBuilder = BooleanQuery.Builder()
+        childQueryBuilder.add(BooleanClause(q, BooleanClause.Occur.MUST))
+        childQueryBuilder.add(BooleanClause(TermQuery(Term("child", "Y")), BooleanClause.Occur.MUST))
+        val childQuery = ToParentBlockJoinQuery(childQueryBuilder.build(), parentsFilter, ScoreMode.Avg)
 
-        val parentQuery = BooleanQuery.Builder()
-        parentQuery.add(BooleanClause(q, BooleanClause.Occur.MUST))
-        parentQuery.add(BooleanClause(TermQuery(Term("child", "N")), BooleanClause.Occur.MUST))
+        val parentQueryBuilder = BooleanQuery.Builder()
+        parentQueryBuilder.add(BooleanClause(q, BooleanClause.Occur.MUST))
+        parentQueryBuilder.add(BooleanClause(TermQuery(Term("child", "N")), BooleanClause.Occur.MUST))
+        val parentQuery = parentQueryBuilder.build()
 
-        val childAndParentQueryBuilder = BooleanQuery.Builder()
-        childAndParentQueryBuilder.add(BooleanClause(childQuery, BooleanClause.Occur.SHOULD))
-        childAndParentQueryBuilder.add(BooleanClause(parentQuery.build(), BooleanClause.Occur.SHOULD))
-        val childAndParentQuery = childAndParentQueryBuilder.build()
+//        val childAndParentQuery = AnswerCountBoostQuery(
+//            DisjunctionMaxQuery(mutableListOf(childQuery, parentQuery), 0.5f),
+//            1.0f)
+
+        val childAndParentQuery = DisjunctionMaxQuery(mutableListOf(childQuery, parentQuery), 0.5f)
 
         val reader = DirectoryReader.open(docIndex.index)
         CheckJoinIndex.check(reader, parentsFilter)
 
-        return docIndex.docIdIndex.searchByQueryForTopDocs(childAndParentQuery, docCollector)
+        return docIndex.docIdIndex.searchByQueryForDocs(childAndParentQuery, docCollector)
     }
 
-    private fun getQuestionDocs(questionDocId: Int, queryScore: Float = 0.0f): QuestionDocs {
-        val questionDocWithId = DocWithId(questionDocId, docIndex.getSearcher().doc(questionDocId))
-        val childDocIds = getChildDocIdsUsingBitset(docIndex.getSearcher(), questionDocId)
+    private fun getDocsForQuestion(doc: Doc): DocsForQuestion {
+        val questionDocWithId = DocWithId(doc.docId, docIndex.getSearcher().doc(doc.docId))
+        val childDocIds = getChildDocIdsUsingBitset(docIndex.getSearcher(), doc.docId)
         val childDocAndIds = childDocIds.map { DocWithId(it, docIndex.getSearcher().doc(it)) }
         val indexedSite = indexedSiteIndex.getById(questionDocWithId.doc.get("indexedSiteId")!!)!!
-        return QuestionDocs(questionDocWithId, childDocAndIds, indexedSite, queryScore)
+        return DocsForQuestion(questionDocWithId, childDocAndIds, indexedSite, doc.score, doc.explanation)
     }
 
     fun getQuestionByUid(uid: String): Question? {
-        val docId = docIndex.docIdIndex.getByTerms(mapOf("uid" to uid, "child" to "N"))
-        if(docId == null) return null
-        return getQuestionDocs(docId).convertToQuestion();
+        val doc = docIndex.docIdIndex.getDocByTerms(mapOf("uid" to uid, "child" to "N"))
+        if(doc == null) return null
+        return getDocsForQuestion(doc).convertToQuestion();
     }
 
     private fun getChildDocIdsUsingBitset(
@@ -160,11 +169,12 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
 
 data class DocWithId(val docId: Int, val doc: Document)
 
-open class QuestionDocs(
+open class DocsForQuestion(
     val questionDoc: DocWithId,
     val childDocs: List<DocWithId>,
     val indexedSite: IndexedSite,
-    val queryScore: Float = 0.0f
+    val queryScore: Float = 0.0f,
+    val explanation: Explanation?
 ){
     fun convertToQuestion(): Question{
         val comments = childDocs.map{ it.doc }.filter { it.get("type") == "comment" }.map { Comment(it) }.toList()
@@ -173,7 +183,8 @@ open class QuestionDocs(
             questionDoc.doc,
             indexedSite,
             comments.filter{it.postUid == questionDoc.doc.get("uid")},
-            answers.filter{it.parentUid == questionDoc.doc.get("uid")}
+            answers.filter{it.parentUid == questionDoc.doc.get("uid")},
+            explanation
         )
         return question
     }
@@ -186,6 +197,45 @@ open class QuestionDocs(
     }
 }
 
+private class AnswerCountBoostQuery(subQuery: Query, val multiplier: Float) : CustomScoreQuery(subQuery) {
+    // The CustomScoreProvider is what actually alters the score
+    private inner class MyScoreProvider(context: LeafReaderContext) : CustomScoreProvider(context) {
+        private val reader: LeafReader = context.reader()
+        private val fieldsToLoad: MutableSet<String>
+
+        init {
+
+            // We create a HashSet which contains the name of the field
+            // which we need. This allows us to retrieve the document
+            // with only this field loaded, which is a lot faster.
+            fieldsToLoad = HashSet()
+            fieldsToLoad.add("answerCount")
+        }
+
+        @Throws(IOException::class)
+        override fun customScore(doc_id: Int, currentScore: Float, valSrcScore: Float): Float {
+            // Get the result document from the index
+            val doc = reader.document(doc_id, fieldsToLoad)
+            val field = doc.getField("answerCount")
+            val number = field.numericValue().toInt()
+
+            // This is just an example on how to alter the current score
+            //val boost = number.toFloat() * multiplier
+
+            val boost = if(number > 0) 100 else 0
+
+            // Return the new score for this result, based on the
+            // original lucene score.
+            return currentScore + boost
+        }
+    }
+
+    // Make sure that our CustomScoreProvider is being used.
+    public override fun getCustomScoreProvider(context: LeafReaderContext): CustomScoreProvider {
+        return MyScoreProvider(context)
+    }
+}
+
 class QuestionSummary (
     val siteDomain: String?,
     val uid: String,
@@ -195,12 +245,14 @@ class QuestionSummary (
     val tags: String?,
     val score: String?,
     val searchResultText: String,
-    val queryScore: Float)
+    val queryScore: Float,
+    val queryExplanation: String?)
 
 class SearchResults (
     val questionSummaries: List<QuestionSummary>,
     val maxScore: Float,
-    val totalHits: Long )
+    val totalHits: Long,
+    val queryTimeMs: Long)
 
 class Fragmenter(
     val docIndex: DocIndex,
@@ -216,9 +268,9 @@ class Fragmenter(
         highlighter.setTextFragmenter(fragmenter);
     }
 
-    fun getQuestionSummary(questionDocs: QuestionDocs): QuestionSummary {
-        val questionDoc = questionDocs.questionDoc.doc
-        val frags = questionDocs.allDocs
+    fun getQuestionSummary(docsForQuestion: DocsForQuestion): QuestionSummary {
+        val questionDoc = docsForQuestion.questionDoc.doc
+        val frags = docsForQuestion.allDocs
             .flatMap { getTextFragmentsForField(it, "textContent") }
             .sortedByDescending { it.score }
             .take(2)
@@ -239,7 +291,7 @@ class Fragmenter(
             summary = "..." + summary
         }
 
-        val question = questionDocs.convertToQuestion()
+        val question = docsForQuestion.convertToQuestion()
         return QuestionSummary(
             question.indexedSite.seSite.urlDomain,
             question.uid,
@@ -249,7 +301,12 @@ class Fragmenter(
             question.tags,
             question.score,
             summary,
-            questionDocs.queryScore
+            docsForQuestion.queryScore,
+            docsForQuestion.explanation
+                .toString()
+                .replace(Regex("\\n\\), product of"), "product of")
+                .trim()
+                .replace("  ", "| ")
         )
     }
 

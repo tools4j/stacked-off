@@ -71,7 +71,8 @@ data class Comment(
     val creationDate: String?,
     override val userUid: String?,
     override val userReputation: String?,
-    override val userDisplayName: String?
+    override val userDisplayName: String?,
+    override val userAccountId: String?
 
 ) : ContainsPrimaryUserFields{
 
@@ -83,7 +84,8 @@ data class Comment(
         doc.get("creationDate"),
         doc.get("userUid"),
         doc.get("userReputation"),
-        doc.get("userDisplayName")
+        doc.get("userDisplayName"),
+        doc.get("userAccountId")
     )
 
     fun convertToDocument(): Document {
@@ -96,6 +98,7 @@ data class Comment(
         if(userUid != null) doc.add(StoredField("userUid", userUid))
         if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
         if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
+        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
         return doc
     }
 }

@@ -1,14 +1,12 @@
 package org.tools4j.stacked.index
 
 import mu.KLogging
-import org.apache.lucene.document.*
-import org.apache.lucene.index.*
+import org.apache.lucene.document.Document
+import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.index.IndexReader
+import org.apache.lucene.index.Term
 import org.apache.lucene.search.*
 import org.apache.lucene.store.Directory
-import org.apache.lucene.search.BooleanClause
-import org.apache.lucene.search.BooleanQuery
-import org.apache.lucene.search.TermQuery
-
 
 
 class DocIdIndex(val index: Directory, val name: String) {
@@ -42,6 +40,14 @@ class DocIdIndex(val index: Directory, val name: String) {
         return getByQuery(queryBuilder.build())
     }
 
+    fun getDocByTerms(terms: Map<String, String>, provideExplainPlans: Boolean = false): Doc? {
+        val queryBuilder = BooleanQuery.Builder()
+        for (e in terms.entries) {
+            queryBuilder.add(TermQuery(Term(e.key, e.value)), BooleanClause.Occur.MUST)
+        }
+        return getDocByQuery(queryBuilder.build(), provideExplainPlans)
+    }
+
     fun getByQuery(query: Query): Int? {
         val docs = searcher.search(query, 2)
         val hits = docs.scoreDocs
@@ -52,6 +58,20 @@ class DocIdIndex(val index: Directory, val name: String) {
         } else {
             throw IllegalStateException("Found more than one document with query [$query] " +
                     "Items:\n${hits.map{searcher.doc(it.doc)}.joinToString("\n")}")
+        }
+    }
+
+    fun getDocByQuery(query: Query, provideExplainPlans: Boolean = false): Doc? {
+        val docs = searcher.search(query, 2)
+        if (docs.totalHits == 0L) {
+            return null
+        } else if (docs.totalHits == 1L) {
+            val scoreDoc = docs.scoreDocs.get(0)
+            val explanation = if(provideExplainPlans) searcher.explain(query, scoreDoc.doc) else null
+            return Doc(scoreDoc, explanation);
+        } else {
+            throw IllegalStateException("Found more than one document with query [$query] " +
+                    "Items:\n${docs.scoreDocs.map{searcher.doc(it.doc)}.joinToString("\n")}")
         }
     }
 
@@ -93,15 +113,15 @@ class DocIdIndex(val index: Directory, val name: String) {
     }
 
     fun searchByQuery(query: Query, docCollector: DocCollector = GetMaxSizeCollector()): List<Int> {
-        return searchByQueryForTopDocs(query, docCollector).scoreDocs.map { it.doc }
+        return searchByQueryForDocs(query, docCollector).map { it.docId }
     }
 
-    fun searchByQueryForTopDocs(query: Query, docCollector: DocCollector): TopDocs{
+    fun searchByQueryForDocs(query: Query, docCollector: DocCollector): Docs {
         return docCollector.search(searcher, query)
     }
 
     fun getAll(): List<Int> {
-        return GetMaxSizeCollector().search(searcher, MatchAllDocsQuery()).scoreDocs.map { it.doc }
+        return GetMaxSizeCollector().search(searcher, MatchAllDocsQuery()).map { it.docId }
     }
 
     fun size(): Int {

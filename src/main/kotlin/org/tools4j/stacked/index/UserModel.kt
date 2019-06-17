@@ -46,4 +46,5 @@ interface ContainsPrimaryUserFields {
     val userUid: String?
     val userReputation: String?
     val userDisplayName: String?
+    val userAccountId: String?
 }

@@ -1,6 +1,7 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.document.*
+import org.apache.lucene.search.Explanation
 import javax.xml.namespace.QName
 import javax.xml.stream.events.StartElement
 
@@ -50,12 +51,17 @@ class StagingPost(
         return doc
     }
 
-    fun convertToQuestionDocument(indexedSiteId: String, user: StagingUser?): Document {
+    fun convertToQuestionDocument(
+        indexedSiteId: String,
+        user: StagingUser?,
+        answerCount: Int
+    ): Document {
         val doc = Document()
         doc.add(StringField("uid", "p$indexedSiteId.$id", Field.Store.YES))
         doc.add(StringField("type", "question", Field.Store.YES))
         doc.add(StringField("child", "N", Field.Store.YES))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
+        doc.add(StoredField("answerCount", Integer.valueOf(answerCount)))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
         if(acceptedAnswerId != null) doc.add(TextField("acceptedAnswerUid", "p$indexedSiteId.$acceptedAnswerId", Field.Store.YES))
         if(tags != null) doc.add(TextField("tags", tags, Field.Store.YES))
@@ -69,6 +75,7 @@ class StagingPost(
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
         if(user?.reputation != null) doc.add(StoredField("userReputation", user.reputation))
         if(user?.displayName != null) doc.add(StoredField("userDisplayName", user.displayName))
+        if(user?.accountId != null) doc.add(StoredField("userAccountId", user.accountId))
         return doc
     }
 
@@ -88,6 +95,7 @@ class StagingPost(
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
         if(user?.reputation != null) doc.add(StoredField("userReputation", user.reputation))
         if(user?.displayName != null) doc.add(StoredField("userDisplayName", user.displayName))
+        if(user?.accountId != null) doc.add(StoredField("userAccountId", user.accountId))
         return doc
     }
 }
@@ -142,15 +150,18 @@ data class Question(
     override val userUid: String?,
     override val userReputation: String?,
     override val userDisplayName: String?,
+    override val userAccountId: String?,
     val indexedSite: IndexedSite,
     override val comments: List<Comment>,
-    val answers: List<Answer>
+    val answers: List<Answer>,
+    val explanation: Explanation?
 ): Post {
 
     constructor(doc: Document,
                 indexedSite: IndexedSite,
                 comments: List<Comment>,
-                answers: List<Answer>): this(
+                answers: List<Answer>,
+                explanation: Explanation?): this(
 
         doc.get("uid"),
         doc.get("title"),
@@ -166,9 +177,11 @@ data class Question(
         doc.get("userUid"),
         doc.get("userReputation"),
         doc.get("userDisplayName"),
+        doc.get("userAccountId"),
         indexedSite,
         comments,
-        answers
+        answers,
+        explanation
     )
 
     override val indexedSiteId: String
@@ -187,6 +200,7 @@ data class Question(
         if(userUid != null) doc.add(StoredField("userUid", userUid))
         if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
         if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
+        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
         if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
         if(tags != null) doc.add(TextField("tags", tags, Field.Store.YES))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
@@ -221,6 +235,7 @@ data class Answer(override val uid: String,
                   override val userUid: String?,
                   override val userReputation: String?,
                   override val userDisplayName: String?,
+                  override val userAccountId: String?,
                   val parentUid: String,
                   override val comments: List<Comment>
 ): Post {
@@ -239,6 +254,7 @@ data class Answer(override val uid: String,
         doc.get("userUid"),
         doc.get("userReputation"),
         doc.get("userDisplayName"),
+        doc.get("userAccountId"),
         doc.get("parentUid"),
         comments
     )
@@ -256,6 +272,7 @@ data class Answer(override val uid: String,
         if(userUid != null) doc.add(StoredField("userUid", userUid))
         if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
         if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
+        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
         doc.add(StringField("parentUid", parentUid, Field.Store.YES))
         return doc
     }
