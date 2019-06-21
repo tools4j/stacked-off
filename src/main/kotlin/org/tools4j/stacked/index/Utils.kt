@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.lang.IllegalStateException
 import java.util.*
 
 val BYTES_IN_KB = 1024

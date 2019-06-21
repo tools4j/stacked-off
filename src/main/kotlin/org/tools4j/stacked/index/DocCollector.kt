@@ -1,7 +1,7 @@
 package org.tools4j.stacked.index
 
 import org.apache.lucene.index.IndexReader
-import org.apache.lucene.index.ReaderUtil
+import org.apache.lucene.index.LeafReaderContext
 import org.apache.lucene.search.*
 
 interface DocCollector {
@@ -27,7 +27,7 @@ class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: In
         return Docs.create(topDocs, explainPlans)
     }
 }
-
+//223227
 class UnscoredCollector(val provideExplainPlans: Boolean = false): DocCollector{
     override fun search(searcher: IndexSearcher, query: Query): Docs {
         val unscoredCollector = UnscoredSimpleCollector(searcher.indexReader)
@@ -40,16 +40,18 @@ class UnscoredCollector(val provideExplainPlans: Boolean = false): DocCollector{
 }
 
 private class UnscoredSimpleCollector(val indexReader: IndexReader) : SimpleCollector() {
+    private var currentLeafReaderContext: LeafReaderContext? = null
     val docIds = ArrayList<Int>()
 
     override fun needsScores(): Boolean {
         return false
     }
 
+    override fun doSetNextReader(context: LeafReaderContext?) {
+        currentLeafReaderContext = context
+    }
+
     override fun collect(unbasedDocId: Int) {
-        val leaves = indexReader.leaves()
-        val subIndex = ReaderUtil.subIndex(unbasedDocId, leaves)
-        val leaf = leaves[subIndex]
-        docIds.add(leaf.docBase + unbasedDocId)
+        docIds.add(currentLeafReaderContext!!.docBase + unbasedDocId)
     }
 }

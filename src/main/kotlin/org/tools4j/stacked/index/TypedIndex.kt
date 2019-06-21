@@ -49,6 +49,10 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
         return getByTerm(Term("id", id))
     }
 
+    fun getByDocId(docId: Int): T? {
+        return convertDocumentToItemOrNull(docIndex.docIdIndex.getDoc(docId))
+    }
+
     fun getByIds(uids: List<String>): List<T> {
         return searchByTerms(uids.map { Term("id", it) }.toList(), BooleanClause.Occur.SHOULD, UnscoredCollector())
     }

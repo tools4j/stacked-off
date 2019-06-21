@@ -3,7 +3,10 @@ package org.tools4j.stacked.index
 import mu.KLogging
 import net.sf.sevenzipjbinding.*
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
-import java.io.*
+import java.io.OutputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
+import java.io.RandomAccessFile
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -21,9 +24,17 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
                     null, // autodetect archive type
                     RandomAccessFileInStream(randomAccessFile)
                 ).use { archive ->
-                    val archiveIndicesToParse = IntArray(archive.numberOfItems)
-                    for (i in archiveIndicesToParse.indices) {
-                        archiveIndicesToParse[i] = i
+                    val archiveIndicesToParse = ArrayList<Int>()
+                    for (i in 0..(archive.numberOfItems - 1)) {
+                        val isFolder = archive.getProperty(i, PropID.IS_FOLDER) as Boolean
+                        if (isFolder){
+                            continue
+                        }
+                        val pathInArchive = archive.getProperty(i, PropID.PATH).toString()
+                        if(!seFileInZipParserProvider.hasZipParserFor(pathInArchive)){
+                            continue
+                        }
+                        archiveIndicesToParse.add(i)
                     }
                     val extractCallback =
                         ExtractCallback(
@@ -35,7 +46,7 @@ class SeZipFileParser(private val seFileInZipParserProvider: SeFileInZipParserPr
                     var outerException: Exception? = null
                     try {
                         archive.extract(
-                            archiveIndicesToParse,
+                            archiveIndicesToParse.toIntArray(),
                             false, // Non-test mode
                             extractCallback
                         )
@@ -77,21 +88,17 @@ class ExtractCallback(
         index: Int,
         extractAskMode: ExtractAskMode
     ): ISequentialOutStream? {
+        if(extractAskMode == ExtractAskMode.SKIP){
+            return null
+        }
         if(exceptionDuringParsing != null) throw exceptionDuringParsing!!
         this.index = index
-        val skipExtraction = archive.getProperty(index, PropID.IS_FOLDER) as Boolean
-        if (skipExtraction || extractAskMode != ExtractAskMode.EXTRACT){
-            return null
-        }
         pathInArchive = archive.getProperty(index, PropID.PATH).toString()
         logger.debug{ "Extractor calling getStream() for: $pathInArchive" }
-        jobStatus.addOperation("Parsing $pathInArchive from $archiveFile...")
         totalFileInZipSize = archive.getProperty(index, PropID.SIZE).toString().toLong()
         fileInZipParser = seFileInZipParserProvider.getFileInZipParser(pathInArchive)
-        if(fileInZipParser == null){
-            return null
-        }
-        parsingFuture = Executors.newSingleThreadExecutor().submit({
+        jobStatus.addOperation("Parsing $pathInArchive from $archiveFile...")
+        parsingFuture = Executors.newSingleThreadExecutor().submit {
             try {
                 if(exceptionDuringParsing != null) throw exceptionDuringParsing!!
                 fileInZipParser!!.start()
@@ -105,7 +112,7 @@ class ExtractCallback(
                 exceptionDuringParsing = UnknownExtractorException(archiveFile, e)
                 throw exceptionDuringParsing!!
             }
-        })
+        }
 
         extractedFileInZipSize = 0
 
@@ -150,21 +157,22 @@ class ExtractorException(val archiveFile: String, val fileInZipParserException: 
 }
 
 interface SeFileInZipParserProvider {
-    fun getFileInZipParser(pathInArchive: String): FileInZipParser?;
+    fun getFileInZipParser(pathInArchive: String): FileInZipParser
+    fun hasZipParserFor(pathInArchive: String): Boolean
 }
 
 class SeFileInZipParserProviderImpl (
     val rowHandlers: Map<String, XmlRowHandler<*>>) : SeFileInZipParserProvider {
 
-    override fun getFileInZipParser(pathInArchive: String): FileInZipParser? {
-        if(!rowHandlers.containsKey(pathInArchive)){
-            return null
-        }
+    override fun hasZipParserFor(pathInArchive: String): Boolean {
+         return rowHandlers.containsKey(pathInArchive)
+    }
+
+    override fun getFileInZipParser(pathInArchive: String): FileInZipParser {
         val xmlRowHandlerProvider = rowHandlers.getValue(pathInArchive)
         val pipedInputStream = PipedInputStream()
         val pipedOutputStream = PipedOutputStream(pipedInputStream)
         val xmlFileParser = XmlFileParser(pipedInputStream, xmlRowHandlerProvider )
-
         return FileInZipParser(pathInArchive, xmlFileParser, pipedOutputStream)
     }
 }

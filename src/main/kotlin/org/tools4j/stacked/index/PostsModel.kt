@@ -46,6 +46,7 @@ class StagingPost(
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
         if(parentId != null) doc.add(StringField("parentId", parentId, Field.Store.YES))
+        doc.add(StringField("isQuestion", (parentId == null).toString() , Field.Store.NO))
         if(acceptedAnswerId != null) doc.add(TextField("acceptedAnswerId", acceptedAnswerId, Field.Store.YES))
         if(userId != null) doc.add(StoredField("userId", userId))
         return doc
@@ -54,22 +55,27 @@ class StagingPost(
     fun convertToQuestionDocument(
         indexedSiteId: String,
         user: StagingUser?,
-        answerCount: Int
+        answerCount: Int,
+        aggregatedTextContent: String
     ): Document {
         val doc = Document()
         doc.add(StringField("uid", "p$indexedSiteId.$id", Field.Store.YES))
+        doc.add(StoredField("postId", id))
         doc.add(StringField("type", "question", Field.Store.YES))
         doc.add(StringField("child", "N", Field.Store.YES))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
-        doc.add(StoredField("answerCount", Integer.valueOf(answerCount)))
+        //https://stackoverflow.com/questions/42482451/lucene-6-recommended-way-to-store-numeric-fields-with-term-vocabulary
+        doc.add(StoredField("answerCount", answerCount))
+        doc.add(NumericDocValuesField("answerCount", answerCount.toLong()))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
         if(acceptedAnswerId != null) doc.add(TextField("acceptedAnswerUid", "p$indexedSiteId.$acceptedAnswerId", Field.Store.YES))
         if(tags != null) doc.add(TextField("tags", tags, Field.Store.YES))
         if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
+        if(score != null) doc.add(NumericDocValuesField("score", score.toLong()))
         if(body != null) doc.add(StoredField("htmlContent", body))
-        if(body != null) doc.add(TextField("textContent", stripHtmlTagsAndMultiWhitespace(body), Field.Store.YES))
+        doc.add(TextField("aggregatedTextContent", aggregatedTextContent, Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
@@ -82,6 +88,7 @@ class StagingPost(
     fun convertToAnswerDocument(indexedSiteId: String, user: StagingUser?): Document {
         val doc = Document()
         doc.add(StringField("uid", "p$indexedSiteId.$id", Field.Store.YES))
+        doc.add(StoredField("postId", id))
         doc.add(StringField("type", "answer", Field.Store.YES))
         doc.add(StringField("child", "Y", Field.Store.NO))
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
@@ -89,7 +96,6 @@ class StagingPost(
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
         if(body != null) doc.add(StoredField("htmlContent", body))
-        if(body != null) doc.add(TextField("textContent", stripHtmlTagsAndMultiWhitespace(body), Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
@@ -122,21 +128,19 @@ class PostXmlRowHandler(delegate: ItemHandler<StagingPost>): XmlRowHandler<Stagi
 
 interface Post: ContainsPrimaryUserFields {
     val uid: String
+    val postId: String
     val indexedSiteId: String
     val creationDate: String?
     val score: String?
     val htmlContent: String?
-    val textContent: String?
     val lastActivityDate: String?
     val favoriteCount: String?
     val comments: List<Comment>
-
-    fun convertToDocument(): Document
-
 }
 
 data class Question(
     override val uid: String,
+    override val postId: String,
     val title: String?,
     val acceptedAnswerUid: String?,
     val tags: String?,
@@ -144,7 +148,7 @@ data class Question(
     override val creationDate: String?,
     override val score: String?,
     override val htmlContent: String?,
-    override val textContent: String?,
+    val aggregatedTextContent: String?,
     override val lastActivityDate: String?,
     override val favoriteCount: String?,
     override val userUid: String?,
@@ -164,6 +168,7 @@ data class Question(
                 explanation: Explanation?): this(
 
         doc.get("uid"),
+        doc.get("postId"),
         doc.get("title"),
         doc.get("acceptedAnswerUid"),
         doc.get("tags"),
@@ -171,7 +176,7 @@ data class Question(
         doc.get("creationDate"),
         doc.get("score"),
         doc.get("htmlContent"),
-        doc.get("textContent"),
+        doc.get("aggregatedTextContent"),
         doc.get("lastActivityDate"),
         doc.get("favoriteCount"),
         doc.get("userUid"),
@@ -186,50 +191,15 @@ data class Question(
 
     override val indexedSiteId: String
         get() = indexedSite.indexedSiteId
-
-    override fun convertToDocument(): Document {
-        val doc = Document()
-        doc.add(StringField("uid", uid, Field.Store.YES))
-        doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
-        if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
-        if(score != null) doc.add(StoredField("score", score))
-        if(htmlContent != null) doc.add(StoredField("htmlContent", htmlContent))
-        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
-        if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
-        if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
-        if(userUid != null) doc.add(StoredField("userUid", userUid))
-        if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
-        if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
-        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
-        if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
-        if(tags != null) doc.add(TextField("tags", tags, Field.Store.YES))
-        if(title != null) doc.add(TextField("title", title, Field.Store.YES))
-        if(acceptedAnswerUid != null) doc.add(TextField("acceptedAnswerUid", acceptedAnswerUid, Field.Store.YES))
-        return doc
-    }
-
-    fun toPrettyString(): String {
-        val sb = StringBuilder()
-        sb.append("----------------------------------------------------------\n")
-        sb.append(indexedSite.seSite.urlDomain).append(":").append(uid).append(":").append(title).append("\n")
-        sb.append(comments.map{"    " + it.uid + ":" + it.textContent  }.joinToString("\n")).append("\n")
-        sb.append("----------------------------------------------------------\n")
-        for (childPost in answers) {
-            sb.append("    ").append(childPost.uid).append(":").append(childPost.htmlContent!!.substring(0, 10)).append("\n")
-            sb.append(childPost.comments.map{"        " + it.uid + ":" + it.textContent  }.joinToString("\n")).append("\n")
-        }
-        return sb.toString()
-    }
-
 }
 
 
 data class Answer(override val uid: String,
+                  override val postId: String,
                   override val indexedSiteId: String,
                   override val creationDate: String?,
                   override val score: String?,
                   override val htmlContent: String?,
-                  override val textContent: String?,
                   override val lastActivityDate: String?,
                   override val favoriteCount: String?,
                   override val userUid: String?,
@@ -244,11 +214,11 @@ data class Answer(override val uid: String,
                 comments: List<Comment>): this(
 
         doc.get("uid"),
+        doc.get("postId"),
         doc.get("indexedSiteId"),
         doc.get("creationDate"),
         doc.get("score"),
         doc.get("htmlContent"),
-        doc.get("textContent"),
         doc.get("lastActivityDate"),
         doc.get("favoriteCount"),
         doc.get("userUid"),
@@ -258,24 +228,6 @@ data class Answer(override val uid: String,
         doc.get("parentUid"),
         comments
     )
-
-    override fun convertToDocument(): Document {
-        val doc = Document()
-        doc.add(StringField("uid", uid, Field.Store.YES))
-        doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
-        if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
-        if(score != null) doc.add(StoredField("score", score))
-        if(htmlContent != null) doc.add(StoredField("htmlContent", htmlContent))
-        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
-        if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
-        if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
-        if(userUid != null) doc.add(StoredField("userUid", userUid))
-        if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
-        if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
-        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
-        doc.add(StringField("parentUid", parentUid, Field.Store.YES))
-        return doc
-    }
 }
 
 public fun stripHtmlTagsAndMultiWhitespace(html: String): String {

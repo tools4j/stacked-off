@@ -1,4 +1,21 @@
 stackoverflow.com
-"java": 1048ms
-"java control": 2736ms
-"python": 1075ms
+"java": 2,372,330 results: 1048ms
+"java control" 3,672,106 results: 2736ms
+"python": 1,588,373 results: 1075ms
+
+apple.stackexchange.com
+"java": 1,624 results: 504ms
+"java control" 10,424 results: 788ms
+"python": 1,488 results: 238ms
+
+//With aggregated text field
+apple.stackexchange.com
+"java": 1,624 results: 21ms
+"java control" 10,424 results: 23ms
+"python": 1,488 results: 17ms
+
+//Scoring by number of answers (multiplying)
+apple.stackexchange.com
+"java": 1,624 results: 50ms
+"java control" 10,424 results: 92ms
+"python": 1,488 results: 88ms

@@ -42,7 +42,7 @@ router
                 }
                 doGet("/rest/search?fromDocIndexInclusive=" + fromDocIndexInclusive +
                     "&toDocIndexExclusive=" + toDocIndexExclusive +
-                    "&searchText=" + queryParams.searchText, results => {
+                    "&searchText=" + queryParams.searchText + (queryParams.explain != null ? "&explain": ""), results => {
 
                     var hasMoreResults = results.totalHits > toDocIndexExclusive
                     var newSearchPage = (fromDocIndexInclusive == 0)
@@ -250,18 +250,18 @@ function showIndexes(indexStats) {
 
 function showQuestion(question) {
     const markup = `
-        <h1>${question.title}</h1>
+        <h1 class="question-heading">${question.title}</h1>
         <div class="question">
             ${renderPost(question, question.indexedSite.seSite, null)}
             ${question.answers.length == 0 ? "" : `
-                <h2>${question.answers.length} Answer${question.answers.length > 1 ? 's' : ''}</h2>`}
+                <h2 class="answers-heading">${question.answers.length} Answer${question.answers.length > 1 ? 's' : ''}</h2>`}
         </div>
         ${question.answers.length == 0 ? "" : `
             <div class="answers">
                 ${question.answers.map(post => `
                 <div class="answer"> 
-                    ${renderPost(post, question.indexedSite.seSite, question.acceptedAnswerId)}
-                </div>`)}     
+                    ${renderPost(post, question.indexedSite.seSite, question.acceptedAnswerUid)}
+                </div>`).join('\n')}     
             </div>`
         }`;
     $("#content")[0].innerHTML = markup
@@ -273,7 +273,7 @@ function showQuestion(question) {
 }
 
 
-function renderPost(post, seSite, acceptedAnswerId){
+function renderPost(post, seSite, acceptedAnswerUid){
     return `
     <table class="post">
         <tr>
@@ -284,7 +284,7 @@ function renderPost(post, seSite, acceptedAnswerId){
                     <img class="star" display="block" width="18" src="static/star.png"/>
                     <div class="fav-count">${post.favoriteCount}</div>    
                 </div>`: ""}
-            ${acceptedAnswerId != null && post.id == acceptedAnswerId ? `
+            ${acceptedAnswerUid != null && post.uid == acceptedAnswerUid ? `
                 <div class="favorite-count">
                     <img class="tick" display="block" width="18" src="static/tick.png"/>
                 </div>`: ""}
@@ -308,13 +308,13 @@ function renderPost(post, seSite, acceptedAnswerId){
                             .map(tag => `<span class="tag rounded-blue-box">${tag}</span>`)
                             .join('')}    
                     </span>`}
-                    ${post.parentId != null ? '': `
-                    <span>
-                        <a class="online-link" href="${seSite.url}/questions/${post.id}">jump to online version</a>
-                    </span>`}
-                    <span class="last-activity">
-                        edited ${formatDateTime(post.lastActivityDate)}
-                    </span>
+                    ${post.parentUid != null ? '': `
+                        <span>
+                            <a class="online-link" href="${seSite.url}/questions/${post.postId}">jump to online version</a>
+                        </span>
+                        <span class="last-activity">
+                            edited ${formatDateTime(post.lastActivityDate)}
+                        </span>`}
                 </div>
                 <table class="comments">
                     ${post.comments.map(comment =>
@@ -367,7 +367,7 @@ function showResults(results, newSearchPage, hasMoreResults){
                             <span class="result-createddate">${formatDate(question.createdDate)} - </span>
                             <span>${question.searchResultText}</span>
                         </div>
-                        ${question.queryExplanation == null ? "": `
+                        ${question.queryExplanation == "null" ? "": `
                             <a href="javascript:void(0);" id="show-${question.uid.replace('.', '-')}" 
                                 onclick="document.getElementById('explain-${question.uid.replace('.', '-')}').style.display='block'; 
                                          document.getElementById('show-${question.uid.replace('.', '-')}').style.display='none';

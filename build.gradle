@@ -43,6 +43,7 @@ sourceSets {
 
 dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1")
     compile("org.apache.lucene:lucene-core:7.6.0")
     compile("org.apache.lucene:lucene-queryparser:7.6.0")
     compile("org.apache.lucene:lucene-highlighter:7.6.0")

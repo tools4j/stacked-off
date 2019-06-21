@@ -7,7 +7,7 @@ import javax.xml.stream.XMLInputFactory
 
 class XmlFileParser(val inputStream: InputStream, val xmlRowHandler: XmlRowHandler<*>) {
     private val factory = XMLInputFactory.newInstance()
-    private val printCountUpdateEveryNRows = 10000;
+    private val printCountUpdateEveryNRows = 1000000;
     companion object: KLogging()
 
     fun parse() {

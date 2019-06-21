@@ -30,7 +30,7 @@ h2 {
     font-size: 0.9em;
     color: #777;
     margin-left: 2em;
-    margin-bottom: 1em;
+    margin-bottom: 1.7em;
 }
 
 h2.results-heading {
@@ -116,7 +116,7 @@ div.result p {
 
 div.header {
     background: black;
-    margin-bottom: 1em;
+    margin-bottom: 0.8em;
 }
 
 a.header-link {
@@ -198,6 +198,11 @@ table.data-table th, table.data-table td {
     border: 1px solid #bbc0c4;
     padding: 0.2em 0.4em;
     border-radius: 3px;
+    margin-top: 5em;
+}
+
+td.score-details {
+    padding-top: 0.7em;
 }
 
 div.fav-count {
@@ -206,12 +211,23 @@ div.fav-count {
 }
 
 div.question {
-    padding-top: 1em;
+    padding-top: 0.8em;
     overflow: auto;
+}
+
+.question-heading{
+    border-bottom: 1px solid rgb(228, 230, 232);
+    padding-bottom: 0.3em;
+    margin-bottom: 0em;
+}
+
+.answers-heading {
+    margin: 0 0 0.7em 0;
 }
 
 div.post-body p {
     margin-bottom: 15px;
+    line-height: 1.6;
 }
 
 .score-details {
@@ -221,7 +237,7 @@ div.post-body p {
 }
 
 .star, .tick {
-    margin-top: 0.5em;
+    margin-top: 1.0em;
 }
 
 
@@ -239,7 +255,7 @@ div.post-body p {
 
 .answer {
     border-top: 1px solid rgb(228, 230, 232);
-    padding-top: 2em;
+    padding-top: 1em;
     padding-bottom: 1em;
 }
 
@@ -315,6 +331,12 @@ span.tag {
 
 table.post {
     width: 100%;
+}
+
+.post pre {
+    background: #EFF0F1;
+    padding: 1em;
+    font-size: 0.8em;
 }
 
 table.comments {

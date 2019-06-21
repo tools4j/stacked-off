@@ -4,17 +4,18 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.en.EnglishAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.*
+import org.apache.lucene.index.LeafReader
+import org.apache.lucene.index.LeafReaderContext
+import org.apache.lucene.index.ReaderUtil
+import org.apache.lucene.index.Term
 import org.apache.lucene.queries.CustomScoreProvider
 import org.apache.lucene.queries.CustomScoreQuery
+import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.search.highlight.*
-import org.apache.lucene.search.join.CheckJoinIndex
 import org.apache.lucene.search.join.QueryBitSetProducer
-import org.apache.lucene.search.join.ScoreMode
-import org.apache.lucene.search.join.ToParentBlockJoinQuery
 import java.io.IOException
 import java.lang.Integer.min
 import java.util.*
@@ -43,8 +44,8 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     private fun getIndexedFieldsAndRankings(): MutableMap<String, Float> = mutableMapOf(
-        "title" to 10.0f, //posts
-        "textContent" to 7.0f)  //posts & comments
+        "title" to 10.0f,
+        "aggregatedTextContent" to 7.0f)
 
     fun addDocsAsBlock(docs: List<Document>){
         docIndex.addDocsAsBlock(docs);
@@ -83,7 +84,10 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): SearchResults {
         val fragmenter = Fragmenter(docIndex, q, analyzer)
         val startMs = System.currentTimeMillis()
-        val docs = searchQuestionDocs(q, docCollector)
+        val boostByField = DoubleValuesSource.fromLongField("answerCount")
+        val boost = NonZeroWeightedBoostValuesSource(boostByField, 2.0f, 0.0)
+        val docs = searchQuestionDocs(FunctionScoreQuery(q, boost), docCollector)
+//        val docs = searchQuestionDocs(q, docCollector)
         val questionSummaries = docs.map {
             val questionDocs = getDocsForQuestion(it)
             fragmenter.getQuestionSummary(questionDocs)
@@ -95,27 +99,8 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
             System.currentTimeMillis() - startMs)
     }
 
-    private fun searchQuestionDocs(q: Query, docCollector: DocCollector, provideExplainPlans: Boolean = false): Docs {
-        val childQueryBuilder = BooleanQuery.Builder()
-        childQueryBuilder.add(BooleanClause(q, BooleanClause.Occur.MUST))
-        childQueryBuilder.add(BooleanClause(TermQuery(Term("child", "Y")), BooleanClause.Occur.MUST))
-        val childQuery = ToParentBlockJoinQuery(childQueryBuilder.build(), parentsFilter, ScoreMode.Avg)
-
-        val parentQueryBuilder = BooleanQuery.Builder()
-        parentQueryBuilder.add(BooleanClause(q, BooleanClause.Occur.MUST))
-        parentQueryBuilder.add(BooleanClause(TermQuery(Term("child", "N")), BooleanClause.Occur.MUST))
-        val parentQuery = parentQueryBuilder.build()
-
-//        val childAndParentQuery = AnswerCountBoostQuery(
-//            DisjunctionMaxQuery(mutableListOf(childQuery, parentQuery), 0.5f),
-//            1.0f)
-
-        val childAndParentQuery = DisjunctionMaxQuery(mutableListOf(childQuery, parentQuery), 0.5f)
-
-        val reader = DirectoryReader.open(docIndex.index)
-        CheckJoinIndex.check(reader, parentsFilter)
-
-        return docIndex.docIdIndex.searchByQueryForDocs(childAndParentQuery, docCollector)
+    private fun searchQuestionDocs(q: Query, docCollector: DocCollector): Docs {
+        return docIndex.docIdIndex.searchByQueryForDocs(q, docCollector)
     }
 
     private fun getDocsForQuestion(doc: Doc): DocsForQuestion {
@@ -270,11 +255,7 @@ class Fragmenter(
 
     fun getQuestionSummary(docsForQuestion: DocsForQuestion): QuestionSummary {
         val questionDoc = docsForQuestion.questionDoc.doc
-        val frags = docsForQuestion.allDocs
-            .flatMap { getTextFragmentsForField(it, "textContent") }
-            .sortedByDescending { it.score }
-            .take(2)
-
+        val frags = getTextFragmentsForField(docsForQuestion.questionDoc, "aggregatedTextContent").take(2)
         var summary = ""
         for(frag in frags){
             summary += frag
@@ -282,7 +263,7 @@ class Fragmenter(
             summary += " ..."
         }
         if(summary.isEmpty()){
-            val questionTextContent = questionDoc.get("textContent")
+            val questionTextContent = questionDoc.get("aggregatedTextContent")
             summary = questionTextContent.substring(0, min(questionTextContent.length, 120)) + "..."
         }
 

@@ -1,5 +1,7 @@
 package org.tools4j.stacked.index
 
+import io.ktor.util.error
+
 class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
 
     override fun onStartParseSite(indexedSite: IndexedSite) {
@@ -37,8 +39,12 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
                 indexes.stagingIndexes.purge()
 
             } catch (e: Exception){
+                logger.error(e)
                 indexes.questionIndex.purgeSite(indexedSite.indexedSiteId)
-                indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.ERROR, ExceptionToString(e).toString()))
+                indexes.indexedSiteIndex.purgeSite(indexedSite.indexedSiteId)
+                val errorMessage = ExceptionToString(e).toString()
+                indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.ERROR, errorMessage))
+                jobStatus.addOperation("Error parsing site ${indexedSite.seSite.urlDomain}:\n${errorMessage}")
             }
         } else {
             jobStatus.addOperation("Error parsing site ${indexedSite.seSite.urlDomain}:\n${indexedSite.errorMessage}")
