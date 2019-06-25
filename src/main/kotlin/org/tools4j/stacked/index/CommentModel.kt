@@ -1,6 +1,9 @@
 package org.tools4j.stacked.index
 
-import org.apache.lucene.document.*
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.StoredField
+import org.apache.lucene.document.StringField
 import javax.xml.namespace.QName
 import javax.xml.stream.events.StartElement
 
@@ -27,7 +30,7 @@ class StagingComment(
         if(postId != null) doc.add(StringField("postId", postId, Field.Store.YES))
         if(userId != null) doc.add(StoredField("userId", userId))
         if(score != null) doc.add(StoredField("score", score))
-        if(text != null) doc.add(TextField("text", text, Field.Store.YES))
+        if(text != null) doc.add(StoredField("text", text))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         return doc
     }
@@ -40,7 +43,7 @@ class StagingComment(
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         if(postId != null) doc.add(StringField("postUid", "p$indexedSiteId.$postId", Field.Store.YES))
         if(score != null) doc.add(StoredField("score", score))
-        if(text != null) doc.add(TextField("textContent", text, Field.Store.YES))
+        if(text != null) doc.add(StoredField("textContent", text))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(userId != null) doc.add(StoredField("userUid", "u$indexedSiteId.$userId"))
         if(user?.reputation != null) doc.add(StoredField("userReputation", user.reputation))
@@ -75,7 +78,6 @@ data class Comment(
     override val userAccountId: String?
 
 ) : ContainsPrimaryUserFields{
-
     constructor(doc: Document): this(
         doc.get("uid"),
         doc.get("postUid"),
@@ -87,18 +89,4 @@ data class Comment(
         doc.get("userDisplayName"),
         doc.get("userAccountId")
     )
-
-    fun convertToDocument(): Document {
-        val doc = Document()
-        doc.add(StringField("uid", uid, Field.Store.YES))
-        if(postUid != null) doc.add(StringField("postUid", postUid, Field.Store.YES))
-        if(score != null) doc.add(StoredField("score", score))
-        if(textContent != null) doc.add(TextField("textContent", textContent, Field.Store.YES))
-        if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
-        if(userUid != null) doc.add(StoredField("userUid", userUid))
-        if(userReputation != null) doc.add(StoredField("userReputation", userReputation))
-        if(userDisplayName != null) doc.add(StoredField("userDisplayName", userDisplayName))
-        if(userAccountId != null) doc.add(StoredField("userAccountId", userAccountId))
-        return doc
-    }
 }

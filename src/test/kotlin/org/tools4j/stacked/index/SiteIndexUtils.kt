@@ -12,7 +12,7 @@ class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
             PostXmlRowHandler(stagingPostIndex.getItemHandler())
         )
         xmlFileParser.parse()
-        stagingPostIndex.onNewDataAddedToIndex()
+        stagingPostIndex.onIndexDataChange()
         return stagingPostIndex
     }
 
@@ -27,7 +27,7 @@ class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
             CommentXmlRowHandler(stagingCommentIndex.getItemHandler())
         )
         xmlFileParser.parse()
-        stagingCommentIndex.onNewDataAddedToIndex()
+        stagingCommentIndex.onIndexDataChange()
         return stagingCommentIndex
     }
 
@@ -42,7 +42,7 @@ class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
             UserXmlRowHandler(stagingUserIndex.getItemHandler())
         )
         xmlFileParser.parse()
-        stagingUserIndex.onNewDataAddedToIndex()
+        stagingUserIndex.onIndexDataChange()
         return stagingUserIndex
     }
 

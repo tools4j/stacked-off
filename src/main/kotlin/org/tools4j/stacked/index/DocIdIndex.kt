@@ -19,7 +19,7 @@ class DocIdIndex(val index: Directory, val name: String) {
         searcher = IndexSearcher(reader)
     }
 
-    fun onNewDataAddedToIndex(){
+    fun onIndexDataChange(){
         reader = DirectoryReader.open(index)
         searcher = IndexSearcher(reader)
     }

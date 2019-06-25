@@ -47,7 +47,8 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     fun purgeSite(indexedSiteId: String) {
-        docIndex.purgeSite(indexedSiteId)
+        docIndex.deleteDocumentsByTerm(Term("indexedSiteId", indexedSiteId))
+        onIndexDataChange()
     }
 
     fun purgeSites(indexedSiteIds: List<String>) {
@@ -137,8 +138,8 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         return childDocs
     }
 
-    fun onNewDataAddedToIndex() {
-        docIndex.onNewDataAddedToIndex()
+    fun onIndexDataChange() {
+        docIndex.onIndexDataChange()
     }
 
     fun commit() {

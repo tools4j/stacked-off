@@ -19,3 +19,7 @@ apple.stackexchange.com
 "java": 1,624 results: 50ms
 "java control" 10,424 results: 92ms
 "python": 1,488 results: 88ms
+
+Indexing, as is
+apple.stackexchange.com: 87,418ms
+with co-routines: 63,051ms

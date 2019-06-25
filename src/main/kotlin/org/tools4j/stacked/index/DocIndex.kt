@@ -48,16 +48,10 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         addItems(listOf(doc))
     }
 
-    fun purgeSite(indexedSiteId: String){
-        writer.deleteDocuments(Term("indexedSiteId", indexedSiteId))
-        writer.commit()
-        onNewDataAddedToIndex()
-    }
-
     fun purge() {
         writer.deleteAll()
         writer.commit()
-        onNewDataAddedToIndex()
+        onIndexDataChange()
     }
 
     fun <T> getDocumentHandler(converter: (T) -> Document): ItemHandler<T> {
@@ -157,11 +151,16 @@ class DocIndex(val indexFactory: IndexFactory, val name: String): Initializable,
         return docIdIndex.searcher
     }
 
-    fun onNewDataAddedToIndex() {
-        docIdIndex.onNewDataAddedToIndex()
+    fun onIndexDataChange() {
+        docIdIndex.onIndexDataChange()
     }
 
     fun size(): Int {
         return docIdIndex.size()
+    }
+
+    fun deleteDocumentsByTerm(term: Term) {
+        writer.deleteDocuments(term)
+        writer.commit()
     }
 }

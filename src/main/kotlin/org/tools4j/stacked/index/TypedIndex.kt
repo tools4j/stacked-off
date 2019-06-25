@@ -33,12 +33,12 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
 
     fun addItems(items: List<T>){
         docIndex.addItems(items.map { convertItemToDocument(it) })
-        docIndex.onNewDataAddedToIndex()
+        docIndex.onIndexDataChange()
     }
 
     fun addItem(item: T){
         docIndex.addItems(listOf(convertItemToDocument(item)))
-        docIndex.onNewDataAddedToIndex()
+        docIndex.onIndexDataChange()
     }
 
     fun getItemHandler(): ItemHandler<T> {
@@ -119,16 +119,11 @@ abstract class TypedIndex<T>(val indexFactory: IndexFactory, val name: String): 
 
     fun purge() {
         docIndex.purge()
-        onNewDataAddedToIndex()
+        onIndexDataChange()
     }
 
-    fun purgeSite(indexedSiteId: String){
-        docIndex.purgeSite(indexedSiteId)
-        onNewDataAddedToIndex()
-    }
-
-    fun onNewDataAddedToIndex() {
-        docIndex.onNewDataAddedToIndex()
+    fun onIndexDataChange() {
+        docIndex.onIndexDataChange()
     }
 
     fun size(): Int {

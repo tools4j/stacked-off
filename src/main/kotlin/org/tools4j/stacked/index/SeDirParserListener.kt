@@ -7,7 +7,7 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
     override fun onStartParseSite(indexedSite: IndexedSite) {
         indexes.stagingIndexes.purge()
         indexes.indexedSiteIndex.addItem(indexedSite)
-        indexes.indexedSiteIndex.onNewDataAddedToIndex()
+        indexes.indexedSiteIndex.onIndexDataChange()
     }
 
     override fun onFinishParseSite(
@@ -20,7 +20,7 @@ class SeDirParserListener(private val indexes: Indexes): ParseSiteListener {
         if(indexedSite.status != Status.ERROR){
             indexes.indexedSiteIndex.purgeSite(indexedSite.indexedSiteId)
             indexes.indexedSiteIndex.addItem(indexedSite.withStatus(Status.LINKING_STAGING_INDICES))
-            indexes.stagingIndexes.onNewDataAddedToIndexes()
+            indexes.stagingIndexes.onIndexDataChange()
             jobStatus.addOperation("Linking staging indexes ${indexedSite.seSite.urlDomain}")
             try {
                 QuestionIndexer(

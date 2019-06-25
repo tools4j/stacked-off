@@ -29,4 +29,9 @@ class IndexedSiteIndex(indexFactory: IndexFactory)
             purgeSite(indexedSiteId)
         }
     }
+
+    fun purgeSite(indexedSiteId: String){
+        docIndex.deleteDocumentsByTerm(Term("indexedSiteId", indexedSiteId))
+        onIndexDataChange()
+    }
 }
