@@ -26,14 +26,14 @@ class ToListHandler<T>(val list: MutableList<T>): ItemHandler<T> {
     }
 }
 
-fun createPostIndex(): StagingPostIndex {
+fun createStagingPostIndex(): StagingPostIndex {
     val postIndex = StagingPostIndex(getTestIndexFactory())
     postIndex.init()
     postIndex.getItemHandler().onFinish()
     return postIndex
 }
 
-fun createCommentIndex(): StagingCommentIndex {
+fun createStagingCommentIndex(): StagingCommentIndex {
     val commentIndex = StagingCommentIndex(getTestIndexFactory())
     commentIndex.init()
     commentIndex.getItemHandler().onFinish()
@@ -56,7 +56,7 @@ fun createAndLoadQuestionIndex(): QuestionIndex {
 }
 
 
-fun createUserIndex(): StagingUserIndex {
+fun createStagingUserIndex(): StagingUserIndex {
     val userIndex = StagingUserIndex(getTestIndexFactory())
     userIndex.init()
     userIndex.getItemHandler().onFinish()
@@ -110,9 +110,9 @@ fun getTestIndexFactory() = LightweightIndexFactory()
 
 fun createStagingIndexes(): StagingIndexes {
     return StagingIndexes(
-        createPostIndex(),
-        createCommentIndex(),
-        createUserIndex())
+        createStagingPostIndex(),
+        createStagingCommentIndex(),
+        createStagingUserIndex())
 }
 
 fun createIndexes(): Indexes {

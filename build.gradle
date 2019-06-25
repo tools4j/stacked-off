@@ -9,14 +9,15 @@ buildscript {
     }
 }
 
-group = "Example"
-version = "1.0-SNAPSHOT"
+group = "org.tools4j"
+version = "1.0"
 
 def ktor_version = "1.1.3"
 
 apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'kotlin'
+apply plugin: 'application'
 
 repositories {
     mavenCentral()
@@ -26,20 +27,9 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
 
-configurations {
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestRuntime.extendsFrom testRuntime
+application {
+    mainClassName = 'org.tools4j.stacked.web.Server'
 }
-
-sourceSets {
-    integrationTest {
-        kotlin.srcDir 'src/integration-test/kotlin'
-        resources.srcDir 'src/integration-test/resources'
-        compileClasspath += main.output
-        runtimeClasspath += main.output
-    }
-}
-
 
 dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
@@ -58,6 +48,8 @@ dependencies {
     compile("ch.qos.logback:logback-classic:1.2.3")
     compile "io.github.microutils:kotlin-logging:1.6.20"
     compile("net.sf.sevenzipjbinding:sevenzipjbinding:9.20-2.00beta")
+    compile "com.github.tulskiy:jkeymaster:1.2"
+    compile "com.airhacks:afterburner.fx:1.6.0"
     runtime("net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:9.20-2.00beta")
     implementation 'org.tukaani:xz:1.8'
     

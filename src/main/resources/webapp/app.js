@@ -42,7 +42,7 @@ router
                 }
                 doGet("/rest/search?fromDocIndexInclusive=" + fromDocIndexInclusive +
                     "&toDocIndexExclusive=" + toDocIndexExclusive +
-                    "&searchText=" + queryParams.searchText + (queryParams.explain != null ? "&explain": ""), results => {
+                    "&searchText=" + queryParams.searchText + (queryParams.explain != null ? "&explain=" + queryParams.explain: ""), results => {
 
                     var hasMoreResults = results.totalHits > toDocIndexExclusive
                     var newSearchPage = (fromDocIndexInclusive == 0)

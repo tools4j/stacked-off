@@ -12,21 +12,21 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
     fun index(){
         jobStatus.addOperation("Fetching parent posts")
         val startMs = System.currentTimeMillis()
-        val questionsDocIds = stagingIndexes.stagingPostIndex.docIndex.docIdIndex.searchByTerm("isQuestion", "true")
+        val questionsDocIds = stagingIndexes.stagingPostIndex.docIndex.docIdIndex.searchByTerm("isQuestion", "true", UnscoredCollector(false))
         jobStatus.addOperation("Joining posts, comments and users into question blocks for fast searching")
         var index = 0;
 
         questionsDocIds.forEach { questionDocId ->
             val questionPost = stagingIndexes.stagingPostIndex.getByDocId(questionDocId)!!
-            val questionComments = stagingIndexes.stagingCommentIndex.getByPostId(questionPost.id)
             val answerPosts = stagingIndexes.stagingPostIndex.getByParentId(questionPost.id)
+            val questionComments = stagingIndexes.stagingCommentIndex.getByPostId(questionPost.id)
             val answerComments = answerPosts.flatMap { stagingIndexes.stagingCommentIndex.getByPostId(it.id) }
             val userUids = ArrayList<String>()
 
             userUids.addAll(answerPosts.map { it.userId }.filterNotNull())
             userUids.addAll(answerComments.map { it.userId }.filterNotNull())
             userUids.addAll(questionComments.map { it.userId }.filterNotNull())
-            if(questionPost.userId != null) userUids.add(questionPost.userId!!)
+            if(questionPost.userId != null) userUids.add(questionPost.userId)
 
             val users = stagingIndexes.stagingUserIndex.getByIds(userUids)
             val usersById = users.map { it.id to it }.toMap()

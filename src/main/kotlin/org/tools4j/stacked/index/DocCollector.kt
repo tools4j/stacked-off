@@ -3,6 +3,7 @@ package org.tools4j.stacked.index
 import org.apache.lucene.index.IndexReader
 import org.apache.lucene.index.LeafReaderContext
 import org.apache.lucene.search.*
+import java.util.*
 
 interface DocCollector {
     fun search(searcher: IndexSearcher, query: Query): Docs
@@ -18,6 +19,21 @@ open class TopNCollector(val size: Int, val provideExplainPlans: Boolean = false
 
 class GetMaxSizeCollector(): TopNCollector(1024*1000)
 
+class FindFirstInTopNCollector(val fetchSize: Int, val filter: (ScoreDoc) -> Boolean): DocCollector{
+    override fun search(searcher: IndexSearcher, query: Query): Docs {
+        val topDocs = searcher.search(query, fetchSize)
+        try {
+            val firstScoreDoc = topDocs.scoreDocs.first(filter)
+            val explainPlans = listOf(searcher.explain(query, firstScoreDoc.doc))
+            val topDocs = TopDocs(topDocs.totalHits, listOf(firstScoreDoc).toTypedArray(), topDocs.maxScore)
+            return Docs.create(topDocs, explainPlans)
+        } catch(e: NoSuchElementException) {
+            val topDocs = TopDocs(topDocs.totalHits, emptyArray(), topDocs.maxScore)
+            return Docs.create(topDocs, emptyList())
+        }
+    }
+}
+
 class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: Int, val provideExplainPlans: Boolean = false): DocCollector{
     override fun search(searcher: IndexSearcher, query: Query): Docs {
         val topTocsToDocIndexExclusive = searcher.search(query, toDocIndexExclusive)
@@ -27,7 +43,7 @@ class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: In
         return Docs.create(topDocs, explainPlans)
     }
 }
-//223227
+
 class UnscoredCollector(val provideExplainPlans: Boolean = false): DocCollector{
     override fun search(searcher: IndexSearcher, query: Query): Docs {
         val unscoredCollector = UnscoredSimpleCollector(searcher.indexReader)

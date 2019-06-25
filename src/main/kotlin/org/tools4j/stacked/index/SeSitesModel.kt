@@ -119,8 +119,8 @@ data class SeSiteImpl(
 
     override fun hashCode(): Int {
         var result = seSiteId.hashCode()
-        result = 31 * result + (tinyName.hashCode() ?: 0)
-        result = 31 * result + (name.hashCode() ?: 0)
+        result = 31 * result + tinyName.hashCode()
+        result = 31 * result + name.hashCode()
         result = 31 * result + url.hashCode()
         return result
     }

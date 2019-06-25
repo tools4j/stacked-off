@@ -104,14 +104,20 @@ class Server {
                         val fromDocIndexInclusive = call.parameters["fromDocIndexInclusive"]?.toInt() ?: 0
                         val toDocIndexExclusive = call.parameters["toDocIndexExclusive"]?.toInt() ?: 10
                         val explain = call.parameters.contains("explain")
+                        val explainValue = call.parameters["explain"]
 
-                        val searchResults = instance.questionIndex.searchForQuestionSummaries(
-                            call.parameters["searchText"]!!,
-                            fromDocIndexInclusive,
-                            toDocIndexExclusive,
-                            explain
-                        )
-                        call.respond(searchResults)
+                         if(explain && explainValue != null && explainValue.length > 0){
+                            call.respond(instance.questionIndex.searchForQuestionSummaryInResults(
+                                call.parameters["searchText"]!!, explainValue
+                            ))
+                        } else {
+                            call.respond(instance.questionIndex.searchForQuestionSummaries(
+                                call.parameters["searchText"]!!,
+                                fromDocIndexInclusive,
+                                toDocIndexExclusive,
+                                explain
+                            ))
+                        }
                     }
 
                     get("/rest/sedir") {

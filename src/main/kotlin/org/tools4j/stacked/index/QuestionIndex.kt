@@ -4,19 +4,14 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.en.EnglishAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.LeafReader
-import org.apache.lucene.index.LeafReaderContext
 import org.apache.lucene.index.ReaderUtil
 import org.apache.lucene.index.Term
-import org.apache.lucene.queries.CustomScoreProvider
-import org.apache.lucene.queries.CustomScoreQuery
 import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.search.highlight.*
 import org.apache.lucene.search.join.QueryBitSetProducer
-import java.io.IOException
 import java.lang.Integer.min
 import java.util.*
 
@@ -62,19 +57,24 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     }
 
     fun getAll(): List<Question>{
-        return search(MatchAllDocsQuery(), GetMaxSizeCollector());
+        return search(TermQuery(Term("type", "question")), GetMaxSizeCollector());
     }
 
-    fun search(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10, provideExplainPlans: Boolean = false): List<Question>{
+    fun search(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10): List<Question>{
         return search(parseSearchTerms(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive))
     }
 
-    fun search(q: Query, docCollector: DocCollector, provideExplainPlans: Boolean = false): List<Question> {
+    fun search(q: Query, docCollector: DocCollector): List<Question> {
         return searchQuestionDocs(q, docCollector).map { getDocsForQuestion(it).convertToQuestion() }
     }
 
     fun searchForQuestionSummaries(searchTerm: String, fromDocIndexInclusive: Int = 0, toDocIndexExclusive: Int = 10, provideExplainPlans: Boolean = false): SearchResults {
         return searchForQuestionSummaries(parseSearchTerms(searchTerm), RangeCollector(fromDocIndexInclusive, toDocIndexExclusive, provideExplainPlans))
+    }
+
+    fun searchForQuestionSummaryInResults(searchTerm: String, questionUid: String): SearchResults {
+        val docId = docIndex.docIdIndex.getByTerms(mapOf("uid" to questionUid, "type" to "question"))
+        return searchForQuestionSummaries(parseSearchTerms(searchTerm), FindFirstInTopNCollector(1000*1000) { scoreDoc -> scoreDoc.doc == docId})
     }
 
     private fun parseSearchTerms(searchTerm: String): Query {
@@ -87,7 +87,6 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         val boostByField = DoubleValuesSource.fromLongField("answerCount")
         val boost = NonZeroWeightedBoostValuesSource(boostByField, 2.0f, 0.0)
         val docs = searchQuestionDocs(FunctionScoreQuery(q, boost), docCollector)
-//        val docs = searchQuestionDocs(q, docCollector)
         val questionSummaries = docs.map {
             val questionDocs = getDocsForQuestion(it)
             fragmenter.getQuestionSummary(questionDocs)
@@ -121,7 +120,6 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         indexSearcher: IndexSearcher,
         parentDocId: Int
     ): List<Int> {
-        val start = System.currentTimeMillis()
         val indexReader = indexSearcher.indexReader
         val leaves = indexReader.leaves()
         val subIndex = ReaderUtil.subIndex(parentDocId, leaves)
@@ -179,45 +177,6 @@ open class DocsForQuestion(
         allDocs.add(questionDoc)
         allDocs.addAll(childDocs)
         allDocs
-    }
-}
-
-private class AnswerCountBoostQuery(subQuery: Query, val multiplier: Float) : CustomScoreQuery(subQuery) {
-    // The CustomScoreProvider is what actually alters the score
-    private inner class MyScoreProvider(context: LeafReaderContext) : CustomScoreProvider(context) {
-        private val reader: LeafReader = context.reader()
-        private val fieldsToLoad: MutableSet<String>
-
-        init {
-
-            // We create a HashSet which contains the name of the field
-            // which we need. This allows us to retrieve the document
-            // with only this field loaded, which is a lot faster.
-            fieldsToLoad = HashSet()
-            fieldsToLoad.add("answerCount")
-        }
-
-        @Throws(IOException::class)
-        override fun customScore(doc_id: Int, currentScore: Float, valSrcScore: Float): Float {
-            // Get the result document from the index
-            val doc = reader.document(doc_id, fieldsToLoad)
-            val field = doc.getField("answerCount")
-            val number = field.numericValue().toInt()
-
-            // This is just an example on how to alter the current score
-            //val boost = number.toFloat() * multiplier
-
-            val boost = if(number > 0) 100 else 0
-
-            // Return the new score for this result, based on the
-            // original lucene score.
-            return currentScore + boost
-        }
-    }
-
-    // Make sure that our CustomScoreProvider is being used.
-    public override fun getCustomScoreProvider(context: LeafReaderContext): CustomScoreProvider {
-        return MyScoreProvider(context)
     }
 }
 

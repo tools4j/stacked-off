@@ -46,6 +46,7 @@ class StagingPost(
         if(favoriteCount != null) doc.add(StoredField("favoriteCount", favoriteCount))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
         if(parentId != null) doc.add(StringField("parentId", parentId, Field.Store.YES))
+        if(parentId != null) doc.add(StringField("parentId", parentId, Field.Store.YES))
         doc.add(StringField("isQuestion", (parentId == null).toString() , Field.Store.NO))
         if(acceptedAnswerId != null) doc.add(TextField("acceptedAnswerId", acceptedAnswerId, Field.Store.YES))
         if(userId != null) doc.add(StoredField("userId", userId))

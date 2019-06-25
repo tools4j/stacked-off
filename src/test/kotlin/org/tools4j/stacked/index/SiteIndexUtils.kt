@@ -2,7 +2,7 @@ package org.tools4j.stacked.index
 class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
 
     fun createAndLoadPostIndex(): StagingPostIndex {
-        val postIndex = createPostIndex()
+        val postIndex = createStagingPostIndex()
         return loadPostIndex(postIndex)
     }
 
@@ -17,7 +17,7 @@ class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
     }
 
     fun createAndLoadCommentIndex(): StagingCommentIndex {
-        val commentIndex = createCommentIndex()
+        val commentIndex = createStagingCommentIndex()
         return loadCommentIndex(commentIndex)
     }
 
@@ -58,8 +58,8 @@ class SiteIndexUtils(val classpathToXmlFiles: String, val siteId: String) {
 
     fun createStagingIndexes(): StagingIndexes {
         return StagingIndexes(
-            createPostIndex(),
-            createCommentIndex(),
+            createStagingPostIndex(),
+            createStagingCommentIndex(),
             createUserIndex()
         )
     }

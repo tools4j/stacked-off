@@ -1,7 +1,6 @@
 package org.tools4j.stacked.index
 
 import mu.KLogging
-import java.lang.UnsupportedOperationException
 
 
 interface JobStatus{
@@ -54,8 +53,8 @@ class JobStatusImpl: JobStatus {
         return sb.toString()
     }
 
-    override fun addOperation(s: String) {
-        operationHistory.add(s)
+    override fun addOperation(operation: String) {
+        operationHistory.add(operation)
         currentOperationProgress = ""
     }
 
@@ -87,7 +86,7 @@ class JobContainer: JobSupplier {
 
     fun createNew(): JobStatus {
         jobStatus = JobStatusImpl()
-        jobStatus!!.onStart();
-        return jobStatus!!
+        jobStatus.onStart();
+        return jobStatus
     }
 }
