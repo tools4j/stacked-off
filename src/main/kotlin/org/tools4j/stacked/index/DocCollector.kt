@@ -25,10 +25,10 @@ class FindFirstInTopNCollector(val fetchSize: Int, val filter: (ScoreDoc) -> Boo
         try {
             val firstScoreDoc = topDocs.scoreDocs.first(filter)
             val explainPlans = listOf(searcher.explain(query, firstScoreDoc.doc))
-            val topDocs = TopDocs(topDocs.totalHits, listOf(firstScoreDoc).toTypedArray(), topDocs.maxScore)
+            val topDocs = TopDocs(topDocs.totalHits, listOf(firstScoreDoc).toTypedArray())
             return Docs.create(topDocs, explainPlans)
         } catch(e: NoSuchElementException) {
-            val topDocs = TopDocs(topDocs.totalHits, emptyArray(), topDocs.maxScore)
+            val topDocs = TopDocs(topDocs.totalHits, emptyArray())
             return Docs.create(topDocs, emptyList())
         }
     }
@@ -38,7 +38,7 @@ class RangeCollector(val fromDocIndexInclusive: Int, val toDocIndexExclusive: In
     override fun search(searcher: IndexSearcher, query: Query): Docs {
         val topTocsToDocIndexExclusive = searcher.search(query, toDocIndexExclusive)
         val lastDocs = topTocsToDocIndexExclusive.scoreDocs.toList().takeLast(toDocIndexExclusive - fromDocIndexInclusive)
-        val topDocs = TopDocs(topTocsToDocIndexExclusive.totalHits, lastDocs.toTypedArray(), topTocsToDocIndexExclusive.maxScore)
+        val topDocs = TopDocs(topTocsToDocIndexExclusive.totalHits, lastDocs.toTypedArray())
         val explainPlans = if(provideExplainPlans) topDocs.scoreDocs.toList().map { searcher.explain(query, it.doc) } else emptyList()
         return Docs.create(topDocs, explainPlans)
     }
@@ -49,18 +49,20 @@ class UnscoredCollector(val provideExplainPlans: Boolean = false): DocCollector{
         val unscoredCollector = UnscoredSimpleCollector(searcher.indexReader)
         searcher.search(query, unscoredCollector)
         val scoreDocs = unscoredCollector.docIds.map { ScoreDoc(it, 0.0f) }
-        val topDocs = TopDocs(scoreDocs.size.toLong(), scoreDocs.toTypedArray(), 0.0f)
+        val topDocs = TopDocs(TotalHits(scoreDocs.size.toLong(), TotalHits.Relation.EQUAL_TO), scoreDocs.toTypedArray())
         val explainPlans = if(provideExplainPlans) topDocs.scoreDocs.toList().map { searcher.explain(query, it.doc) } else emptyList()
         return Docs.create(topDocs, explainPlans)
     }
 }
 
 private class UnscoredSimpleCollector(val indexReader: IndexReader) : SimpleCollector() {
+
     private var currentLeafReaderContext: LeafReaderContext? = null
+
     val docIds = ArrayList<Int>()
 
-    override fun needsScores(): Boolean {
-        return false
+    override fun scoreMode(): ScoreMode {
+        return ScoreMode.COMPLETE_NO_SCORES
     }
 
     override fun doSetNextReader(context: LeafReaderContext?) {

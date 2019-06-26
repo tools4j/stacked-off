@@ -27,7 +27,6 @@ data class StagingUser(
         if(accountId != null) doc.add(StoredField("accountId", accountId))
         return doc
     }
-
 }
 
 class UserXmlRowHandler(delegate: ItemHandler<StagingUser>): XmlRowHandler<StagingUser>(delegate) {

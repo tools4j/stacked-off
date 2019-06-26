@@ -14,7 +14,7 @@ class MultiplicativeWeightedBoostValuesSource(
         {parentScore, fieldValue -> parentScore * fieldValue * weight},
         {parentExplanation, fieldBoostExplanation ->
            Explanation.match(
-                    parentExplanation.value * fieldBoostExplanation.value * weight,
+                    parentExplanation.value.toFloat() * fieldBoostExplanation.value.toFloat() * weight,
                     "product of:", fieldBoostExplanation, Explanation.match(weight, "weight"), parentExplanation)
         }
     )

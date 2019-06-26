@@ -2,11 +2,10 @@ package org.tools4j.stacked.index
 
 import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.en.EnglishAnalyzer
+import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.index.ReaderUtil
 import org.apache.lucene.index.Term
-import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
@@ -25,7 +24,7 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
 
     override fun init() {
         val fields: MutableMap<String, Float> = getIndexedFieldsAndRankings()
-        analyzer = EnglishAnalyzer()
+        analyzer = StandardAnalyzer()
         queryParser = MultiFieldQueryParser(
             fields.keys.toTypedArray(),
             analyzer,
@@ -87,14 +86,14 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
         val startMs = System.currentTimeMillis()
         val boostByField = DoubleValuesSource.fromLongField("answerCount")
         val boost = NonZeroWeightedBoostValuesSource(boostByField, 2.0f, 0.0)
-        val docs = searchQuestionDocs(FunctionScoreQuery(q, boost), docCollector)
+//        val docs = searchQuestionDocs(FunctionScoreQuery(q, boost), docCollector)
+        val docs = searchQuestionDocs(q, docCollector)
         val questionSummaries = docs.map {
             val questionDocs = getDocsForQuestion(it)
             fragmenter.getQuestionSummary(questionDocs)
         }
         return SearchResults(
             questionSummaries,
-            if(docs.maxScore.isNaN()) 0.0f else docs.maxScore,
             docs.totalHits,
             System.currentTimeMillis() - startMs)
     }
@@ -195,7 +194,6 @@ class QuestionSummary (
 
 class SearchResults (
     val questionSummaries: List<QuestionSummary>,
-    val maxScore: Float,
     val totalHits: Long,
     val queryTimeMs: Long)
 

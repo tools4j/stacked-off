@@ -4,7 +4,7 @@ import org.apache.lucene.search.Explanation
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.TopDocs
 
-class Docs(val topDocs: List<Doc>, val totalHits: Long, val maxScore: Float): List<Doc> by topDocs{
+class Docs(val topDocs: List<Doc>, val totalHits: Long): List<Doc> by topDocs{
     companion object {
         @JvmStatic
         fun create(topDocs: TopDocs, explains: List<Explanation> = emptyList()): Docs {
@@ -12,7 +12,7 @@ class Docs(val topDocs: List<Doc>, val totalHits: Long, val maxScore: Float): Li
             for(i in 0..(topDocs.scoreDocs.size - 1)){
                 docs.add(Doc(topDocs.scoreDocs[i], if(explains.isEmpty()) null else explains[i]))
             }
-            return Docs(docs, topDocs.totalHits, topDocs.maxScore)
+            return Docs(docs, topDocs.totalHits.value)
         }
     }
 }

@@ -51,9 +51,10 @@ class DocIdIndex(val index: Directory, val name: String) {
     fun getByQuery(query: Query): Int? {
         val docs = searcher.search(query, 2)
         val hits = docs.scoreDocs
-        if (docs.totalHits == 0L) {
+
+        if (docs.totalHits.value == 0L) {
             return null
-        } else if (docs.totalHits == 1L) {
+        } else if (docs.totalHits.value == 1L) {
             return hits.get(0).doc;
         } else {
             throw IllegalStateException("Found more than one document with query [$query] " +
@@ -63,9 +64,9 @@ class DocIdIndex(val index: Directory, val name: String) {
 
     fun getDocByQuery(query: Query, provideExplainPlans: Boolean = false): Doc? {
         val docs = searcher.search(query, 2)
-        if (docs.totalHits == 0L) {
+        if (docs.totalHits.value == 0L) {
             return null
-        } else if (docs.totalHits == 1L) {
+        } else if (docs.totalHits.value == 1L) {
             val scoreDoc = docs.scoreDocs.get(0)
             val explanation = if(provideExplainPlans) searcher.explain(query, scoreDoc.doc) else null
             return Doc(scoreDoc, explanation);

@@ -337,7 +337,7 @@ function renderPost(post, seSite, acceptedAnswerUid){
 
 function showResults(results, newSearchPage, hasMoreResults){
     if(newSearchPage){
-        $("#content")[0].innerHTML = `<div class="result-summary">${results.totalHits} results, took ${results.queryTimeMs}ms${results.maxScore == 0 ? "": ", max score " + results.maxScore}</div>`
+        $("#content")[0].innerHTML = `<div class="result-summary">${results.totalHits} results, took ${results.queryTimeMs}ms</div>`
     }
     $("#more-button-div").remove()
     $("#content")[0].innerHTML += `

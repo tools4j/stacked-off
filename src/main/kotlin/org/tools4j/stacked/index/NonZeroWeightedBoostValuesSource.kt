@@ -16,7 +16,7 @@ class NonZeroWeightedBoostValuesSource(
                 parentExplanation
             } else {
                 Explanation.match(
-                    parentExplanation.value * fieldBoostExplanation.value * weight,
+                    parentExplanation.value.toFloat() * fieldBoostExplanation.value.toFloat() * weight,
                     "product of:", Explanation.match(weight, "weight because of non-zero value of " + fieldBoostExplanation.description), parentExplanation
                 )
             }
