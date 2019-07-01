@@ -38,6 +38,15 @@ dependencies {
     compile("org.apache.lucene:lucene-queryparser:8.1.1")
     compile("org.apache.lucene:lucene-highlighter:8.1.1")
     compile("org.apache.lucene:lucene-join:8.1.1")
+    compile("org.apache.solr:solr-core:8.1.1"){
+        transitive = false
+    }
+    compile("org.apache.solr:solr-common:8.1.1"){
+        transitive = false
+    }
+    compile("org.apache.solr:solr-lucene-core:8.1.1"){
+        transitive = false
+    }
     compile("com.fasterxml.jackson.core:jackson-core:2.9.8")
     compile("com.fasterxml.jackson.core:jackson-annotations:2.9.8")
     compile("com.fasterxml.jackson.core:jackson-databind:2.9.8")

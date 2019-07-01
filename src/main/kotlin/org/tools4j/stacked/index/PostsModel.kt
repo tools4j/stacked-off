@@ -19,6 +19,8 @@ class StagingPost(
     val acceptedAnswerId: String?,
     val userId: String?){
 
+    private val MIN_RANK = 1.17549435E-38f
+
     constructor(doc: Document): this(
         doc.get("id"),
         doc.get("creationDate"),
@@ -66,14 +68,14 @@ class StagingPost(
         doc.add(StringField("indexedSiteId", indexedSiteId, Field.Store.YES))
         //https://stackoverflow.com/questions/42482451/lucene-6-recommended-way-to-store-numeric-fields-with-term-vocabulary
         doc.add(StoredField("answerCount", answerCount))
-        doc.add(NumericDocValuesField("answerCount", answerCount.toLong()))
+        doc.add(FeatureField("answerCount", "answerCountRank", calculateAnswerCountRank(answerCount)))
         if(title != null) doc.add(TextField("title", title, Field.Store.YES))
         if(acceptedAnswerId != null) doc.add(StoredField("acceptedAnswerUid", "p$indexedSiteId.$acceptedAnswerId"))
         if(tags != null) doc.add(StoredField("tags", tags))
         if(viewCount != null) doc.add(StoredField("viewCount", viewCount))
         if(creationDate != null) doc.add(StoredField("creationDate", creationDate))
         if(score != null) doc.add(StoredField("score", score))
-        if(score != null) doc.add(NumericDocValuesField("score", score.toLong()))
+        doc.add(FeatureField("score", "scoreRank", calculateScoreRank()))
         if(body != null) doc.add(StoredField("htmlContent", body))
         doc.add(TextField("aggregatedTextContent", aggregatedTextContent, Field.Store.YES))
         if(lastActivityDate != null) doc.add(StoredField("lastActivityDate", lastActivityDate))
@@ -103,6 +105,18 @@ class StagingPost(
         if(user?.displayName != null) doc.add(StoredField("userDisplayName", user.displayName))
         if(user?.accountId != null) doc.add(StoredField("userAccountId", user.accountId))
         return doc
+    }
+
+    private fun calculateAnswerCountRank(answerCount: Int): Float{
+        return Math.max(MIN_RANK, answerCount.toFloat())
+    }
+
+    private fun calculateScoreRank(): Float{
+        return if(score == null || score.toFloat() < MIN_RANK){
+            MIN_RANK
+        } else {
+            return score.toFloat()
+        }
     }
 }
 

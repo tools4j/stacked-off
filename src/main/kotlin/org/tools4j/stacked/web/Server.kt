@@ -87,6 +87,10 @@ class Server {
                         call.respond(instance.diContext.getIndexParentDir() ?: "")
                     }
 
+                    get("/rest/runPerfTest") {
+                        call.respond("Took: " + PerfTest(instance).run() + "ms")
+                    }
+
                     get("/rest/sites") {
                         val sites = instance.indexes.indexedSiteIndex.getAll()
                         call.respond(sites)
@@ -162,6 +166,7 @@ class Server {
                     get("/rest/indexes") {
                         call.respond(IndexStats(instance.indexes))
                     }
+
 
                     get("/rest/purgeSite/{id}") {
                         instance.indexes.questionIndex.purgeSite(call.parameters["id"]!!)

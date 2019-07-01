@@ -4,6 +4,7 @@ import mu.KLogging
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.Document
+import org.apache.lucene.document.FeatureField
 import org.apache.lucene.index.ReaderUtil
 import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
@@ -84,10 +85,15 @@ class QuestionIndex(indexFactory: IndexFactory, var indexedSiteIndex: IndexedSit
     fun searchForQuestionSummaries(q: Query, docCollector: DocCollector): SearchResults {
         val fragmenter = Fragmenter(docIndex, q, analyzer)
         val startMs = System.currentTimeMillis()
-        val boostByField = DoubleValuesSource.fromLongField("answerCount")
-        val boost = NonZeroWeightedBoostValuesSource(boostByField, 2.0f, 0.0)
-//        val docs = searchQuestionDocs(FunctionScoreQuery(q, boost), docCollector)
-        val docs = searchQuestionDocs(q, docCollector)
+
+        val answerCountBoostQuery = FeatureField.newSaturationQuery("answerCount", "answerCountRank", 64.0f, 1.0f)
+        val scoreBoostQuery = FeatureField.newSaturationQuery("score", "scoreRank", 32.0f, 10.0f)
+        val boostedQuery = BooleanQuery.Builder().add(q, BooleanClause.Occur.MUST)
+            .add(answerCountBoostQuery, BooleanClause.Occur.SHOULD)
+            .add(scoreBoostQuery, BooleanClause.Occur.SHOULD)
+            .build()
+        val docs = searchQuestionDocs(boostedQuery, docCollector)
+
         val questionSummaries = docs.map {
             val questionDocs = getDocsForQuestion(it)
             fragmenter.getQuestionSummary(questionDocs)

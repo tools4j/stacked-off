@@ -75,6 +75,6 @@ open class BoostValuesSource(
     }
 
     override fun isCacheable(ctx: LeafReaderContext): Boolean {
-        return sourceBoostField.isCacheable(ctx)
+        return false;
     }
 }

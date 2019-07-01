@@ -23,3 +23,13 @@ apple.stackexchange.com
 Indexing, as is
 apple.stackexchange.com: 87,418ms
 with co-routines: 63,051ms
+
+With boosting
+Total time: 24003ms
+Avg time per query: 240ms
+
+Without boosting
+Total time: 4170ms
+Avg time per query: 41ms
+
+
