@@ -32,4 +32,7 @@ Without boosting
 Total time: 4170ms
 Avg time per query: 41ms
 
+With Feature Field Boosting (apple site)
+Total time: 3103ms
+Avg time per query: 31ms
 

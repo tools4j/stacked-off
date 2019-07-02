@@ -1,12 +1,10 @@
 package org.tools4j.stacked.index
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 import org.apache.lucene.document.Document
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingDeque
 
 class QuestionIndexer(val stagingIndexes: StagingIndexes,
@@ -26,23 +24,40 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
                 UnscoredCollector(false)
             )
             jobStatus.addOperation("Joining posts, comments and users into question blocks for fast searching")
+
+            val exceptions = ConcurrentLinkedQueue<Throwable>()
             val postsQueue = LinkedBlockingDeque<List<StagingPost>>(1000)
             val postsAndCommentsQueue = LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>(1000)
             val docsQueue = LinkedBlockingDeque<List<Document>>(1000)
-            val postsFetchingJob = fetchPosts(questionsDocIds, postsQueue)
-            val commentsFetchingJob = fetchComments(postsQueue, postsAndCommentsQueue)
-            val docsBuildingJob = buildDocs(postsAndCommentsQueue, docsQueue)
-            val addDocsJob = addDocsToLucene(docsQueue, questionsDocIds.size)
-            listOf(postsFetchingJob, commentsFetchingJob, docsBuildingJob, addDocsJob).forEach { it.join() }
-            jobStatus.addOperation("Finished creating question blocks for site, took ${System.currentTimeMillis() - startMs}ms")
+
+            val jobs = ArrayList<Thread>()
+            val exceptionHandler = {e: Exception ->
+                logger.error { "Error during joining: $e" }
+                exceptions.add(e)
+                jobs.forEach{it.interrupt()}
+            }
+            jobs.add(Thread { fetchPosts(questionsDocIds, postsQueue, exceptionHandler) })
+            jobs.add(Thread { fetchComments(postsQueue, postsAndCommentsQueue, exceptionHandler) })
+            jobs.add(Thread { buildDocs(postsAndCommentsQueue, docsQueue, exceptionHandler) })
+            jobs.add(Thread { addDocsToLucene(docsQueue, questionsDocIds.size, exceptionHandler) })
+            jobs.forEach{it.start()}
+            jobs.forEach{it.join()}
+
+            if(!exceptions.isEmpty()){
+                jobStatus.addOperation("Error occurred during joining")
+                throw exceptions.element()
+            } else {
+                jobStatus.addOperation("Finished creating question blocks for site, took ${System.currentTimeMillis() - startMs}ms")
+            }
         }
     }
 
     private fun fetchPosts(
         questionsDocIds: List<Int>,
-        outputQueue: LinkedBlockingDeque<List<StagingPost>>
-    ): Job {
-        val postsFetchingJob = GlobalScope.launch {
+        outputQueue: LinkedBlockingDeque<List<StagingPost>>,
+        exceptionHandler: (Exception) -> Unit
+    ) {
+        try {
             questionsDocIds.forEach { questionDocId ->
                 val posts = ArrayList<StagingPost>()
                 posts.add(stagingIndexes.stagingPostIndex.getByDocId(questionDocId)!!)
@@ -50,34 +65,44 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
                 outputQueue.put(posts)
             }
             outputQueue.put(emptyList()) //put 'poison pill'
-            logger.info { "finished posts proc" }
+        } catch (e: InterruptedException){
+            logger.warn { "posts proc interrupted" }
+        } catch (e: Exception) {
+            logger.error { "Error during posts proc ${e.message}" }
+            exceptionHandler(e)
         }
-        return postsFetchingJob
+        logger.info { "finished posts proc" }
     }
 
     private fun fetchComments(
         inputQueue: LinkedBlockingDeque<List<StagingPost>>,
-        outputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>
-    ): Job {
-        val commentsFetchingJob = GlobalScope.launch {
-            while (true) {
+        outputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>,
+        exceptionHandler: (Exception) -> Unit
+    ){
+        try {
+            while (!Thread.currentThread().isInterrupted) {
                 val stagingPosts = inputQueue.take()
                 if (stagingPosts.isEmpty()) break  //break if 'poison pill'
                 val stagingComments = stagingPosts.flatMap { stagingIndexes.stagingCommentIndex.getByPostId(it.id) }
                 outputQueue.put(Optional.of(Pair(stagingPosts, stagingComments)))
             }
             outputQueue.put(Optional.empty()) //put 'poison pill'
-            logger.info { "finished comments proc" }
+        } catch (e: InterruptedException){
+            logger.warn { "comments proc interrupted" }
+        } catch (e: Exception) {
+            logger.error { "Error during comments proc ${e.message}" }
+            exceptionHandler(e)
         }
-        return commentsFetchingJob
+        logger.info { "finished comments proc" }
     }
 
     private fun buildDocs(
         inputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>,
-        outputQueue: LinkedBlockingDeque<List<Document>>
-    ): Job {
-        val docsBuildingJob = GlobalScope.launch {
-            while (true) {
+        outputQueue: LinkedBlockingDeque<List<Document>>,
+        exceptionHandler: (Exception) -> Unit
+    ){
+        try {
+            while (!Thread.currentThread().isInterrupted) {
                 val postsAndCommentsOptional = inputQueue.take()
                 if (!postsAndCommentsOptional.isPresent) break  //break if 'poison pill'
                 val postsAndComments = postsAndCommentsOptional.get()
@@ -104,19 +129,24 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
                 documents.add(questionPost.convertToQuestionDocument(indexedSiteId, usersById[questionPost.userId], answerPosts.size, aggregatedTextContent))
                 outputQueue.put(documents)
             }
-            logger.info { "finished user proc" }
             outputQueue.put(emptyList()) //put 'poison pill'
+        } catch (e: InterruptedException){
+            logger.warn { "user proc interrupted" }
+        } catch (e: Exception) {
+            logger.error { "Error during user proc ${e.message}" }
+            exceptionHandler(e)
         }
-        return docsBuildingJob
+        logger.info { "finished user proc" }
     }
 
     private fun addDocsToLucene(
         inputQueue: LinkedBlockingDeque<List<Document>>,
-        totalQuestionCount: Int
-    ): Job {
-        val addDocsJob = GlobalScope.launch {
+        totalQuestionCount: Int,
+        exceptionHandler: (Exception) -> Unit
+    ){
+        try {
             var index = 1;
-            while (true) {
+            while (!Thread.currentThread().isInterrupted) {
                 val documents = inputQueue.take()
                 if (documents.isEmpty()) break  //break if 'poison pill'
                 questionIndex.addDocsAsBlock(documents)
@@ -125,9 +155,13 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
             }
             questionIndex.commit()
             questionIndex.onIndexDataChange()
-            logger.info { "finished docs proc" }
+        } catch (e: InterruptedException){
+            logger.warn { "docs proc interrupted" }
+        } catch (e: Exception) {
+            logger.error { "Error during docs proc ${e.message}" }
+            exceptionHandler(e)
         }
-        return addDocsJob
+        logger.info { "finished docs proc" }
     }
 }
 
