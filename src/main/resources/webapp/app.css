@@ -378,3 +378,22 @@ blockquote {
     margin-bottom: 10px;
     vertical-align: baseline;
 }
+
+#errors, #messages {
+    padding: 0.5em 1em;
+    width: 600px;
+    margin-left: 1em;
+    display: none;
+}
+
+#errors {
+    background-color: #ffe9e4;
+    border: 1px solid red;
+    color: red;
+}
+
+#messages {
+    background-color: #d3ffcd;
+    border: 1px solid darkgreen;
+    color: darkgreen;
+}

@@ -14,7 +14,7 @@ router
             var queryParams = convertQueryStringToJson(queryString)
             let parentIndexDir = queryParams["parentIndexDir"];
             if(parentIndexDir != null && parentIndexDir != ""){
-                doPost("/rest/admin", parentIndexDir => showAdmin(parentIndexDir), "parentIndexDir=" + parentIndexDir);
+                doPost("/rest/admin", parentIndexDir => showAdmin(parentIndexDir, "Your index directory has been updated."), "parentIndexDir=" + parentIndexDir);
             } else {
                 doGet("/rest/admin", parentIndexDir => showAdmin(parentIndexDir));
             }
@@ -108,7 +108,8 @@ function convertQueryStringToJson(queryString) {
     return JSON.parse(JSON.stringify(result));
 }
 
-function showAdmin(parentIndexDir){
+function showAdmin(parentIndexDir, message){
+    showMessage(message)
     const markup = `<h1>Index Directory</h1>
                 <p>Please select the directory where your indexes are/will be stored.</p>
                 <p>If you already have sites loaded, and you change this directory.  Your indexes will still 
@@ -410,7 +411,9 @@ function purgeSite(indexedSiteId){
 function showSites(indexedSites){
     if(indexedSites.length == 0){
         const markup = `
+                <br/>
                 <span>You have no sites loaded.  Click here to load sites from a stackdump download</span>
+                <br/><br/>
                 <input type="button" onclick="router.navigate('/load/chooseSitesXmlFile')" value="Load new site(s)"/>
                 `
         $("#content")[0].innerHTML = markup
@@ -448,7 +451,7 @@ function doGet(address, callback){
             callback(data)
         },
         error: function( jqXhr, textStatus, errorThrown ){
-            $("#errors")[0].innerHTML = errorThrown
+            showError(jqXhr.responseText)
         }
     });
 }
@@ -456,7 +459,6 @@ function doGet(address, callback){
 function doPost(address, callback, params){
     $.ajax({
         url: address,
-        dataType: 'json',
         type: 'post',
         contentType: 'application/x-www-form-urlencoded',
         data: params,
@@ -464,11 +466,24 @@ function doPost(address, callback, params){
             callback(data)
         },
         error: function( jqXhr, textStatus, errorThrown ){
-            $("#errors")[0].innerHTML = errorThrown + ":  " + jqXhr.responseText
+            showError(errorThrown + ":  " + jqXhr.responseText)
         }
     });
 }
 
+function showMessage(message){
+    if(message != null){
+        $('#messages')[0].innerHTML = message
+        $('#messages').css('display', 'block')
+    }
+}
+
+function showError(error){
+    if(error != null){
+        $('#errors')[0].innerHTML = error
+        $('#errors').css('display', 'block')
+    }
+}
 
 function formatDateTime(dateStr){
     return dateStr.replace('T', ' ').replace(/:\d\d\.\d\d\d/, '')

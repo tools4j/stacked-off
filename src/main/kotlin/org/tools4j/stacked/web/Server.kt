@@ -49,6 +49,11 @@ class Server {
                         setPrettyPrinting()
                     }
                 }
+                install(StatusPages) {
+                    exception<Throwable> { cause ->
+                        call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Exception occurred")
+                    }
+                }
 
                 routing {
                     intercept(ApplicationCallPipeline.Setup) {
@@ -75,11 +80,7 @@ class Server {
                         } else {
                             instance.diContext.setIndexParentDir(parentIndexDir)
                             instance = Instance()
-                            val response = object {
-                                val message = "Index directory has been updated."
-                                val indexParentDir = parentIndexDir
-                            }
-                            call.respond(response)
+                            call.respond(parentIndexDir)
                         }
                     }
 
@@ -149,11 +150,16 @@ class Server {
                             val seDirPath = call.parameters["path"]!!
                             val seDirSiteIds = call.parameters["seDirSiteIds"]!!.split(",")
                             Thread({
-                                instance.seDirParser.parse(
-                                    seDirPath,
-                                    { seSite -> seDirSiteIds.contains(seSite.seSiteId) },
-                                    newLoadStatus
-                                )
+                                try {
+                                    instance.seDirParser.parse(
+                                        seDirPath,
+                                        { seSite -> seDirSiteIds.contains(seSite.seSiteId) },
+                                        newLoadStatus
+                                    )
+                                } catch(e: Exception){
+                                    loadInProgress.get().addOperation("Exception during initialization: $e")
+                                    loadInProgress.get().running = false
+                                }
                             }).start()
                             call.respond(HttpStatusCode.OK, newLoadStatus)
                         }
