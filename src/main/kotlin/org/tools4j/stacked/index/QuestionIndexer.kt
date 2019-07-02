@@ -36,11 +36,10 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
                 exceptions.add(e)
                 jobs.forEach{it.interrupt()}
             }
-            jobs.add(Thread { fetchPosts(questionsDocIds, postsQueue, exceptionHandler) })
-            jobs.add(Thread { fetchComments(postsQueue, postsAndCommentsQueue, exceptionHandler) })
-            jobs.add(Thread { buildDocs(postsAndCommentsQueue, docsQueue, exceptionHandler) })
-            jobs.add(Thread { addDocsToLucene(docsQueue, questionsDocIds.size, exceptionHandler) })
-            jobs.forEach{it.start()}
+            jobs.add(runThread(exceptionHandler){ fetchPosts(questionsDocIds, postsQueue) })
+            jobs.add(runThread(exceptionHandler){ fetchComments(postsQueue, postsAndCommentsQueue) })
+            jobs.add(runThread(exceptionHandler){ buildDocs(postsAndCommentsQueue, docsQueue) })
+            jobs.add(runThread(exceptionHandler){ addDocsToLucene(docsQueue, questionsDocIds.size) })
             jobs.forEach{it.join()}
 
             if(!exceptions.isEmpty()){
@@ -52,115 +51,98 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
         }
     }
 
+    private fun runThread(exceptionHandler: (e: Exception) -> Unit, runnable: () -> Unit): Thread {
+        val thread = Thread {
+            try {
+                runnable()
+            } catch (e: InterruptedException) {
+                logger.warn { "posts proc interrupted" }
+            } catch (e: Exception) {
+                logger.error { "Error during posts proc ${e.message}" }
+                exceptionHandler(e)
+            }
+        }
+        thread.start()
+        return thread
+    }
+
     private fun fetchPosts(
         questionsDocIds: List<Int>,
-        outputQueue: LinkedBlockingDeque<List<StagingPost>>,
-        exceptionHandler: (Exception) -> Unit
+        outputQueue: LinkedBlockingDeque<List<StagingPost>>
     ) {
-        try {
-            questionsDocIds.forEach { questionDocId ->
-                val posts = ArrayList<StagingPost>()
-                posts.add(stagingIndexes.stagingPostIndex.getByDocId(questionDocId)!!)
-                posts.addAll(stagingIndexes.stagingPostIndex.getByParentId(posts.get(0).id))
-                outputQueue.put(posts)
-            }
-            outputQueue.put(emptyList()) //put 'poison pill'
-        } catch (e: InterruptedException){
-            logger.warn { "posts proc interrupted" }
-        } catch (e: Exception) {
-            logger.error { "Error during posts proc ${e.message}" }
-            exceptionHandler(e)
+        questionsDocIds.forEach { questionDocId ->
+            val posts = ArrayList<StagingPost>()
+            posts.add(stagingIndexes.stagingPostIndex.getByDocId(questionDocId)!!)
+            posts.addAll(stagingIndexes.stagingPostIndex.getByParentId(posts.get(0).id))
+            outputQueue.put(posts)
         }
+        outputQueue.put(emptyList()) //put 'poison pill'
         logger.info { "finished posts proc" }
     }
 
     private fun fetchComments(
         inputQueue: LinkedBlockingDeque<List<StagingPost>>,
-        outputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>,
-        exceptionHandler: (Exception) -> Unit
+        outputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>
     ){
-        try {
-            while (!Thread.currentThread().isInterrupted) {
-                val stagingPosts = inputQueue.take()
-                if (stagingPosts.isEmpty()) break  //break if 'poison pill'
-                val stagingComments = stagingPosts.flatMap { stagingIndexes.stagingCommentIndex.getByPostId(it.id) }
-                outputQueue.put(Optional.of(Pair(stagingPosts, stagingComments)))
-            }
-            outputQueue.put(Optional.empty()) //put 'poison pill'
-        } catch (e: InterruptedException){
-            logger.warn { "comments proc interrupted" }
-        } catch (e: Exception) {
-            logger.error { "Error during comments proc ${e.message}" }
-            exceptionHandler(e)
+        while (!Thread.currentThread().isInterrupted) {
+            val stagingPosts = inputQueue.take()
+            if (stagingPosts.isEmpty()) break  //break if 'poison pill'
+            val stagingComments = stagingPosts.flatMap { stagingIndexes.stagingCommentIndex.getByPostId(it.id) }
+            outputQueue.put(Optional.of(Pair(stagingPosts, stagingComments)))
         }
+        outputQueue.put(Optional.empty()) //put 'poison pill'
         logger.info { "finished comments proc" }
     }
 
     private fun buildDocs(
         inputQueue: LinkedBlockingDeque<Optional<Pair<List<StagingPost>, List<StagingComment>>>>,
-        outputQueue: LinkedBlockingDeque<List<Document>>,
-        exceptionHandler: (Exception) -> Unit
+        outputQueue: LinkedBlockingDeque<List<Document>>
     ){
-        try {
-            while (!Thread.currentThread().isInterrupted) {
-                val postsAndCommentsOptional = inputQueue.take()
-                if (!postsAndCommentsOptional.isPresent) break  //break if 'poison pill'
-                val postsAndComments = postsAndCommentsOptional.get()
-                val stagingPosts = postsAndComments.first
-                val comments = postsAndComments.second
-                val questionPost = stagingPosts.first()
-                val answerPosts = stagingPosts.subList(1, stagingPosts.size)
+        while (!Thread.currentThread().isInterrupted) {
+            val postsAndCommentsOptional = inputQueue.take()
+            if (!postsAndCommentsOptional.isPresent) break  //break if 'poison pill'
+            val postsAndComments = postsAndCommentsOptional.get()
+            val stagingPosts = postsAndComments.first
+            val comments = postsAndComments.second
+            val questionPost = stagingPosts.first()
+            val answerPosts = stagingPosts.subList(1, stagingPosts.size)
 
-                val userUids = ArrayList<String>()
-                userUids.addAll(stagingPosts.map { it.userId }.filterNotNull())
-                userUids.addAll(comments.map { it.userId }.filterNotNull())
-                if (questionPost.userId != null) userUids.add(questionPost.userId)
+            val userUids = ArrayList<String>()
+            userUids.addAll(stagingPosts.map { it.userId }.filterNotNull())
+            userUids.addAll(comments.map { it.userId }.filterNotNull())
+            if (questionPost.userId != null) userUids.add(questionPost.userId)
 
-                val users = stagingIndexes.stagingUserIndex.getByIds(userUids)
-                val usersById = users.map { it.id to it }.toMap()
-                val documents = ArrayList<Document>()
+            val users = stagingIndexes.stagingUserIndex.getByIds(userUids)
+            val usersById = users.map { it.id to it }.toMap()
+            val documents = ArrayList<Document>()
 
-                var aggregatedTextContent = if (questionPost.body != null) stripHtmlTagsAndMultiWhitespace(questionPost.body) + "\n" else ""
-                aggregatedTextContent += stagingPosts.filter { it.body != null }.map { stripHtmlTagsAndMultiWhitespace(it.body!!) }.joinToString("\n") + "\n"
-                aggregatedTextContent += comments.filter { it.text != null }.map { it.text }.joinToString("\n") + "\n"
+            var aggregatedTextContent = if (questionPost.body != null) stripHtmlTagsAndMultiWhitespace(questionPost.body) + "\n" else ""
+            aggregatedTextContent += stagingPosts.filter { it.body != null }.map { stripHtmlTagsAndMultiWhitespace(it.body!!) }.joinToString("\n") + "\n"
+            aggregatedTextContent += comments.filter { it.text != null }.map { it.text }.joinToString("\n") + "\n"
 
-                documents.addAll(answerPosts.map { it.convertToAnswerDocument(indexedSiteId, usersById[it.userId]) })
-                documents.addAll(comments.map { it.convertToDocument(indexedSiteId, usersById[it.userId]) })
-                documents.add(questionPost.convertToQuestionDocument(indexedSiteId, usersById[questionPost.userId], answerPosts.size, aggregatedTextContent))
-                outputQueue.put(documents)
-            }
-            outputQueue.put(emptyList()) //put 'poison pill'
-        } catch (e: InterruptedException){
-            logger.warn { "user proc interrupted" }
-        } catch (e: Exception) {
-            logger.error { "Error during user proc ${e.message}" }
-            exceptionHandler(e)
+            documents.addAll(answerPosts.map { it.convertToAnswerDocument(indexedSiteId, usersById[it.userId]) })
+            documents.addAll(comments.map { it.convertToDocument(indexedSiteId, usersById[it.userId]) })
+            documents.add(questionPost.convertToQuestionDocument(indexedSiteId, usersById[questionPost.userId], answerPosts.size, aggregatedTextContent))
+            outputQueue.put(documents)
         }
+        outputQueue.put(emptyList()) //put 'poison pill'
         logger.info { "finished user proc" }
     }
 
     private fun addDocsToLucene(
         inputQueue: LinkedBlockingDeque<List<Document>>,
-        totalQuestionCount: Int,
-        exceptionHandler: (Exception) -> Unit
+        totalQuestionCount: Int
     ){
-        try {
-            var index = 1;
-            while (!Thread.currentThread().isInterrupted) {
-                val documents = inputQueue.take()
-                if (documents.isEmpty()) break  //break if 'poison pill'
-                questionIndex.addDocsAsBlock(documents)
-                jobStatus.currentOperationProgress = "Joined $index of ${totalQuestionCount} questions"
-                index++
-            }
-            questionIndex.commit()
-            questionIndex.onIndexDataChange()
-        } catch (e: InterruptedException){
-            logger.warn { "docs proc interrupted" }
-        } catch (e: Exception) {
-            logger.error { "Error during docs proc ${e.message}" }
-            exceptionHandler(e)
+        var index = 1;
+        while (!Thread.currentThread().isInterrupted) {
+            val documents = inputQueue.take()
+            if (documents.isEmpty()) break  //break if 'poison pill'
+            questionIndex.addDocsAsBlock(documents)
+            jobStatus.currentOperationProgress = "Joined $index of ${totalQuestionCount} questions"
+            index++
         }
+        questionIndex.commit()
+        questionIndex.onIndexDataChange()
         logger.info { "finished docs proc" }
     }
 }
