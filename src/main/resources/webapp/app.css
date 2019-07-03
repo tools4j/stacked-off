@@ -381,8 +381,8 @@ blockquote {
 
 #errors, #messages {
     padding: 0.5em 1em;
-    width: 600px;
     margin-left: 1em;
+    margin-right: 1em;
     display: none;
 }
 
@@ -393,6 +393,7 @@ blockquote {
 }
 
 #messages {
+    width: 600px;
     background-color: #d3ffcd;
     border: 1px solid darkgreen;
     color: darkgreen;

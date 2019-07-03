@@ -51,7 +51,8 @@ class Server {
                 }
                 install(StatusPages) {
                     exception<Throwable> { cause ->
-                        call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Exception occurred")
+                        logger.error(cause.message, cause)
+                        call.respond(HttpStatusCode.InternalServerError, ExceptionToString(cause).toString())
                     }
                 }
 
@@ -77,6 +78,8 @@ class Server {
                             call.respond(HttpStatusCode.InternalServerError, "Dir does not exist: $parentIndexDir")
                         } else if(!File(parentIndexDir).isDirectory()){
                             call.respond(HttpStatusCode.InternalServerError, "Path is not a directory: $parentIndexDir")
+                        } else if(File(parentIndexDir).canonicalPath.equals(File(instance.diContext.getIndexParentDir()).canonicalPath)){
+                            call.respond(HttpStatusCode.NotAcceptable, "New path is the same as the existing path: $parentIndexDir")
                         } else {
                             instance.diContext.setIndexParentDir(parentIndexDir)
                             instance = Instance()

@@ -32,7 +32,7 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
 
             val jobs = ArrayList<Thread>()
             val exceptionHandler = {e: Exception ->
-                logger.error { "Error during joining: $e" }
+                logger.error("Error during joining", e)
                 exceptions.add(e)
                 jobs.forEach{it.interrupt()}
             }
@@ -58,7 +58,7 @@ class QuestionIndexer(val stagingIndexes: StagingIndexes,
             } catch (e: InterruptedException) {
                 logger.warn { "posts proc interrupted" }
             } catch (e: Exception) {
-                logger.error { "Error during posts proc ${e.message}" }
+                logger.error("Error during joining proc", e )
                 exceptionHandler(e)
             }
         }

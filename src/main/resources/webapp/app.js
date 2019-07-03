@@ -7,6 +7,13 @@ const router = new Navigo(root);
 var currentToDocIndexExclusive = 0
 var lastSearchText = ""
 
+router.hooks({
+    before: function(done, params) {
+        clearMessagesAndErrors()
+        done()
+    }
+});
+
 router
     .on({
         '/admin': function (params, queryString) {
@@ -483,6 +490,13 @@ function showError(error){
         $('#errors')[0].innerHTML = error
         $('#errors').css('display', 'block')
     }
+}
+
+function clearMessagesAndErrors(){
+    $('#messages')[0].innerHTML = ""
+    $('#messages').css('display', 'none')
+    $('#errors')[0].innerHTML = ""
+    $('#errors').css('display', 'none')
 }
 
 function formatDateTime(dateStr){
