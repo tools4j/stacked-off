@@ -38,6 +38,10 @@ h2.results-heading {
     margin-bottom: 0.3em
 }
 
+div.header {
+    border-top: 2px solid orange;
+}
+
 table.result td {
     vertical-align: top;
 }
@@ -119,10 +123,14 @@ div.header {
     margin-bottom: 0.8em;
 }
 
+div.header table {
+    box-shadow: 0px 5px 4px silver;
+}
+
 a.header-link {
     margin-right: 1em;
-    text-decoration-color: #f1d637;
-    color: #f1d637;
+    text-decoration-color: #fdbc3b;
+    color: #fdbc3b;
     text-decoration: none;
 }
 
@@ -132,6 +140,7 @@ div.result {
 
 img.logo {
     width: 15em;
+    padding: 0.5em 0.5em;
 }
 
 td.logo-td {

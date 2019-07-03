@@ -95,7 +95,8 @@ class Server {
                         call.respond(HttpStatusCode.InternalServerError, "Dir does not exist: $parentIndexDir")
                     } else if (!File(parentIndexDir).isDirectory()) {
                         call.respond(HttpStatusCode.InternalServerError, "Path is not a directory: $parentIndexDir")
-                    } else if (File(parentIndexDir).canonicalPath.equals(File(instance.diContext.getIndexParentDir()).canonicalPath)) {
+                    } else if (instance.diContext.getIndexParentDir() != null
+                        && File(parentIndexDir).canonicalPath.equals(File(instance.diContext.getIndexParentDir()).canonicalPath)) {
                         call.respond(
                             HttpStatusCode.NotAcceptable,
                             "New path is the same as the existing path: $parentIndexDir"
