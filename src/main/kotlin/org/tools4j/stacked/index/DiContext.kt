@@ -6,6 +6,7 @@ import java.util.*
 class DiContext {
     companion object: KLogging()
     val INDEX_DIR_PROP = "index.dir"
+    val PORT_PROP = "port"
     val initializables: MutableList<Initializable> = ArrayList();
     val shutdownables: MutableList<Shutdownable> = ArrayList();
     var initialized = false
@@ -44,10 +45,6 @@ class DiContext {
         return shutdownable
     }
 
-//    fun getIndexParentDir(): String? {
-//        return "./data"
-//    }
-
     fun getIndexParentDir(): String? {
         return properties.getProperty(INDEX_DIR_PROP)
     }
@@ -55,6 +52,10 @@ class DiContext {
     fun setIndexParentDir(indexParentDir: String) {
         properties.setProperty(INDEX_DIR_PROP, indexParentDir)
         saveStackedOffUserProperties(properties)
+    }
+
+    fun getPort(): Int {
+        return if(properties.getProperty(PORT_PROP) == null) 80 else properties.getProperty(PORT_PROP).toInt()
     }
 }
 

@@ -141,6 +141,7 @@ function showAdmin(parentIndexDir, message){
 }
 
 function loadNewSites_chooseSitesXmlFile(){
+    var lastStackExchangePath = Cookies.get('lastStackExchangePath') != null ? Cookies.get('lastStackExchangePath'): ''
     const markup = `<h1>Load new site(s)</h1>
                 <h2>Step 1. Enter the path of the a downloaded stack dump directory</h2>
                 <div><i>(This cannot be a file chooser due to browser security restrictions.)</i></div>
@@ -149,7 +150,7 @@ function loadNewSites_chooseSitesXmlFile(){
                     <input id="sites-xml-chooser"
                             class="wide-text-input text-input"
                             type="text"
-                            value="C:/Users/ben/Downloads/stackexchange"
+                            value="${lastStackExchangePath}"
                             onchange="$('#sites-xml-chosen-next-button')[0].disabled=false"/>
                 </div>
                 <br/>
@@ -162,6 +163,7 @@ function loadNewSites_chooseSitesXmlFile(){
 }
 
 function loadNewSites_selectSitesToLoad(seDir, seDirSites){
+    Cookies.set('lastStackExchangePath', seDir);
     // language=HTML
     const markup = `<h1>Load new site(s)</h1>
             <h2>Step 2. Select the sites that you wish to load</h2>
