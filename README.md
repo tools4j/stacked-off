@@ -1,8 +1,8 @@
 <img height="64px" src="https://github.com/benjwarner/stacked/blob/master/src/main/resources/webapp/stacked-off-white.png"/>
 
-StackedOff is a stack exchange site indexer and search engine.  It's
+StackedOff is a Stack Exchange site indexer and search engine.  It's
 intended use is for people who wish to access Stack Exchange Network site(s), 
-e.g. stackoverflow.com, but do not have a reliable internet service.  
+e.g. <a href="stackoverflow.com">stackoverflow.com</a>, but do not have a reliable internet service.  
 StackedOff uses the 'stack dump' data files made public by the Stack Exchange Network.
 
 # Installation
@@ -40,7 +40,7 @@ Assuming you have downloaded a Stack Exchange site, click on the 'Add Site' butt
 Enter the path that contains the 7z files, and Sites.xml file that you previously downloaded.
 Select the site(s) that you wish to index.  Click 'Next'
 
-Indexing can take some time.  On my laptop indexing stackoverflow.com takes about 4 hours.
+Indexing can take some time.  On my laptop indexing <a href="stackoverflow.com">stackoverflow.com</a> takes about 4 hours.
 
 ## Search
 You should now be able to search the loaded sites, using the search bar at the top of the StackedOff gui.
