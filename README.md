@@ -11,8 +11,9 @@ StackedOff uses the 'stack dump' data files made public by the Stack Exchange Ne
 3. Ensure your JAVA_HOME environment variable is pointing to this java home directory.
 
 # Aquiring StackExchange Data Dumps
-Get the 'BitTorrent Infohash' from <a href="https://meta.stackexchange.com/questions/224873/all-stack-exchange-data-dumps">here</a>.
-Use your preferred BitTorrent (e.g. uTorrent) client to download a, or part of a Data Dump.
+1. Get the 'BitTorrent Infohash' from <a href="https://meta.stackexchange.com/questions/224873/all-stack-exchange-data-dumps">here</a>.
+2. Use your preferred BitTorrent (e.g. uTorrent) client to download a, or part of a Data Dump.
+
 Note: Most BitTorrent clients allow you to pick and choose which files _within_ a Torrent that you
 wish to download.  You will probably want to limit the files that you download, as some of them can be 
 quite large.  Most of the sites are in individual 7z files.  Except for stackoverflow.com which is broken
@@ -20,9 +21,9 @@ up into a few seperate archives.  If downloading stackoverflow.com, ensure you d
 
 **Important**: You must include in your download the Sites.xml file that is present in every data dump.
 
-**Important**: Once downloaded, do NOT unzip the 7z site files.  Stacked Off can only read from the archived site files.
+**Important**: Once downloaded, do NOT unzip the 7z site files.  StackedOff can only read from the archived site files.
 
-# Running Stacked Off
+# Running StackedOff
 * Call /path/to/stacked-off/bin/stacked (if running on Linux/MacOS)
 * Call C:\path\to\stacked-off\bin\stacked.bat (if running on Windows)
 
@@ -48,13 +49,13 @@ Indexing can take some time.  On my laptop (7th Gen i5, with SSD) indexing <a hr
 ## Search
 You should now be able to search the loaded sites, using the search bar at the top of the StackedOff gui.
 
-## Changing the port that Stacked Off uses
-By default Stacked Off launches on port 80.
+## Changing the port that StackedOff uses
+By default StackedOff launches on port 80.
 To change this, edit the file in your home directory .stackedoff/app.properties, and add a port setting, e.g.:
 
 `port=8080`
 
-Re-run Stacked Off.
+Re-run StackedOff.
 
 # Acknowledgments
 The guys at <a href="https://stackexchange.com/">stackexchange.com</a>.  Who not only revolutionized the 
