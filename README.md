@@ -1,14 +1,14 @@
 <img height="64px" src="https://github.com/benjwarner/stacked/blob/master/src/main/resources/webapp/stacked-off-white.png"/>
 
 StackedOff is a stack exchange site indexer and search engine.  It's
-intended use is for people who wish to access a Stack Exchange Network site, 
+intended use is for people who wish to access Stack Exchange Network site(s), 
 e.g. stackoverflow.com, but do not have a reliable internet service.  
 StackedOff uses the 'stack dump' data files made public by the Stack Exchange Network.
 
 #Installation
-* Download the latest zip version from <a href="https://github.com/benjwarner/stacked">here</a>, and unzip into your desired location.
-* Ensure you have a version of a Java JRE installed which is <a href="https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html">version 8</a> or higher.
-* Ensure your JAVA_HOME environment variable is pointing to this java home directory.
+1. Download the latest zip version from <a href="https://github.com/benjwarner/stacked">here</a>, and unzip into your desired location.
+2. Ensure you have a version of a Java JRE installed which is <a href="https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html">version 8</a> or higher.
+3. Ensure your JAVA_HOME environment variable is pointing to this java home directory.
 
 #Aquiring StackExchange Data Dumps
 Get the 'BitTorrent Infohash' from <a href="https://meta.stackexchange.com/questions/224873/all-stack-exchange-data-dumps">here</a>.
@@ -27,6 +27,24 @@ quite large.
 
 Launch a browser pointing at http://localhost and you should see the StackedOff GUI.
 
+##Configure index dir
+The first time that you run StackedOff you will be asked to specify an index directory.  This is where StackedOff
+will store it's indexes.  These indexes can get quite large if you are indexing large sites such as stackoverflow.com.
+
+* Make sure you have enough disk space.  
+* It is preferable to use a local disk, as this will dramatically impact the speed of StackedOff.
+* It is preferable to use an SSD disk, as this will also impact the speed of StackedOff.
+
+##Load a site
+Assuming you have downloaded a Stack Exchange site, click on the 'Add Site' button.
+Enter the path that contains the 7z files, and Sites.xml file that you previously downloaded.
+Select the site(s) that you wish to index.  Click 'Next'
+
+Indexing can take some time.  On my laptop indexing stackoverflow.com takes about 4 hours.
+
+##Search
+You should now be able to search the loaded sites, using the search bar at the top of the StackedOff gui.
+
 ##Changing the port that Stacked Off uses
 By default Stacked Off launches on port 80.
 To change this, edit the file in your home directory .stackedoff/app.properties, and add a port setting, e.g.:
@@ -35,7 +53,7 @@ To change this, edit the file in your home directory .stackedoff/app.properties,
 
 Re-run Stacked Off.
 
-##Acknowledgments
+#Acknowledgments
 The guys at <a href="https://stackexchange.com/">stackexchange.com</a>.  Who not only revolutionized the 
-technical Q&A space, but also, in the spirit of 'openness' admirably continue to allow free access to all of their
+technical Q&A space, but also in the spirit of 'openness' admirably continue to allow free access to all of their
 Q&A data for all of their sites.
