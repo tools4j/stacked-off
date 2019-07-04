@@ -15,15 +15,16 @@ Get the 'BitTorrent Infohash' from <a href="https://meta.stackexchange.com/quest
 Use your preferred BitTorrent (e.g. uTorrent) client to download a, or part of a Data Dump.
 Note: Most BitTorrent clients allow you to pick and choose which files _within_ a Torrent that you
 wish to download.  You will probably want to limit the files that you download, as some of them can be 
-quite large.
+quite large.  Most of the sites are in individual 7z files.  Except for stackoverflow.com which is broken
+up into a few seperate archives.  If downloading stackoverflow.com, ensure you download the Posts, Users, and Comments files.
 
 **Important**: You must include in your download the Sites.xml file that is present in every data dump.
 
 **Important**: Once downloaded, do NOT unzip the 7z site files.  Stacked Off can only read from the archived site files.
 
 # Running Stacked Off
-* Call <unzipped-location>/bin/stacked (if running on Linux/MacOS)
-* Call <unzipped-location>/bin/stacked.bat (if running on Windows)
+* Call /path/to/stacked-off/bin/stacked (if running on Linux/MacOS)
+* Call C:\path\to\stacked-off\bin\stacked.bat (if running on Windows)
 
 Launch a browser pointing at http://localhost and you should see the StackedOff GUI.
 
@@ -37,7 +38,7 @@ will store it's indexes.  These indexes can get quite large if you are indexing 
 
 ## Load a site
 Assuming you have downloaded a Stack Exchange site, click on the 'Add Site' button.
-Enter the path that contains the 7z files, and Sites.xml file that you previously downloaded.
+Enter the path that contains the 7z file(s) and Sites.xml file that you previously downloaded.
 Select the site(s) that you wish to index.  Click 'Next'
 
 Indexing can take some time.  On my laptop indexing <a href="stackoverflow.com">stackoverflow.com</a> takes about 4 hours.
@@ -57,3 +58,7 @@ Re-run Stacked Off.
 The guys at <a href="https://stackexchange.com/">stackexchange.com</a>.  Who not only revolutionized the 
 technical Q&A space, but also in the spirit of 'openness' admirably continue to allow free access to all of their
 Q&A data for all of their sites.
+
+The fantastic <a href="https://lucene.apache.org/">Lucene</a> indexing and search API.
+
+<a href="www.jetbrains.com">JetBrains</a> for creating and maintaining the awesome <a href="https://kotlinlang.org/">Kotlin</a> JVM language.
