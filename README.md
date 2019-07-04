@@ -37,11 +37,13 @@ will store it's indexes.  These indexes can get quite large if you are indexing 
 * It is preferable to use an SSD disk, as this will also impact the speed of StackedOff.
 
 ## Load a site
-Assuming you have downloaded a Stack Exchange site, click on the 'Add Site' button.
-Enter the path that contains the 7z file(s) and Sites.xml file that you previously downloaded.
-Select the site(s) that you wish to index.  Click 'Next'
+Assuming you have downloaded a Stack Exchange site:
+1. click on the 'Add Site' button.
+2. Enter the path that contains the 7z file(s) and Sites.xml file that you previously downloaded.  Click 'Next'
+3. Select the site(s) that you wish to index.
+4. Click 'Next'
 
-Indexing can take some time.  On my laptop indexing <a href="stackoverflow.com">stackoverflow.com</a> takes about 4 hours.
+Indexing can take some time.  On my laptop (7th Gen i5, with SSD) indexing <a href="stackoverflow.com">stackoverflow.com</a> takes about 4 hours.
 
 ## Search
 You should now be able to search the loaded sites, using the search bar at the top of the StackedOff gui.
@@ -59,6 +61,7 @@ The guys at <a href="https://stackexchange.com/">stackexchange.com</a>.  Who not
 technical Q&A space, but also in the spirit of 'openness' admirably continue to allow free access to all of their
 Q&A data for all of their sites.
 
-The fantastic <a href="https://lucene.apache.org/">Lucene</a> indexing and search API.
+The <a href="https://lucene.apache.org/">Lucene</a> indexing and search API.
 
-<a href="www.jetbrains.com">JetBrains</a> for creating and maintaining the awesome <a href="https://kotlinlang.org/">Kotlin</a> JVM language.
+<a href="www.jetbrains.com">JetBrains</a> for creating and maintaining the awesome <a href="https://kotlinlang.org/">Kotlin</a> 
+JVM language.
