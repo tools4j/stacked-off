@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 class Server {
     companion object {
-        var instance = Instance()
+        var instance = WebDi()
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -103,7 +103,7 @@ class Server {
                         )
                     } else {
                         instance.diContext.setIndexParentDir(parentIndexDir)
-                        instance = Instance()
+                        instance = WebDi()
                         call.respond(parentIndexDir)
                     }
                 }
@@ -122,7 +122,8 @@ class Server {
                 }
 
                 get("/rest/questions/{id}") {
-                    val post = instance.questionIndex.getQuestionByUid(call.parameters["id"]!!)
+                    val questionUid = call.parameters["id"]!!
+                    val post = instance.searchService.getQuestionByUid(questionUid)
                     if (post == null)
                         call.respond(HttpStatusCode.NotFound)
                     else
@@ -143,12 +144,7 @@ class Server {
                         )
                     } else {
                         call.respond(
-                            instance.questionIndex.searchForQuestionSummaries(
-                                call.parameters["searchText"]!!,
-                                fromDocIndexInclusive,
-                                toDocIndexExclusive,
-                                explain
-                            )
+                            instance.searchService.searchForQuestionSummaries(call.parameters["searchText"]!!, fromDocIndexInclusive, toDocIndexExclusive, explain)
                         )
                     }
                 }
