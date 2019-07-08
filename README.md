@@ -1,4 +1,4 @@
-<img height="64px" src="https://github.com/benjwarner/stacked/blob/master/src/main/resources/webapp/stacked-off-white.png"/>
+<img height="64px" src="https://github.com/tools4j/stacked-off/blob/master/src/main/resources/webapp/stacked-off-white.png"/>
 
 StackedOff is a Stack Exchange site indexer and search engine.  It's
 intended use is for people who wish to access Stack Exchange Network site(s), 
@@ -6,7 +6,7 @@ e.g. <a href="stackoverflow.com">stackoverflow.com</a>, but do not have a reliab
 StackedOff uses the 'stack dump' data files made public by the Stack Exchange Network.
 
 # Installation
-1. Download the latest zip version from <a href="https://github.com/benjwarner/stacked">here</a>, and unzip into your desired location.
+1. Download the latest zip version from <a href="https://github.com/tools4j/stacked-off/tree/master/dist">here</a>, and unzip into your desired location.
 2. Ensure you have a version of a Java JRE installed which is <a href="https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html">version 8</a> or higher.
 3. Ensure your JAVA_HOME environment variable is pointing to this java home directory.
 
