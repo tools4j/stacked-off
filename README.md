@@ -29,6 +29,8 @@ up into a few seperate archives.  If downloading stackoverflow.com, ensure you d
 
 Launch a browser pointing at http://localhost and you should see the StackedOff GUI.
 
+(NOTE: Your browser must be ES6 compatible.  Please see the <a href="https://www.w3schools.com/js/js_es6.asp">table here for browser version compatibility</a>.)
+
 ## Configure index dir
 The first time that you run StackedOff you will be asked to specify an index directory.  This is where StackedOff
 will store it's indexes.  These indexes can get quite large if you are indexing large sites such as stackoverflow.com.

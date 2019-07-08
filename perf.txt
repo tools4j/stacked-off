@@ -24,7 +24,7 @@ Indexing, as is
 apple.stackexchange.com: 87,418ms
 with co-routines: 63,051ms
 
-With boosting
+With FunctionScoreQuery boosting
 Total time: 24003ms
 Avg time per query: 240ms
 
@@ -32,7 +32,22 @@ Without boosting
 Total time: 4170ms
 Avg time per query: 41ms
 
-With Feature Field Boosting (apple site)
-Total time: 3103ms
-Avg time per query: 31ms
+stackoverflow.com
+With feature field boosting (Satu) x2
+Total time: 15487ms
+Avg time per query: 154ms
 
+stackoverflow.com
+With feature field boosting (Satu) x1
+Total time: 14155ms
+Avg time per query: 141ms
+
+stackoverflow.com
+Without feature field boosting
+Total time: 4389ms
+Avg time per query: 43ms
+
+stackoverflow.com
+With feature field boosting (Log) x2
+Total time: 70896ms
+Avg time per query: 708ms
