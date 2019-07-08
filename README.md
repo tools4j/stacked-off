@@ -68,3 +68,13 @@ The <a href="https://lucene.apache.org/">Lucene</a> indexing and search API.
 
 <a href="www.jetbrains.com">JetBrains</a> for creating and maintaining the awesome <a href="https://kotlinlang.org/">Kotlin</a> 
 JVM language.
+
+# Screenshots
+## Search
+<img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-search.png">
+
+## Question view
+<img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-question.png">
+
+## Selecting sites to index
+<img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-selecting-site-to-index.png">
