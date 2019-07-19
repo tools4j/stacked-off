@@ -260,7 +260,7 @@ function showIndexes(indexStats) {
 
 function showQuestion(question) {
     const markup = `
-        <h1 class="question-heading">${question.title}</h1>
+        <h1 class="question-heading">${escapeHtml(question.title)}</h1>
         <div class="question">
             ${renderPost(question, question.indexedSite.seSite, null)}
             ${question.answers.length == 0 ? "" : `
@@ -364,7 +364,7 @@ function showResults(results, newSearchPage, hasMoreResults){
                     <div class="result-content">
                         <h2 class="results-heading">
                             <a class="result-link" data-navigo href="/questions/${question.uid}">
-                                ${question.title}
+                                ${escapeHtml(question.title)}
                             </a>
                         </h2>
                         <div class="result-meta">
@@ -507,6 +507,55 @@ function formatDateTime(dateStr){
 
 function formatDate(dateStr){
     return dateStr.replace(/T.*/, '')
+}
+
+var matchHtmlRegExp = /["'&<>]/
+
+function escapeHtml (string) {
+    var str = '' + string
+    var match = matchHtmlRegExp.exec(str)
+
+    if (!match) {
+        return str
+    }
+
+    var escape
+    var html = ''
+    var index = 0
+    var lastIndex = 0
+
+    for (index = match.index; index < str.length; index++) {
+        switch (str.charCodeAt(index)) {
+            case 34: // "
+                escape = '&quot;'
+                break
+            case 38: // &
+                escape = '&amp;'
+                break
+            case 39: // '
+                escape = '&#39;'
+                break
+            case 60: // <
+                escape = '&lt;'
+                break
+            case 62: // >
+                escape = '&gt;'
+                break
+            default:
+                continue
+        }
+
+        if (lastIndex !== index) {
+            html += str.substring(lastIndex, index)
+        }
+
+        lastIndex = index + 1
+        html += escape
+    }
+
+    return lastIndex !== index
+        ? html + str.substring(lastIndex, index)
+        : html
 }
 
 showStatusOnlyIfRunning();
