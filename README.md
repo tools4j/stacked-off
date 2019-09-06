@@ -5,6 +5,8 @@ intended use is for people who wish to access Stack Exchange Network site(s),
 e.g. <a href="stackoverflow.com">stackoverflow.com</a>, but do not have a reliable internet service.  
 StackedOff uses the 'stack dump' data files made public by the Stack Exchange Network.
 
+<img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-search.png">
+
 # Installation
 1. Download the latest zip version from <a href="https://github.com/tools4j/stacked-off/tree/master/dist">here</a>, and unzip into your desired location.
 2. Ensure you have a version of a Java JRE installed which is <a href="https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html">version 8</a> or higher.
@@ -69,9 +71,7 @@ The <a href="https://lucene.apache.org/">Lucene</a> indexing and search API.
 <a href="www.jetbrains.com">JetBrains</a> for creating and maintaining the awesome <a href="https://kotlinlang.org/">Kotlin</a> 
 JVM language.
 
-# Screenshots
-## Search
-<img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-search.png">
+# More Screenshots
 
 ## Question view
 <img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-question.png">
