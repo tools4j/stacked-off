@@ -2,7 +2,7 @@
 
 StackedOff is a Stack Exchange site indexer and search engine.  It's
 intended use is for people who wish to access Stack Exchange Network site(s), 
-e.g. <a href="stackoverflow.com">stackoverflow.com</a>, but do not have a reliable internet service.  
+e.g. <a href="https://stackoverflow.com">stackoverflow.com</a>, but do not have a reliable internet service.
 StackedOff uses the 'stack dump' data files made public by the Stack Exchange Network.
 
 <img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-search.png">
