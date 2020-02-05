@@ -143,7 +143,7 @@ function showAdmin(parentIndexDir, message){
 function loadNewSites_chooseSitesXmlFile(){
     var lastStackExchangePath = Cookies.get('lastStackExchangePath') != null ? Cookies.get('lastStackExchangePath'): ''
     const markup = `<h1>Load new site(s)</h1>
-                <h2>Step 1. Enter the path of the a downloaded stack dump directory</h2>
+                <h2>Step 1. Enter the path of the downloaded stack dump directory</h2>
                 <div><i>(This cannot be a file chooser due to browser security restrictions.)</i></div>
                 <br/>
                 <div class="div-load-sites">
