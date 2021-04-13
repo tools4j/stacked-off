@@ -8,3 +8,7 @@ build
 # Ignore imports
 import
 !import/.gitkeep
+
+# Ignore nginx passwd file and logs
+nginx/.htpasswd
+nginx/logs/

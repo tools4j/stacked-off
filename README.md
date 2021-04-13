@@ -9,7 +9,7 @@ StackedOff uses the 'stack dump' data files made public by the Stack Exchange Ne
 
 # Installation (Docker)
 
-## Build and run
+## Build and run (dev / test)
 
 Let's build and run the service :
 
@@ -23,7 +23,32 @@ Place your StackExchange archive files in the `./import` directory and once on t
 
 > Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
 
-You're ready to go !
+## Build and run (production)
+
+Production adds basic_auth on `/admin` (add index) and `/rest/purgeSite` (remove index) endpoints
+
+Create a user and password with :
+
+```bash
+touch ./nginx/.htpasswd
+htpasswd -m ./nginx/.htpasswd admin
+# A password will be asked for the "admin" user
+# You can add multiple accounts
+```
+
+> This may require an `apt-get install apache2-utils`
+
+Let's build and run the service :
+
+```bash
+docker-compose -f prod.docker-compose.yml up -d --build
+```
+
+Go on `localhost:8080`
+
+Place your StackExchange archive files in the `./import` directory and once on the web interface, enter `/import` as _Index directory_.
+
+> Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
 
 # Installation (classic)
 
