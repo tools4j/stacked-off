@@ -21,6 +21,8 @@ Go on `localhost:8080`
 
 Place your StackExchange archive files in the `./import` directory and once on the web interface, enter `/import` as _Index directory_.
 
+> Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
+
 You're ready to go !
 
 # Installation (classic)
