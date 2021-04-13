@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+
+    # Protects the /admin and /sites routes with basic auth
+    nginx:
+        build: ./nginx
+        restart: always
+        ports:
+            - 8080:80
+        volumes:
+            - ./nginx/logs:/var/log/nginx
+            - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+            - ./nginx/proxy.conf:/etc/nginx/conf.d/proxy.conf:ro
+
+    # StackOff app
+    app:
+        build: .
+        image: tools4j/stacked-off:latest
+        restart: always
+        volumes:
+            - ./import:/import

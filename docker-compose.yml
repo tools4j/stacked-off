@@ -1,0 +1,16 @@
+version: '3.3'
+
+services:
+
+    # StackOff app
+    #
+    # DON'T USE IN PRODUCTION, INDICES CAN BE
+    # ADDED OR ERASED WITHOUT ANY PASSWORD !
+    # cf. ./prod.docker-compose.yml for production
+    app:
+        build: .
+        image: tools4j/stacked-off:latest
+        ports:
+            - 8080:80
+        volumes:
+            - ./import:/import
