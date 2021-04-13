@@ -4,3 +4,7 @@
 
 # Ignore Gradle build output directory
 build
+
+# Ignore imports
+import
+!import/.gitkeep

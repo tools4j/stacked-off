@@ -1,0 +1,11 @@
+version: '3.3'
+
+services:
+
+    app:
+        build: .
+        image: tools4j/stacked-off:latest
+        ports:
+            - 8080:80
+        volumes:
+            - ./import:/import
