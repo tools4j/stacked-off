@@ -49,6 +49,23 @@ Go on `localhost:8080`
 Place your StackExchange archive files in the `./import` directory and once on the web interface, enter `/import` as _Index directory_.
 
 > Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
+>
+> Example :
+> 
+> ```
+> wget https://ia600107.us.archive.org/27/items/stackexchange/Sites.xml
+> wget https://ia600107.us.archive.org/27/items/stackexchange/Stackoverflow.com-Posts.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Badges.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Comments.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-PostHistory.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-PostLinks.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Tags.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Users.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Votes.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/french.stackexchange.com.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/crypto.stackexchange.com.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/unix.stackexchange.com.7z
+> ```
 
 # Installation (classic)
 
