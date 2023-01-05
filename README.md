@@ -7,12 +7,76 @@ StackedOff uses the 'stack dump' data files made public by the Stack Exchange Ne
 
 <img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-search.png">
 
-# Installation
+# Installation (Docker)
+
+## Build and run (dev / test)
+
+Let's build and run the service :
+
+```bash
+docker-compose up -d --build
+```
+
+Go on `localhost:8080`
+
+Place your StackExchange archive files in the `./import` directory and once on the web interface, enter `/import` as _Index directory_.
+
+> Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
+
+## Build and run (production)
+
+Production adds basic_auth on `/admin` (add index) and `/rest/purgeSite` (remove index) endpoints
+
+Create a user and password with :
+
+```bash
+touch ./nginx/.htpasswd
+htpasswd -m ./nginx/.htpasswd admin
+# A password will be asked for the "admin" user
+# You can add multiple accounts
+```
+
+> This may require an `apt-get install apache2-utils`
+
+Let's build and run the service :
+
+```bash
+docker-compose -f prod.docker-compose.yml up -d --build
+```
+
+Go on `localhost:8080`
+
+Place your StackExchange archive files in the `./import` directory and once on the web interface, enter `/import` as _Index directory_.
+
+> Don't forget downloading the [Sites.xml](https://archive.org/download/stackexchange/Sites.xml) file. Add it in `./import`.
+>
+> Example :
+> 
+> ```
+> wget https://ia600107.us.archive.org/27/items/stackexchange/Sites.xml
+> wget https://ia600107.us.archive.org/27/items/stackexchange/Stackoverflow.com-Posts.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Badges.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Comments.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-PostHistory.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-PostLinks.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Tags.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Users.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/stackoverflow.com-Votes.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/french.stackexchange.com.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/crypto.stackexchange.com.7z
+> wget https://ia600107.us.archive.org/27/items/stackexchange/unix.stackexchange.com.7z
+> ```
+
+# Installation (classic)
+
+## Pre-requisite
+
 1. Download the latest zip version from <a href="https://github.com/tools4j/stacked-off/tree/master/dist">here</a>, and unzip into your desired location.
 2. Ensure you have a version of a Java JRE installed which is <a href="https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html">version 8</a> or higher.
 3. Ensure your JAVA_HOME environment variable is pointing to this java home directory.
 
-# Aquiring StackExchange Data Dumps
+## Aquiring StackExchange Data Dumps
+
 1. Get the 'BitTorrent Infohash' from <a href="https://meta.stackexchange.com/questions/224873/all-stack-exchange-data-dumps">here</a>.
 2. Use your preferred BitTorrent (e.g. uTorrent) client to download a, or part of a Data Dump.
 
@@ -25,7 +89,8 @@ up into a few seperate archives.  If downloading stackoverflow.com, ensure you d
 
 **Important**: Once downloaded, do NOT unzip the 7z site files.  StackedOff can only read from the archived site files.
 
-# Running StackedOff
+## Running StackedOff
+
 * Call /path/to/stacked-off/bin/stacked (if running on Linux/MacOS)
 * Call C:\path\to\stacked-off\bin\stacked.bat (if running on Windows)
 
@@ -33,7 +98,8 @@ Launch a browser pointing at http://localhost and you should see the StackedOff 
 
 (NOTE: Your browser must be ES6 compatible.  Please see the <a href="https://www.w3schools.com/js/js_es6.asp">table here for browser version compatibility</a>.)
 
-## Configure index dir
+### Configure index dir
+
 The first time that you run StackedOff you will be asked to specify an index directory.  This is where StackedOff
 will store it's indexes.  These indexes can get quite large if you are indexing large sites such as stackoverflow.com.
 
@@ -41,8 +107,10 @@ will store it's indexes.  These indexes can get quite large if you are indexing 
 * It is preferable to use a local disk, as this will dramatically impact the speed of StackedOff.
 * It is preferable to use an SSD disk, as this will also impact the speed of StackedOff.
 
-## Load a site
+### Load a site
+
 Assuming you have downloaded a Stack Exchange site:
+
 1. click on the 'Add Site' button.
 2. Enter the path that contains the 7z file(s) and Sites.xml file that you previously downloaded.  Click 'Next'
 3. Select the site(s) that you wish to index.
@@ -50,10 +118,12 @@ Assuming you have downloaded a Stack Exchange site:
 
 Indexing can take some time.  On my laptop (7th Gen i5, with SSD) indexing <a href="stackoverflow.com">stackoverflow.com</a> takes about 4 hours.
 
-## Search
+### Search
+
 You should now be able to search the loaded sites, using the search bar at the top of the StackedOff gui.
 
-## Changing the port that StackedOff uses
+### Changing the port that StackedOff uses
+
 By default StackedOff launches on port 80.
 To change this, edit the file in your home directory .stackedoff/app.properties, and add a port setting, e.g.:
 
@@ -62,6 +132,7 @@ To change this, edit the file in your home directory .stackedoff/app.properties,
 Re-run StackedOff.
 
 # Acknowledgments
+
 The guys at <a href="https://stackexchange.com/">stackexchange.com</a>.  Who not only revolutionized the 
 technical Q&A space, but also in the spirit of 'openness' admirably continue to allow free access to all of their
 Q&A data for all of their sites.
@@ -74,7 +145,9 @@ JVM language.
 # More Screenshots
 
 ## Question view
+
 <img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-question.png">
 
 ## Selecting sites to index
+
 <img src="https://github.com/tools4j/stacked-off/blob/master/resources/screenshot-selecting-site-to-index.png">
